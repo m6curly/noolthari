@@ -1,0 +1,566 @@
+/* ==========================================================
+   NOOLTHARI™
+   Premium Coming Soon
+========================================================== */
+
+*{
+
+    margin:0;
+
+    padding:0;
+
+    box-sizing:border-box;
+
+}
+
+:root{
+
+    --bg:#FCFAF7;
+
+    --bg2:#F8F3EC;
+
+    --gold1:#FFF8DF;
+
+    --gold2:#F6E29F;
+
+    --gold3:#E5C067;
+
+    --gold4:#C89433;
+
+    --gold5:#97661A;
+
+    --text:#666666;
+
+    --heading:#124D56;
+
+}
+
+html{
+
+    scroll-behavior:smooth;
+
+}
+
+body{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:40px;
+
+    font-family:"Poppins",sans-serif;
+
+    background:
+    radial-gradient(circle at top,
+    #FFFFFF 0%,
+    var(--bg) 45%,
+    var(--bg2) 100%);
+
+    color:var(--text);
+
+    overflow-x:hidden;
+
+}
+
+/* Silk Background */
+
+body::before{
+
+    content:"";
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+
+    radial-gradient(circle at 20% 20%,rgba(255,255,255,.8),transparent 35%),
+
+    radial-gradient(circle at 80% 80%,rgba(255,255,255,.6),transparent 40%);
+
+    opacity:.8;
+
+    pointer-events:none;
+
+}
+
+/* ========================================= */
+
+.container{
+
+    width:100%;
+
+    max-width:760px;
+
+    text-align:center;
+
+    position:relative;
+
+    z-index:2;
+
+}
+
+/* ==========================================================
+   LOGO
+========================================================== */
+
+.logo-box{
+
+    width:230px;
+
+    height:230px;
+
+    margin:0 auto 38px;
+
+    border-radius:50%;
+
+    overflow:hidden;
+
+    background:
+
+    radial-gradient(circle,
+    #FFFDF9 0%,
+    #FAF6EF 100%);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border:3px solid rgba(224,189,108,.35);
+
+    box-shadow:
+
+        0 12px 35px rgba(188,140,45,.18),
+
+        0 0 0 10px rgba(255,255,255,.85),
+
+        inset 0 2px 12px rgba(255,255,255,.9);
+
+    transition:.45s ease;
+
+}
+
+.logo-box:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:
+
+        0 20px 55px rgba(188,140,45,.28),
+
+        0 0 0 12px rgba(255,255,255,.9),
+
+        inset 0 2px 14px rgba(255,255,255,1);
+
+}
+
+.logo{
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+    border-radius:50%;
+
+    transition:.45s ease;
+
+}
+
+.logo-box:hover .logo{
+
+    transform:scale(1.04);
+
+}
+
+/* ==========================================================
+   TITLES
+========================================================== */
+
+.subtitle{
+
+    display:inline-block;
+
+    margin-bottom:20px;
+
+    padding:8px 20px;
+
+    border-radius:50px;
+
+    background:rgba(255,255,255,.65);
+
+    border:1px solid rgba(214,184,110,.35);
+
+    font-size:.78rem;
+
+    font-weight:600;
+
+    letter-spacing:6px;
+
+    text-transform:uppercase;
+
+    background-image:linear-gradient(
+        180deg,
+        var(--gold1),
+        var(--gold2),
+        var(--gold3),
+        var(--gold4),
+        var(--gold5)
+    );
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+    background-clip:text;
+
+}
+
+/* ========================================= */
+
+h2{
+
+    margin-top:8px;
+
+    font-family:
+
+    "Cormorant Garamond",
+
+    serif;
+
+    font-size:3rem;
+
+    font-weight:700;
+
+    line-height:1.2;
+
+    letter-spacing:.5px;
+
+    background-image:linear-gradient(
+        180deg,
+        #FFF6D8,
+        #F4D883,
+        #D8AA49,
+        #B88223,
+        #8F6517
+    );
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+    background-clip:text;
+
+    text-shadow:
+
+        0 1px 1px rgba(255,255,255,.7),
+
+        0 10px 20px rgba(184,130,35,.12);
+
+}
+
+/* ========================================= */
+
+.description{
+
+    max-width:620px;
+
+    margin:30px auto 0;
+
+    font-size:1.03rem;
+
+    line-height:2;
+
+    font-weight:400;
+
+    color:#6A6A6A;
+
+    letter-spacing:.3px;
+
+}
+
+/* ==========================================================
+   CONTACT
+========================================================== */
+
+.contact{
+
+    margin-top:60px;
+
+}
+
+.contact span{
+
+    display:inline-block;
+
+    margin-bottom:28px;
+
+    font-size:.80rem;
+
+    font-weight:600;
+
+    letter-spacing:5px;
+
+    text-transform:uppercase;
+
+    background-image:linear-gradient(
+
+        180deg,
+
+        var(--gold1),
+
+        var(--gold2),
+
+        var(--gold3),
+
+        var(--gold4),
+
+        var(--gold5)
+
+    );
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+    background-clip:text;
+
+}
+
+/* ========================================= */
+
+.contact a{
+
+    display:block;
+
+    width:max-content;
+
+    margin:18px auto;
+
+    padding:14px 32px;
+
+    text-decoration:none;
+
+    font-size:1rem;
+
+    font-weight:500;
+
+    color:#205963;
+
+    background:#FFFFFF;
+
+    border-radius:50px;
+
+    border:1px solid rgba(210,180,100,.28);
+
+    transition:.35s ease;
+
+    box-shadow:
+
+        0 10px 25px rgba(0,0,0,.05);
+
+}
+
+.contact a:hover{
+
+    transform:translateY(-3px);
+
+    color:#B8862D;
+
+    border-color:#D5A646;
+
+    box-shadow:
+
+        0 18px 40px rgba(184,134,45,.18);
+
+}
+
+/* ==========================================================
+   FOOTER
+========================================================== */
+
+footer{
+
+    margin-top:70px;
+
+    font-size:.90rem;
+
+    color:#9A9A9A;
+
+    letter-spacing:1px;
+
+    line-height:1.8;
+
+}
+
+/* ==========================================================
+   PREMIUM SELECTION
+========================================================== */
+
+::selection{
+
+    background:#D4A74A;
+
+    color:#FFFFFF;
+
+}
+
+img{
+
+    user-select:none;
+
+    -webkit-user-drag:none;
+
+}
+
+/* ==========================================================
+   SCROLLBAR
+========================================================== */
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:#F8F4ED;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:linear-gradient(
+
+        180deg,
+
+        #F7E5AE,
+
+        #E4BE62,
+
+        #BC8829,
+
+        #8D6116
+
+    );
+
+    border-radius:30px;
+
+}
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media(max-width:768px){
+
+body{
+
+    padding:30px 22px;
+
+}
+
+.logo-box{
+
+    width:180px;
+
+    height:180px;
+
+    margin-bottom:30px;
+
+}
+
+.subtitle{
+
+    font-size:.68rem;
+
+    letter-spacing:4px;
+
+    padding:7px 16px;
+
+}
+
+h2{
+
+    font-size:2.2rem;
+
+}
+
+.description{
+
+    font-size:.95rem;
+
+    line-height:1.9;
+
+}
+
+.contact{
+
+    margin-top:45px;
+
+}
+
+.contact a{
+
+    width:100%;
+
+    max-width:300px;
+
+    padding:14px 20px;
+
+    font-size:.95rem;
+
+}
+
+footer{
+
+    margin-top:45px;
+
+    font-size:.80rem;
+
+}
+
+}
+
+/* ==========================================================
+   LARGE SCREEN
+========================================================== */
+
+@media(min-width:1600px){
+
+.container{
+
+    max-width:900px;
+
+}
+
+.logo-box{
+
+    width:260px;
+
+    height:260px;
+
+}
+
+h2{
+
+    font-size:3.5rem;
+
+}
+
+.description{
+
+    font-size:1.12rem;
+
+}
+
+}

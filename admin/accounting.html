@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0B3D45"
+  >
+
+  <title>
+    Profit &amp; Loss | NOOLTHARI™
+  </title>
+
+
+  <!-- Fonts -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- Styles -->
+
+  <link
+    rel="stylesheet"
+    href="../css/main.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="../css/admin.css"
+  >
+
+</head>
+
+
+<body data-root="../">
+
+
+  <!-- =====================================================
+       ADMIN LAYOUT
+  ====================================================== -->
+
+  <div class="admin-shell">
+
+
+    <!-- ===================================================
+         SIDEBAR
+    ==================================================== -->
+
+    <aside class="admin-side">
+
+      <div class="admin-top">
+
+
+        <a
+          class="admin-logo"
+          href="index.html"
+          aria-label="NOOLTHARI Admin Dashboard"
+        >
+
+          <img
+            src="../assets/logo/noolthari-logo.png"
+            alt="NOOLTHARI™"
+            loading="eager"
+          >
+
+          <span>
+            NOOLTHARI™
+          </span>
+
+        </a>
+
+
+        <button
+          class="admin-mobile-toggle"
+          data-admin-menu
+          type="button"
+          aria-label="Open admin menu"
+          aria-expanded="false"
+        >
+          Menu
+        </button>
+
+      </div>
+
+
+      <nav
+        class="admin-nav"
+        aria-label="Admin navigation"
+      >
+
+        <a href="index.html">
+          Dashboard
+        </a>
+
+        <a href="products.html">
+          Products
+        </a>
+
+        <a href="categories.html">
+          Categories
+        </a>
+
+        <a href="orders.html">
+          Orders
+        </a>
+
+        <a href="customers.html">
+          Customers
+        </a>
+
+        <a href="returns.html">
+          Returns
+        </a>
+
+        <a href="messages.html">
+          Messages
+        </a>
+
+        <a
+          href="accounting.html"
+          class="active"
+          aria-current="page"
+        >
+          Finance
+        </a>
+
+
+        <a href="../index.html">
+          View store
+        </a>
+
+        <a href="../account.html">
+          Account
+        </a>
+
+        <a
+          href="#"
+          data-logout
+        >
+          Sign out
+        </a>
+
+      </nav>
+
+    </aside>
+
+
+    <!-- ===================================================
+         MAIN CONTENT
+    ==================================================== -->
+
+    <main class="admin-main">
+
+
+      <!-- PAGE HEADER -->
+
+      <header class="admin-page-header">
+
+        <div>
+
+          <div class="eyebrow">
+            Business finance
+          </div>
+
+          <h1 class="page-title">
+            Profit &amp; Loss
+          </h1>
+
+          <p class="finance-note">
+            A live management view of your recorded sales,
+            product costs, expenses and current business position.
+          </p>
+
+        </div>
+
+      </header>
+
+
+      <!-- =================================================
+           PROFIT & LOSS
+      ================================================== -->
+
+      <section
+        aria-label="Profit and loss summary"
+      >
+
+        <div class="stat-grid">
+
+
+          <div class="stat">
+
+            <div class="eyebrow">
+              Revenue
+            </div>
+
+            <strong id="revenue">
+              —
+            </strong>
+
+          </div>
+
+
+          <div class="stat">
+
+            <div class="eyebrow">
+              COGS
+            </div>
+
+            <strong id="cogs">
+              —
+            </strong>
+
+          </div>
+
+
+          <div class="stat">
+
+            <div class="eyebrow">
+              Expenses
+            </div>
+
+            <strong id="expenses">
+              —
+            </strong>
+
+          </div>
+
+
+          <div class="stat">
+
+            <div class="eyebrow">
+              Net profit
+            </div>
+
+            <strong id="profit">
+              —
+            </strong>
+
+          </div>
+
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           BALANCE SNAPSHOT
+      ================================================== -->
+
+      <section
+        class="finance-section"
+        aria-label="Balance snapshot"
+      >
+
+        <div class="admin-card">
+
+
+          <div class="eyebrow">
+            Management balance snapshot
+          </div>
+
+
+          <h2>
+            Assets &amp; equity
+          </h2>
+
+
+          <div class="finance-grid">
+
+
+            <div>
+
+              <span>
+                Cash / bank
+              </span>
+
+              <strong id="bs-cash">
+                —
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Inventory
+              </span>
+
+              <strong id="bs-inventory">
+                —
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Receivables
+              </span>
+
+              <strong id="bs-receivables">
+                —
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Liabilities
+              </span>
+
+              <strong id="bs-liabilities">
+                —
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Equity
+              </span>
+
+              <strong id="bs-equity">
+                —
+              </strong>
+
+            </div>
+
+
+          </div>
+
+
+          <p class="finance-note">
+            This is a management snapshot based on recorded payments,
+            expenses, refunds and current stock cost. Full statutory
+            accounting can be extended without changing the commerce flow.
+          </p>
+
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           EXPENSE MANAGEMENT
+      ================================================== -->
+
+      <section
+        class="admin-card"
+        style="margin-top:22px"
+        aria-label="Expense management"
+      >
+
+
+        <div class="section-heading">
+
+          <div class="eyebrow">
+            Business spending
+          </div>
+
+          <h2>
+            Add expense
+          </h2>
+
+          <p class="finance-note">
+            Record operating expenses so your net profit stays accurate.
+          </p>
+
+        </div>
+
+
+        <!-- Expense form -->
+
+        <form
+          id="expense-form"
+          class="admin-form"
+        >
+
+
+          <div class="field">
+
+            <label for="expense-title">
+              Title
+            </label>
+
+            <input
+              id="expense-title"
+              name="title"
+              type="text"
+              autocomplete="off"
+              required
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="expense-category">
+              Category
+            </label>
+
+            <input
+              id="expense-category"
+              name="category"
+              type="text"
+              autocomplete="off"
+              required
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="expense-amount">
+              Amount
+            </label>
+
+            <input
+              id="expense-amount"
+              name="amount"
+              type="number"
+              min="0"
+              step="0.01"
+              inputmode="decimal"
+              required
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="expense-date">
+              Date
+            </label>
+
+            <input
+              id="expense-date"
+              name="expense_date"
+              type="date"
+              required
+            >
+
+          </div>
+
+
+          <button
+            class="btn btn-gold"
+            type="submit"
+          >
+            Save expense
+          </button>
+
+
+        </form>
+
+
+        <!-- =================================================
+             RECORDED EXPENSES
+        ================================================== -->
+
+        <div
+          class="section-heading"
+          style="margin-top:32px"
+        >
+
+          <div class="eyebrow">
+            Recorded spending
+          </div>
+
+          <h2>
+            Expenses
+          </h2>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th scope="col">
+                  Date
+                </th>
+
+                <th scope="col">
+                  Title
+                </th>
+
+                <th scope="col">
+                  Amount
+                </th>
+
+                <th scope="col">
+                  Category
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+            <!-- Hook used by accounting.js -->
+
+            <tbody id="expense-table"></tbody>
+
+          </table>
+
+        </div>
+
+
+      </section>
+
+
+    </main>
+
+  </div>
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
+  ></script>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/supabase.js"></script>
+
+  <script src="../js/utils.js"></script>
+
+  <script src="../js/app.js"></script>
+
+  <script src="../admin/js/accounting.js"></script>
+
+
+</body>
+
+</html>

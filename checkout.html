@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="description"
+    content="NOOLTHARI™ — secure checkout for premium Indian sarees."
+  >
+
+  <meta
+    name="theme-color"
+    content="#0B3D45"
+  >
+
+  <title>
+    Secure Checkout | NOOLTHARI™
+  </title>
+
+
+  <!-- =====================================================
+       FONTS
+  ====================================================== -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =====================================================
+       STYLES
+  ====================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="css/main.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/responsive.css"
+  >
+
+</head>
+
+
+<body data-root="./">
+
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <header class="site-header">
+
+    <div class="container nav-wrap">
+
+
+      <!-- BRAND -->
+
+      <a
+        class="brand"
+        href="index.html"
+        aria-label="NOOLTHARI™ Home"
+      >
+
+        <img
+          src="assets/logo/noolthari-logo.png"
+          alt="NOOLTHARI™ logo"
+          loading="eager"
+        >
+
+        <span>
+          NOOLTHARI<small>™</small>
+        </span>
+
+      </a>
+
+
+      <!-- NAVIGATION -->
+
+      <nav
+        class="nav"
+        data-site-nav
+        aria-label="Main navigation"
+      >
+
+        <a href="index.html">
+          Home
+        </a>
+
+        <a
+          href="shop.html"
+          aria-current="page"
+        >
+          Shop
+        </a>
+
+        <a href="about.html">
+          About
+        </a>
+
+        <a href="contact.html">
+          Contact
+        </a>
+
+      </nav>
+
+
+      <!-- HEADER ACTIONS -->
+
+      <div class="nav-right">
+
+
+        <a
+          class="icon-link"
+          href="shop.html"
+          aria-label="Search"
+          title="Search"
+        >
+          ⌕
+        </a>
+
+
+        <a
+          class="icon-link"
+          href="cart.html"
+          aria-label="Cart"
+          title="Cart"
+        >
+          👜
+        </a>
+
+
+        <div
+          class="auth-slot"
+          data-auth-slot
+        ></div>
+
+
+        <button
+          class="menu"
+          data-menu-toggle
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main>
+
+    <section class="page">
+
+      <div class="container">
+
+
+        <!-- PAGE HEADER -->
+
+        <div class="eyebrow">
+          Secure checkout
+        </div>
+
+
+        <h1 class="page-title">
+          Checkout
+        </h1>
+
+
+        <!-- =================================================
+             CHECKOUT LAYOUT
+        ================================================== -->
+
+        <div
+          id="checkout-app"
+          class="checkout-layout"
+        >
+
+
+          <!-- =================================================
+               SHIPPING ADDRESS
+          ================================================== -->
+
+          <div>
+
+            <section
+              class="panel"
+              aria-label="Shipping address"
+            >
+
+              <h2 style="margin-top:0">
+                Shipping address
+              </h2>
+
+
+              <!-- Existing address list hook -->
+
+              <div id="address-list"></div>
+
+
+              <hr
+                style="
+                  border:0;
+                  border-top:1px solid var(--line);
+                  margin:22px 0;
+                "
+              >
+
+
+              <h3>
+                Add a new address
+              </h3>
+
+
+              <!-- Existing address form hook -->
+
+              <form
+                id="address-form"
+                class="form-grid"
+              >
+
+
+                <div class="field">
+
+                  <label
+                    for="full-name"
+                  >
+                    Full name
+                  </label>
+
+                  <input
+                    id="full-name"
+                    name="full_name"
+                    type="text"
+                    autocomplete="name"
+                    required
+                  >
+
+                </div>
+
+
+                <div class="field">
+
+                  <label
+                    for="phone"
+                  >
+                    Phone
+                  </label>
+
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    autocomplete="tel"
+                    required
+                  >
+
+                </div>
+
+
+                <div class="field full">
+
+                  <label
+                    for="address-line1"
+                  >
+                    Address line 1
+                  </label>
+
+                  <input
+                    id="address-line1"
+                    name="address_line1"
+                    type="text"
+                    autocomplete="street-address"
+                    required
+                  >
+
+                </div>
+
+
+                <div class="field full">
+
+                  <label
+                    for="address-line2"
+                  >
+                    Address line 2
+                  </label>
+
+                  <input
+                    id="address-line2"
+                    name="address_line2"
+                    type="text"
+                    autocomplete="address-line2"
+                  >
+
+                </div>
+
+
+                <div class="field">
+
+                  <label
+                    for="city"
+                  >
+                    City
+                  </label>
+
+                  <input
+                    id="city"
+                    name="city"
+                    type="text"
+                    autocomplete="address-level2"
+                    required
+                  >
+
+                </div>
+
+
+                <div class="field">
+
+                  <label
+                    for="state"
+                  >
+                    State
+                  </label>
+
+                  <input
+                    id="state"
+                    name="state"
+                    type="text"
+                    autocomplete="address-level1"
+                    required
+                  >
+
+                </div>
+
+
+                <div class="field">
+
+                  <label
+                    for="postal-code"
+                  >
+                    Postal code
+                  </label>
+
+                  <input
+                    id="postal-code"
+                    name="postal_code"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="postal-code"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
+                    required
+                  >
+
+                </div>
+
+
+                <div
+                  class="field"
+                  style="justify-content:end"
+                >
+
+                  <button
+                    class="btn btn-outline"
+                    type="submit"
+                  >
+                    Save address
+                  </button>
+
+                </div>
+
+
+              </form>
+
+            </section>
+
+          </div>
+
+
+          <!-- =================================================
+               PAYMENT
+          ================================================== -->
+
+          <aside
+            class="panel summary"
+            aria-label="Secure payment"
+          >
+
+            <div class="eyebrow">
+              Payment
+            </div>
+
+
+            <h2 style="margin-top:6px">
+              Secure online payment
+            </h2>
+
+
+            <p>
+              UPI, cards, net banking and supported wallets
+              are handled securely by Razorpay.
+              NOOLTHARI does not store card details.
+            </p>
+
+
+            <div class="totals">
+
+              <span>
+                Order total
+              </span>
+
+              <strong id="checkout-total">
+                ₹0
+              </strong>
+
+            </div>
+
+
+            <!-- Existing payment hook -->
+
+            <button
+              id="pay-btn"
+              class="btn btn-gold"
+              type="button"
+              style="width:100%;margin-top:20px"
+            >
+              Pay securely
+            </button>
+
+
+            <p
+              style="
+                font-size:12px;
+                margin-top:12px;
+              "
+            >
+              Payment is confirmed only after
+              server-side verification.
+            </p>
+
+          </aside>
+
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================================
+       FOOTER
+  ====================================================== -->
+
+  <footer class="site-footer">
+
+    <div class="container footer-grid">
+
+
+      <!-- BRAND -->
+
+      <div>
+
+        <div class="eyebrow">
+          NOOLTHARI™
+        </div>
+
+        <h3>
+          Timeless sarees,<br>
+          quietly luxurious.
+        </h3>
+
+        <p>
+          Premium Indian sarees curated with restraint,
+          craft and modern elegance.
+        </p>
+
+      </div>
+
+
+      <!-- SHOP -->
+
+      <div>
+
+        <div class="eyebrow">
+          Shop
+        </div>
+
+        <a href="shop.html">
+          All Sarees
+        </a>
+
+        <a href="cart.html">
+          Bag
+        </a>
+
+      </div>
+
+
+      <!-- HELP -->
+
+      <div>
+
+        <div class="eyebrow">
+          Help
+        </div>
+
+        <a href="shipping-policy.html">
+          Shipping
+        </a>
+
+        <a href="return-policy.html">
+          Returns
+        </a>
+
+        <a href="contact.html">
+          Contact
+        </a>
+
+      </div>
+
+
+      <!-- LEGAL -->
+
+      <div>
+
+        <div class="eyebrow">
+          Legal
+        </div>
+
+        <a href="privacy-policy.html">
+          Privacy
+        </a>
+
+        <a href="terms.html">
+          Terms
+        </a>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="container footer-bottom">
+
+      ©
+      <span data-year></span>
+      NOOLTHARI™. All rights reserved.
+
+    </div>
+
+  </footer>
+
+
+  <!-- =====================================================
+       SCRIPTS
+       Order intentionally preserved
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
+  ></script>
+
+  <script src="js/config.js"></script>
+
+  <script src="js/supabase.js"></script>
+
+  <script src="js/utils.js"></script>
+
+  <script src="js/app.js"></script>
+
+
+  <!-- Razorpay checkout library -->
+
+  <script
+    src="https://checkout.razorpay.com/v1/checkout.js"
+  ></script>
+
+
+  <!-- Existing checkout logic -->
+
+  <script src="js/checkout.js"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,328 @@
+/* =========================================================
+   NOOLTHARI™ ADMIN — PREMIUM SYSTEM
+========================================================= */
+
+.admin-card{
+  position:relative;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.995),
+      rgba(252,250,247,.98)
+    );
+  border:1px solid rgba(200,148,51,.16);
+  border-radius:12px;
+  padding:28px;
+  box-shadow:
+    0 14px 40px rgba(11,61,69,.055),
+    0 2px 8px rgba(11,61,69,.025);
+  transition:
+    border-color .22s ease,
+    box-shadow .22s ease,
+    transform .22s ease;
+}
+
+.admin-card:hover{
+  border-color:rgba(200,148,51,.24);
+  box-shadow:
+    0 18px 48px rgba(11,61,69,.07),
+    0 3px 12px rgba(11,61,69,.025);
+  transform:translateY(-1px);
+}
+
+
+/* =========================================================
+   ADMIN FORM
+========================================================= */
+
+.admin-form{
+  display:grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+
+.admin-form .full{
+  grid-column:1/-1;
+}
+
+
+/* =========================================================
+   ADMIN TOP / BRAND AREA
+========================================================= */
+
+.admin-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:28px;
+  padding-bottom:18px;
+  border-bottom:1px solid rgba(200,148,51,.12);
+}
+
+
+/* =========================================================
+   ADMIN HEADINGS
+========================================================= */
+
+.admin-card h2{
+  margin:0 0 16px;
+  color:var(--teal);
+  font:
+    500 36px/1.08
+    "Cormorant Garamond",
+    Georgia,
+    serif;
+  letter-spacing:-.01em;
+}
+
+.admin-main .page-title{
+  margin-bottom:26px;
+}
+
+
+/* =========================================================
+   ADMIN NAVIGATION
+========================================================= */
+
+.admin-nav a{
+  position:relative;
+  border-radius:6px;
+  transition:
+    color .2s ease,
+    background-color .2s ease,
+    transform .2s ease;
+}
+
+.admin-nav a::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  width:2px;
+  height:0;
+  transform:translateY(-50%);
+  border-radius:2px;
+  background:var(--gold4);
+  transition:height .2s ease;
+}
+
+.admin-nav a:hover{
+  color:#fff;
+  background:rgba(229,192,103,.08);
+  transform:translateX(1px);
+}
+
+.admin-nav a:hover::before{
+  height:18px;
+}
+
+.admin-nav a.active{
+  color:#fff;
+  background:rgba(229,192,103,.11);
+}
+
+.admin-nav a.active::before{
+  height:18px;
+}
+
+
+/* =========================================================
+   SIGN OUT
+========================================================= */
+
+.admin-nav a:last-child{
+  color:#c58b7d;
+}
+
+.admin-nav a:last-child:hover{
+  color:#e2aaa0;
+  background:rgba(197,139,125,.07);
+}
+
+
+/* =========================================================
+   ADMIN FORM BUTTON
+========================================================= */
+
+.admin-form .btn{
+  justify-self:start;
+  min-height:46px;
+  padding:0 22px;
+  border-radius:5px;
+  letter-spacing:.045em;
+  box-shadow:
+    0 7px 18px rgba(18,77,86,.10);
+}
+
+
+/* =========================================================
+   TABLE POLISH
+========================================================= */
+
+.admin-main .table-wrap{
+  border-radius:10px;
+}
+
+.admin-main table th{
+  letter-spacing:.075em;
+}
+
+.admin-main table td{
+  color:#5f625f;
+}
+
+.admin-main table tr:hover td{
+  background:rgba(246,226,159,.035);
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.admin-page-header{
+  margin-bottom:28px;
+}
+
+.admin-page-header .eyebrow{
+  margin-bottom:7px;
+}
+
+.admin-page-header .page-title{
+  margin-bottom:10px;
+}
+
+
+/* =========================================================
+   SMALL ADMIN TEXT
+========================================================= */
+
+.admin-main .finance-note{
+  max-width:760px;
+  color:#8a8379;
+  line-height:1.7;
+}
+
+
+/* =========================================================
+   MOBILE / TABLET
+========================================================= */
+
+@media(max-width:1000px){
+
+  .admin-side{
+    position:relative;
+    height:auto;
+  }
+
+  .admin-nav{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+  }
+
+  .admin-nav a{
+    display:inline-flex;
+    align-items:center;
+    min-height:40px;
+    padding:0 12px;
+  }
+
+  .admin-mobile-toggle{
+    display:none;
+  }
+
+  .admin-card{
+    padding:24px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:700px){
+
+  .admin-top{
+    margin-bottom:14px;
+    padding-bottom:15px;
+    align-items:flex-start;
+  }
+
+  .admin-nav{
+    display:grid;
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+
+  .admin-nav a{
+    min-height:42px;
+    justify-content:center;
+    text-align:center;
+    padding:0 10px;
+    font-size:12px;
+  }
+
+  .admin-main{
+    padding:18px 13px 30px;
+  }
+
+  .admin-page-header{
+    margin-bottom:22px;
+  }
+
+  .admin-card{
+    padding:20px 16px;
+    border-radius:10px;
+  }
+
+  .admin-card h2{
+    font-size:31px;
+  }
+
+  .admin-form{
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+
+  .admin-form .full{
+    grid-column:auto;
+  }
+
+  .admin-form .btn{
+    width:100%;
+    justify-self:stretch;
+  }
+
+  .admin-main .table-wrap{
+    margin-inline:-3px;
+    border-radius:7px;
+  }
+
+  .stat strong{
+    font-size:30px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media(max-width:420px){
+
+  .admin-nav{
+    grid-template-columns:1fr;
+  }
+
+  .admin-card h2{
+    font-size:29px;
+  }
+
+}

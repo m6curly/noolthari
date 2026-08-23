@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="description"
+    content="Sign in or create your NOOLTHARI™ account."
+  >
+
+  <meta
+    name="theme-color"
+    content="#0B3D45"
+  >
+
+  <title>
+    Account | NOOLTHARI™
+  </title>
+
+
+  <!-- =====================================================
+       FONTS
+  ====================================================== -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =====================================================
+       STYLES
+  ====================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="css/main.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/responsive.css"
+  >
+
+</head>
+
+
+<body data-root="./">
+
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <header class="site-header">
+
+    <div class="container nav-wrap">
+
+
+      <!-- BRAND -->
+
+      <a
+        class="brand"
+        href="index.html"
+        aria-label="NOOLTHARI™ Home"
+      >
+
+        <img
+          src="assets/logo/noolthari-logo.png"
+          alt="NOOLTHARI™ logo"
+          loading="eager"
+        >
+
+        <span>
+          NOOLTHARI<small>™</small>
+        </span>
+
+      </a>
+
+
+      <!-- MAIN NAVIGATION -->
+
+      <nav
+        class="nav"
+        data-site-nav
+        aria-label="Main navigation"
+      >
+
+        <a href="index.html">
+          Home
+        </a>
+
+        <a href="shop.html">
+          Shop
+        </a>
+
+        <a href="about.html">
+          About
+        </a>
+
+        <a href="contact.html">
+          Contact
+        </a>
+
+      </nav>
+
+
+      <!-- HEADER ACTIONS -->
+
+      <div class="nav-right">
+
+        <a
+          class="icon-link"
+          href="shop.html"
+          aria-label="Search"
+          title="Search"
+        >
+          ⌕
+        </a>
+
+
+        <a
+          class="icon-link"
+          href="cart.html"
+          aria-label="Cart"
+          title="Cart"
+        >
+          👜
+        </a>
+
+
+        <div
+          class="auth-slot"
+          data-auth-slot
+        ></div>
+
+
+        <button
+          class="menu"
+          data-menu-toggle
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main>
+
+    <section class="page auth-page">
+
+      <div class="container auth-shell">
+
+
+        <!-- =================================================
+             INTRO
+        ================================================== -->
+
+        <div class="auth-intro">
+
+          <div class="eyebrow">
+            NOOLTHARI™
+          </div>
+
+
+          <h1 class="page-title">
+            A quieter way to shop.
+          </h1>
+
+
+          <p>
+            Discover premium Indian sarees, keep your orders
+            in one place and enjoy a secure checkout.
+          </p>
+
+
+          <div class="auth-badges">
+
+            <span>
+              Secure account
+            </span>
+
+            <span>
+              Razorpay checkout
+            </span>
+
+            <span>
+              Damage-only returns
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             AUTH CARD
+        ================================================== -->
+
+        <section
+          class="form-card auth-card"
+          aria-label="Account authentication"
+        >
+
+
+          <!-- TABS -->
+
+          <div
+            class="auth-tabs"
+            role="tablist"
+            aria-label="Account actions"
+          >
+
+            <button
+              class="auth-tab active"
+              type="button"
+              data-mode="signin"
+              role="tab"
+              aria-selected="true"
+              aria-controls="auth-signin"
+            >
+              Sign in
+            </button>
+
+
+            <button
+              class="auth-tab"
+              type="button"
+              data-mode="signup"
+              role="tab"
+              aria-selected="false"
+              aria-controls="auth-signup"
+            >
+              Create account
+            </button>
+
+          </div>
+
+
+          <!-- =================================================
+               SIGN IN
+          ================================================== -->
+
+          <div
+            id="auth-signin"
+            class="auth-panel"
+          >
+
+            <div class="eyebrow">
+              Welcome back
+            </div>
+
+
+            <h2>
+              Sign in
+            </h2>
+
+
+            <form
+              id="login-form"
+            >
+
+
+              <div class="field">
+
+                <label
+                  for="signin-email"
+                >
+                  Email
+                </label>
+
+                <input
+                  id="signin-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label
+                  for="signin-password"
+                >
+                  Password
+                </label>
+
+                <input
+                  id="signin-password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                >
+
+              </div>
+
+
+              <button
+                class="btn btn-gold auth-submit"
+                type="submit"
+              >
+                Sign in
+              </button>
+
+
+              <a
+                class="auth-helper"
+                href="forgot-password.html"
+              >
+                Forgot password?
+              </a>
+
+
+            </form>
+
+          </div>
+
+
+          <!-- =================================================
+               SIGN UP
+          ================================================== -->
+
+          <div
+            id="auth-signup"
+            class="auth-panel"
+            hidden
+          >
+
+            <div class="eyebrow">
+              New here
+            </div>
+
+
+            <h2>
+              Create account
+            </h2>
+
+
+            <form
+              id="register-form"
+            >
+
+
+              <div class="field">
+
+                <label
+                  for="signup-name"
+                >
+                  Full name
+                </label>
+
+                <input
+                  id="signup-name"
+                  name="name"
+                  type="text"
+                  autocomplete="name"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label
+                  for="signup-phone"
+                >
+                  Phone
+                </label>
+
+                <input
+                  id="signup-phone"
+                  name="phone"
+                  type="tel"
+                  autocomplete="tel"
+                  inputmode="tel"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label
+                  for="signup-email"
+                >
+                  Email
+                </label>
+
+                <input
+                  id="signup-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label
+                  for="signup-password"
+                >
+                  Password
+                </label>
+
+                <input
+                  id="signup-password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="8"
+                  required
+                >
+
+              </div>
+
+
+              <button
+                class="btn btn-gold auth-submit"
+                type="submit"
+              >
+                Create account
+              </button>
+
+
+              <p class="auth-note">
+                Email verification follows your
+                Supabase Auth setting.
+              </p>
+
+
+            </form>
+
+          </div>
+
+
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================================
+       FOOTER
+  ====================================================== -->
+
+  <footer class="site-footer">
+
+    <div class="container footer-grid">
+
+
+      <!-- BRAND -->
+
+      <div>
+
+        <div class="eyebrow">
+          NOOLTHARI™
+        </div>
+
+        <h3>
+          Timeless sarees,<br>
+          quietly luxurious.
+        </h3>
+
+        <p>
+          Premium Indian sarees curated with restraint,
+          craft and modern elegance.
+        </p>
+
+      </div>
+
+
+      <!-- SHOP -->
+
+      <div>
+
+        <div class="eyebrow">
+          Shop
+        </div>
+
+        <a href="shop.html">
+          All Sarees
+        </a>
+
+        <a href="cart.html">
+          Bag
+        </a>
+
+      </div>
+
+
+      <!-- HELP -->
+
+      <div>
+
+        <div class="eyebrow">
+          Help
+        </div>
+
+        <a href="shipping-policy.html">
+          Shipping
+        </a>
+
+        <a href="return-policy.html">
+          Returns
+        </a>
+
+        <a href="contact.html">
+          Contact
+        </a>
+
+      </div>
+
+
+      <!-- LEGAL -->
+
+      <div>
+
+        <div class="eyebrow">
+          Legal
+        </div>
+
+        <a href="privacy-policy.html">
+          Privacy
+        </a>
+
+        <a href="terms.html">
+          Terms
+        </a>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="container footer-bottom">
+
+      ©
+      <span data-year></span>
+      NOOLTHARI™. All rights reserved.
+
+    </div>
+
+  </footer>
+
+
+  <!-- =====================================================
+       SCRIPTS
+       Order preserved
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
+  ></script>
+
+  <script src="js/config.js"></script>
+
+  <script src="js/supabase.js"></script>
+
+  <script src="js/utils.js"></script>
+
+  <script src="js/app.js"></script>
+
+  <script src="js/auth.js"></script>
+
+
+  <!-- =====================================================
+       AUTH TAB SWITCHING
+  ====================================================== -->
+
+  <script>
+    document.addEventListener(
+      'DOMContentLoaded',
+      () => {
+
+        const tabs =
+          NL.qsa(
+            '.auth-tab'
+          );
+
+        const panels = {
+          signin:
+            NL.qs('#auth-signin'),
+
+          signup:
+            NL.qs('#auth-signup')
+        };
+
+
+        const showMode =
+          mode => {
+
+            const validMode =
+              mode === 'signup'
+                ? 'signup'
+                : 'signin';
+
+
+            tabs.forEach(tab => {
+
+              const active =
+                tab.dataset.mode ===
+                validMode;
+
+
+              tab.classList.toggle(
+                'active',
+                active
+              );
+
+
+              tab.setAttribute(
+                'aria-selected',
+                String(active)
+              );
+
+            });
+
+
+            Object.entries(
+              panels
+            ).forEach(
+              ([name, panel]) => {
+
+                if (!panel) {
+                  return;
+                }
+
+
+                panel.hidden =
+                  name !==
+                  validMode;
+
+              }
+            );
+
+          };
+
+
+        tabs.forEach(tab => {
+
+          tab.addEventListener(
+            'click',
+            () => {
+
+              showMode(
+                tab.dataset.mode
+              );
+
+            }
+          );
+
+        });
+
+
+        const mode =
+          new URLSearchParams(
+            window.location.search
+          ).get(
+            'mode'
+          );
+
+
+        showMode(
+          mode === 'signup'
+            ? 'signup'
+            : 'signin'
+        );
+
+      }
+    );
+  </script>
+
+
+</body>
+
+</html>

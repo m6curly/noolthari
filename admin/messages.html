@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="description"
+    content="Customer messages and enquiries | NOOLTHARI™ Admin"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0B3D45"
+  >
+
+  <title>
+    Messages | NOOLTHARI™ Admin
+  </title>
+
+
+  <!-- =====================================================
+       FONTS
+  ====================================================== -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =====================================================
+       STYLES
+  ====================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="../css/main.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="../css/admin.css"
+  >
+
+
+  <!-- =====================================================
+       PAGE-SPECIFIC MESSAGE STYLES
+  ====================================================== -->
+
+  <style>
+
+    .message-list {
+      display:grid;
+      gap:12px;
+    }
+
+    .message-item {
+      border:1px solid var(--line);
+      background:#fff;
+      padding:18px;
+      border-radius:8px;
+      transition:.2s ease;
+    }
+
+    .message-item:hover {
+      border-color:rgba(200,148,51,.35);
+      box-shadow:var(--shadow-sm);
+    }
+
+    .message-item.is-new {
+      border-left:3px solid var(--gold4);
+    }
+
+    .message-top {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:20px;
+      flex-wrap:wrap;
+    }
+
+    .message-title {
+      margin:4px 0 4px;
+      color:var(--teal);
+      font:
+        500 28px/1.1
+        "Cormorant Garamond",
+        Georgia,
+        serif;
+    }
+
+    .message-meta {
+      color:#8c857c;
+      font-size:11px;
+    }
+
+    .message-body {
+      margin:15px 0;
+      padding:15px;
+      background:var(--bg2);
+      border:1px solid var(--line);
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
+    }
+
+    .message-actions {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .message-actions select {
+      min-height:40px;
+      border:1px solid var(--line);
+      background:#fff;
+      padding:8px 11px;
+    }
+
+    .message-email {
+      color:var(--teal);
+      font-weight:600;
+    }
+
+    .message-empty {
+      padding:60px 20px;
+      text-align:center;
+      border:1px dashed var(--line);
+      background:#fff;
+    }
+
+    .message-stat {
+      color:var(--teal);
+      font-weight:600;
+    }
+
+    .message-note {
+      width:100%;
+      min-height:90px;
+      border:1px solid var(--line);
+      padding:11px 13px;
+      background:#fff;
+      resize:vertical;
+    }
+
+    @media(max-width:700px) {
+
+      .message-title {
+        font-size:24px;
+      }
+
+      .message-top {
+        flex-direction:column;
+      }
+
+      .message-actions {
+        width:100%;
+      }
+
+      .message-actions select,
+      .message-actions .btn {
+        width:100%;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body data-root="../">
+
+
+  <!-- =====================================================
+       ADMIN LAYOUT
+  ====================================================== -->
+
+  <div class="admin-shell">
+
+
+    <!-- ===================================================
+         SIDEBAR
+    ==================================================== -->
+
+    <aside class="admin-side">
+
+      <div class="admin-top">
+
+
+        <a
+          class="admin-logo"
+          href="index.html"
+          aria-label="NOOLTHARI Admin Dashboard"
+        >
+
+          <img
+            src="../assets/logo/noolthari-logo.png"
+            alt="NOOLTHARI™"
+            loading="eager"
+          >
+
+          <span>
+            NOOLTHARI™
+          </span>
+
+        </a>
+
+
+        <button
+          class="admin-mobile-toggle"
+          data-admin-menu
+          type="button"
+          aria-label="Open admin menu"
+          aria-expanded="false"
+        >
+          Menu
+        </button>
+
+      </div>
+
+
+      <!-- =================================================
+           ADMIN NAVIGATION
+      ================================================== -->
+
+      <nav
+        class="admin-nav"
+        aria-label="Admin navigation"
+      >
+
+        <a href="index.html">
+          Dashboard
+        </a>
+
+        <a href="products.html">
+          Products
+        </a>
+
+        <a href="categories.html">
+          Categories
+        </a>
+
+        <a href="orders.html">
+          Orders
+        </a>
+
+        <a href="customers.html">
+          Customers
+        </a>
+
+        <a href="returns.html">
+          Returns
+        </a>
+
+        <a
+          href="messages.html"
+          class="active"
+          aria-current="page"
+        >
+          Messages
+        </a>
+
+        <a href="accounting.html">
+          Finance
+        </a>
+
+
+        <a href="../index.html">
+          View store
+        </a>
+
+        <a href="../account.html">
+          Account
+        </a>
+
+        <a
+          href="#"
+          data-logout
+        >
+          Sign out
+        </a>
+
+      </nav>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="admin-main">
+
+
+      <!-- PAGE HEADER -->
+
+      <header class="admin-page-header">
+
+        <div class="eyebrow">
+          Customer enquiries
+        </div>
+
+
+        <h1 class="page-title">
+          Messages
+        </h1>
+
+      </header>
+
+
+      <!-- =================================================
+           MESSAGE INBOX
+      ================================================== -->
+
+      <section
+        class="admin-card"
+        aria-label="Customer messages"
+      >
+
+
+        <div class="messages-toolbar">
+
+
+          <div>
+
+            <div class="eyebrow">
+              Inbox
+            </div>
+
+            <div class="message-stat">
+
+              <span id="message-count">
+                0
+              </span>
+
+              messages
+
+            </div>
+
+          </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             MESSAGE LIST
+
+             ID preserved for messages.js
+        ================================================== -->
+
+        <div
+          id="message-list"
+          class="message-list"
+        ></div>
+
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
+  ></script>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/supabase.js"></script>
+
+  <script src="../js/utils.js"></script>
+
+  <script src="../js/app.js"></script>
+
+  <script src="js/messages.js"></script>
+
+
+</body>
+
+</html>

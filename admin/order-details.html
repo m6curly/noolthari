@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0B3D45"
+  >
+
+  <meta
+    name="description"
+    content="Manage NOOLTHARI™ order fulfilment, shipment and payment details."
+  >
+
+  <title>
+    Order Details | NOOLTHARI™
+  </title>
+
+
+  <!-- =====================================================
+       FONTS
+  ====================================================== -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =====================================================
+       STYLES
+  ====================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="../css/main.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="../css/admin.css"
+  >
+
+</head>
+
+
+<body data-root="../">
+
+
+  <!-- =====================================================
+       ADMIN LAYOUT
+  ====================================================== -->
+
+  <div class="admin-shell">
+
+
+    <!-- ===================================================
+         SIDEBAR
+    ==================================================== -->
+
+    <aside class="admin-side">
+
+      <div class="admin-top">
+
+
+        <a
+          class="admin-logo"
+          href="index.html"
+          aria-label="NOOLTHARI Admin Dashboard"
+        >
+
+          <img
+            src="../assets/logo/noolthari-logo.png"
+            alt="NOOLTHARI™"
+            loading="eager"
+          >
+
+          <span>
+            NOOLTHARI™
+          </span>
+
+        </a>
+
+
+        <button
+          class="admin-mobile-toggle"
+          data-admin-menu
+          type="button"
+          aria-label="Open admin menu"
+          aria-expanded="false"
+        >
+          Menu
+        </button>
+
+      </div>
+
+
+      <!-- =================================================
+           ADMIN NAVIGATION
+      ================================================== -->
+
+      <nav
+        class="admin-nav"
+        aria-label="Admin navigation"
+      >
+
+        <a href="index.html">
+          Dashboard
+        </a>
+
+        <a href="products.html">
+          Products
+        </a>
+
+        <a href="categories.html">
+          Categories
+        </a>
+
+        <a
+          href="orders.html"
+          class="active"
+          aria-current="page"
+        >
+          Orders
+        </a>
+
+        <a href="customers.html">
+          Customers
+        </a>
+
+        <a href="returns.html">
+          Returns
+        </a>
+
+        <a href="messages.html">
+          Messages
+        </a>
+
+        <a href="accounting.html">
+          Finance
+        </a>
+
+
+        <a href="../index.html">
+          View store
+        </a>
+
+        <a href="../account.html">
+          Account
+        </a>
+
+        <a
+          href="#"
+          data-logout
+        >
+          Sign out
+        </a>
+
+      </nav>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="admin-main">
+
+
+      <header class="admin-page-header">
+
+        <div class="eyebrow">
+          Fulfilment
+        </div>
+
+      </header>
+
+
+      <!-- =================================================
+           ORDER DETAILS
+           
+           ID preserved for:
+           admin/js/order-details.js
+      ================================================== -->
+
+      <section
+        id="order-admin"
+        aria-label="Order details"
+      ></section>
+
+
+    </main>
+
+  </div>
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+       Existing paths preserved
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
+  ></script>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/supabase.js"></script>
+
+  <script src="../js/utils.js"></script>
+
+  <script src="../js/app.js"></script>
+
+  <script src="../admin/js/order-details.js"></script>
+
+
+</body>
+
+</html>

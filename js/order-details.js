@@ -48,14 +48,13 @@ document.addEventListener('DOMContentLoaded', async () => {
      LOAD ORDER
   ======================================================== */
 
-  let query =
+  let orderQuery =
     sb
       .from('orders')
       .select(`
         *,
         order_items(*),
-        payments(*),
-        shipments(*)
+        payments(*)
       `)
       .eq(
         'id',
@@ -64,18 +63,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   /*
-     IMPORTANT:
-     Customers can only access their own orders.
+     CUSTOMER:
+     Can only access own order.
 
-     Admins can access the requested order.
+     ADMIN:
+     Can access the requested order.
   */
 
   if (
     profile.role === 'customer'
   ) {
 
-    query =
-      query.eq(
+    orderQuery =
+      orderQuery.eq(
         'customer_id',
         profile.id
       );
@@ -83,22 +83,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 
-  const result =
-    await query.single();
+  const orderResult =
+    await orderQuery.single();
 
 
-  if (result.error) {
+  if (orderResult.error) {
 
     console.error(
       'Order loading error:',
-      result.error
+      orderResult.error
     );
 
 
     rootEl.innerHTML = `
       <p class="empty">
         ${NL.esc(
-          result.error.message
+          orderResult.error.message
         )}
       </p>
     `;
@@ -108,13 +108,69 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   const order =
-    result.data;
+    orderResult.data;
 
-  const shipment =
-    order.shipments?.[0];
+
+  /* =======================================================
+     LOAD SHIPMENT SEPARATELY
+     
+     IMPORTANT:
+     We intentionally do NOT depend on:
+     
+       shipments(*)
+     
+     inside the order query.
+
+     Instead, shipment is fetched directly by:
+     
+       shipments.order_id = orders.id
+  ======================================================== */
+
+  let shipment = null;
+
+
+  const shipmentResult =
+    await sb
+      .from('shipments')
+      .select(`
+        id,
+        order_id,
+        carrier,
+        tracking_number,
+        tracking_url,
+        status,
+        updated_at
+      `)
+      .eq(
+        'order_id',
+        order.id
+      )
+      .maybeSingle();
+
+
+  if (
+    shipmentResult.error
+  ) {
+
+    console.error(
+      'Shipment loading error:',
+      shipmentResult.error
+    );
+
+  } else {
+
+    shipment =
+      shipmentResult.data || null;
+
+  }
+
+
+  /* =======================================================
+     PAYMENT
+  ======================================================== */
 
   const payment =
-    order.payments?.[0];
+    order.payments?.[0] || null;
 
 
   /* =======================================================
@@ -122,37 +178,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   ======================================================== */
 
   const stages = [
+
     [
       'paid',
       'Payment'
     ],
+
     [
       'processing',
       'Processing'
     ],
+
     [
       'shipped',
       'Shipped'
     ],
+
     [
       'out_for_delivery',
       'Out for delivery'
     ],
+
     [
       'delivered',
       'Delivered'
     ]
+
   ];
 
 
   const statusRank = {
+
     payment_pending: 0,
+
     paid: 1,
+
     confirmed: 1,
+
     processing: 2,
+
     shipped: 3,
+
     out_for_delivery: 4,
+
     delivered: 5
+
   };
 
 
@@ -186,12 +256,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const itemsHtml =
     orderItems.length
+
       ? orderItems
           .map(
             item => `
+
               <div class="order-item-line">
 
                 <span>
+
                   ${NL.esc(
                     item.product_name ||
                     'Saree'
@@ -200,25 +273,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                   ×
 
                   ${Number(
-                    item.quantity || 0
+                    item.quantity ||
+                    0
                   )}
+
                 </span>
 
 
                 <strong>
+
                   ${NL.money(
-                    item.line_total || 0
+                    item.line_total ||
+                    0
                   )}
+
                 </strong>
 
               </div>
+
             `
           )
           .join('')
+
       : `
+
           <p class="empty">
             No items found for this order.
           </p>
+
         `;
 
 
@@ -226,33 +308,72 @@ document.addEventListener('DOMContentLoaded', async () => {
      TRACKING
   ======================================================== */
 
-  const trackingHtml =
-    shipment?.tracking_number
-      ? `
-        <div class="shipping-box">
-
-          <strong>
-            Shipment
-          </strong>
+  const hasTracking =
+    Boolean(
+      shipment?.tracking_number
+    );
 
 
-          <p>
-            ${NL.esc(
-              shipment.carrier ||
-              'Courier'
-            )}
-
-            ·
-
-            ${NL.esc(
-              shipment.tracking_number
-            )}
-          </p>
+  const hasTrackingUrl =
+    Boolean(
+      shipment?.tracking_url
+    );
 
 
-          ${
-            shipment.tracking_url
-              ? `
+  let trackingHtml = '';
+
+
+  if (hasTracking) {
+
+    trackingHtml = `
+
+      <div
+        class="shipping-box"
+        style="margin-top:16px"
+      >
+
+        <strong>
+          Shipment
+        </strong>
+
+
+        <p>
+
+          ${NL.esc(
+            shipment.carrier ||
+            'Courier'
+          )}
+
+          ·
+
+          ${NL.esc(
+            shipment.tracking_number
+          )}
+
+        </p>
+
+
+        ${
+          shipment.status
+            ? `
+                <p>
+                  Status:
+                  ${NL.esc(
+                    shipment.status
+                  ).replaceAll(
+                    '_',
+                    ' '
+                  )}
+                </p>
+              `
+            : ''
+        }
+
+
+        ${
+          hasTrackingUrl
+            ? `
+
                 <a
                   class="btn btn-outline"
                   href="${escapeAttribute(
@@ -263,13 +384,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 >
                   Track package
                 </a>
-              `
-              : ''
-          }
 
-        </div>
-      `
-      : '';
+              `
+            : ''
+        }
+
+      </div>
+
+    `;
+
+  }
 
 
   /* =======================================================
@@ -278,7 +402,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const returnHtml =
     order.status === 'delivered'
+
       ? `
+
         <div class="order-return-cta">
 
           <strong>
@@ -302,7 +428,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           </a>
 
         </div>
+
       `
+
       : '';
 
 
@@ -325,17 +453,21 @@ document.addEventListener('DOMContentLoaded', async () => {
           class="page-title"
           style="margin-bottom:6px"
         >
+
           ${NL.esc(
             order.order_number ||
             ''
           )}
+
         </h1>
 
 
         <p>
+
           ${NL.esc(
             formattedDate
           )}
+
         </p>
 
       </div>
@@ -357,7 +489,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
       <!-- ===============================================
-           STATUS
+           ORDER STATUS
       ================================================ -->
 
       <div class="order-head">
@@ -368,12 +500,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             Order status
           </h2>
 
+
           <p>
+
             Payment:
+
             ${NL.esc(
               payment?.status ||
               'pending'
             )}
+
           </p>
 
         </div>
@@ -410,6 +546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
                 return `
+
                   <div
                     class="timeline-node ${
                       currentRank >=
@@ -423,9 +560,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                       ${stageRank}
                     </span>
 
+
                     ${label}
 
                   </div>
+
                 `;
 
               }
@@ -458,10 +597,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           Total paid
         </span>
 
+
         <strong>
+
           ${NL.money(
-            order.total || 0
+            order.total ||
+            0
           )}
+
         </strong>
 
       </div>
@@ -471,7 +614,10 @@ document.addEventListener('DOMContentLoaded', async () => {
            DELIVERY ADDRESS
       ================================================ -->
 
-      <div class="shipping-box">
+      <div
+        class="shipping-box"
+        style="margin-top:16px"
+      >
 
         <strong>
           Delivery address
@@ -537,8 +683,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
 
 
+      <!-- ===============================================
+           SHIPMENT / TRACKING
+      ================================================ -->
+
       ${trackingHtml}
 
+
+      <!-- ===============================================
+           RETURN
+      ================================================ -->
 
       ${returnHtml}
 
@@ -552,27 +706,34 @@ document.addEventListener('DOMContentLoaded', async () => {
      SAFE ATTRIBUTE ESCAPING
   ======================================================== */
 
-  function escapeAttribute(value) {
+  function escapeAttribute(
+    value
+  ) {
 
     return String(
       value ?? ''
     )
+
       .replaceAll(
         '&',
         '&amp;'
       )
+
       .replaceAll(
         '"',
         '&quot;'
       )
+
       .replaceAll(
         '<',
         '&lt;'
       )
+
       .replaceAll(
         '>',
         '&gt;'
       )
+
       .replaceAll(
         "'",
         '&#039;'

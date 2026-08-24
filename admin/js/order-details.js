@@ -98,10 +98,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       result.data;
 
     const shipment =
-      order.shipments?.[0];
+      order.shipments?.[0] || null;
 
     const payment =
-      order.payments?.[0];
+      order.payments?.[0] || null;
 
 
     /* =====================================================
@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   'Customer'
                 )}
               </h2>
+
 
               <p>
 
@@ -378,11 +379,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
               ${
                 order.shipping_address_line2
-                  ? `,
-                    ${NL.esc(
+                  ? `, ${NL.esc(
                       order.shipping_address_line2
-                    )}
-                  `
+                    )}`
                   : ''
               }
             </p>
@@ -650,48 +649,93 @@ document.addEventListener('DOMContentLoaded', async () => {
           event.preventDefault();
 
 
-          const status =
-            new FormData(
-              event.target
-            ).get(
-              'status'
+          const button =
+            statusForm.querySelector(
+              'button[type="submit"]'
             );
 
-
-          const result =
-            await sb
-              .from('orders')
-              .update({
-                status,
-
-                updated_at:
-                  new Date()
-                    .toISOString()
-              })
-              .eq(
-                'id',
-                id
-              );
+          const originalText =
+            button?.textContent ||
+            'Save status';
 
 
-          if (result.error) {
+          if (button) {
 
-            NL.toast(
-              result.error.message,
-              'error'
-            );
+            button.disabled =
+              true;
 
-            return;
+            button.textContent =
+              'Saving...';
+
           }
 
 
-          NL.toast(
-            'Order status saved.',
-            'success'
-          );
+          try {
+
+            const status =
+              new FormData(
+                event.target
+              ).get(
+                'status'
+              );
 
 
-          await load();
+            const result =
+              await sb
+                .from('orders')
+                .update({
+                  status,
+
+                  updated_at:
+                    new Date()
+                      .toISOString()
+                })
+                .eq(
+                  'id',
+                  id
+                );
+
+
+            if (result.error) {
+              throw result.error;
+            }
+
+
+            NL.toast(
+              'Order status saved.',
+              'success'
+            );
+
+
+            await load();
+
+
+          } catch (error) {
+
+            console.error(
+              'Order status save error:',
+              error
+            );
+
+
+            NL.toast(
+              error.message ||
+              'Unable to save order status.',
+              'error'
+            );
+
+
+            if (button) {
+
+              button.disabled =
+                false;
+
+              button.textContent =
+                originalText;
+
+            }
+
+          }
 
         };
 
@@ -700,6 +744,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /* =====================================================
        SHIPMENT FORM
+       
+       IMPORTANT FIX:
+       One shipment per order is enforced by:
+       shipments_order_id_key
+
+       Therefore:
+       - Existing shipment → UPDATE
+       - No shipment → INSERT
+       - Safe database-level fallback → UPSERT
+
+       This prevents duplicate key errors.
     ====================================================== */
 
     const shipmentForm =
@@ -716,93 +771,163 @@ document.addEventListener('DOMContentLoaded', async () => {
           event.preventDefault();
 
 
-          const form =
-            new FormData(
-              event.target
+          const button =
+            shipmentForm.querySelector(
+              'button[type="submit"]'
             );
 
-
-          const shipmentData = {
-
-            carrier:
-              form.get(
-                'carrier'
-              ),
-
-            tracking_number:
-              form.get(
-                'tracking_number'
-              ),
-
-            tracking_url:
-              form.get(
-                'tracking_url'
-              ),
-
-            status:
-              'shipped',
-
-            updated_at:
-              new Date()
-                .toISOString()
-
-          };
+          const originalText =
+            button?.textContent ||
+            'Save shipment';
 
 
-          let result;
+          if (button) {
 
+            button.disabled =
+              true;
 
-          if (shipment) {
-
-            result =
-              await sb
-                .from('shipments')
-                .update(
-                  shipmentData
-                )
-                .eq(
-                  'id',
-                  shipment.id
-                );
-
-          } else {
-
-            result =
-              await sb
-                .from('shipments')
-                .insert({
-                  order_id:
-                    id,
-
-                  ...shipmentData
-                });
+            button.textContent =
+              'Saving...';
 
           }
 
 
-          if (result.error) {
+          try {
+
+            const form =
+              new FormData(
+                event.target
+              );
+
+
+            const carrier =
+              String(
+                form.get(
+                  'carrier'
+                ) ||
+                ''
+              ).trim();
+
+
+            const trackingNumber =
+              String(
+                form.get(
+                  'tracking_number'
+                ) ||
+                ''
+              ).trim();
+
+
+            const trackingUrl =
+              String(
+                form.get(
+                  'tracking_url'
+                ) ||
+                ''
+              ).trim();
+
+
+            if (
+              !carrier ||
+              !trackingNumber
+            ) {
+
+              throw new Error(
+                'Courier and tracking number are required.'
+              );
+
+            }
+
+
+            const shipmentData = {
+
+              order_id:
+                id,
+
+              carrier:
+                carrier,
+
+              tracking_number:
+                trackingNumber,
+
+              tracking_url:
+                trackingUrl,
+
+              status:
+                'shipped',
+
+              updated_at:
+                new Date()
+                  .toISOString()
+
+            };
+
+
+            /*
+              UPSERT uses the unique order_id
+              constraint.
+
+              Existing shipment:
+              → UPDATE
+
+              Missing shipment:
+              → INSERT
+            */
+
+            const result =
+              await sb
+                .from(
+                  'shipments'
+                )
+                .upsert(
+                  shipmentData,
+                  {
+                    onConflict:
+                      'order_id'
+                  }
+                );
+
+
+            if (result.error) {
+              throw result.error;
+            }
+
 
             NL.toast(
-              result.error.message,
+              'Shipment saved successfully.',
+              'success'
+            );
+
+
+            await load();
+
+
+          } catch (error) {
+
+            console.error(
+              'Shipment save error:',
+              error
+            );
+
+
+            NL.toast(
+              error.message ||
+              'Unable to save shipment.',
               'error'
             );
 
-            return;
+
+            if (button) {
+
+              button.disabled =
+                false;
+
+              button.textContent =
+                originalText;
+
+            }
+
           }
-
-
-          /*
-             Shipment information has been saved.
-             Loading again shows the latest values.
-          */
-
-          NL.toast(
-            'Shipment saved.',
-            'success'
-          );
-
-
-          await load();
 
         };
 

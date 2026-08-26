@@ -1,6 +1,6 @@
 /* =========================================================
    NOOLTHARI™ SHOP
-   Category filter + search + sorting
+   Category filter + search + automatic sorting
 ========================================================= */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -130,19 +130,97 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   /* =======================================================
-     FILTER FORM
+     PREVENT FORM SUBMIT
+     Apply button has been removed.
+     Pressing Enter should not reload the page.
   ======================================================== */
 
   if (filtersForm) {
 
-    filtersForm.onsubmit =
-      async event => {
+    filtersForm.addEventListener(
+      'submit',
+      event => {
 
         event.preventDefault();
 
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     CATEGORY
+     Automatically filter when category changes.
+  ======================================================== */
+
+  if (categorySelect) {
+
+    categorySelect.addEventListener(
+      'change',
+      async () => {
+
         await renderShop();
 
-      };
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     SORT
+     Automatically sort when selection changes.
+  ======================================================== */
+
+  if (sortSelect) {
+
+    sortSelect.addEventListener(
+      'change',
+      async () => {
+
+        await renderShop();
+
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     SEARCH
+     Automatically search while typing.
+     
+     300ms debounce prevents a Supabase request
+     for every single keystroke.
+  ======================================================== */
+
+  let searchTimer = null;
+
+
+  if (searchInput) {
+
+    searchInput.addEventListener(
+      'input',
+      () => {
+
+        clearTimeout(
+          searchTimer
+        );
+
+
+        searchTimer =
+          setTimeout(
+            async () => {
+
+              await renderShop();
+
+            },
+            300
+          );
+
+      }
+    );
 
   }
 

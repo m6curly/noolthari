@@ -60,6 +60,48 @@
     href="css/responsive.css"
   >
 
+
+  <!-- =====================================================
+       STICKY SHOP FILTERS
+  ====================================================== -->
+
+  <style>
+
+    #filters{
+      position:sticky;
+      top:94px;
+      z-index:90;
+
+      padding-top:14px;
+      padding-bottom:14px;
+
+      background:rgba(252,250,247,.96);
+
+      border-bottom:
+        1px solid
+        rgba(200,148,51,.10);
+
+      backdrop-filter:blur(14px) saturate(120%);
+      -webkit-backdrop-filter:blur(14px) saturate(120%);
+    }
+
+
+    @media (max-width:700px){
+
+      #filters{
+        top:0;
+
+        padding-top:10px;
+        padding-bottom:10px;
+
+        margin-inline:-20px;
+        padding-inline:20px;
+      }
+
+    }
+
+  </style>
+
 </head>
 
 
@@ -256,16 +298,6 @@
             </option>
 
           </select>
-
-
-          <!-- APPLY -->
-
-          <button
-            class="btn btn-outline"
-            type="submit"
-          >
-            Apply
-          </button>
 
 
         </form>

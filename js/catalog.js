@@ -467,8 +467,37 @@ async function updateShopCartBadge(
 
 
 /* =========================================================
+   QUANTITY CONTROL ICON
+========================================================= */
+
+function quantityRemoveIcon() {
+
+  return `
+    <svg
+      class="bag-remove-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h16"></path>
+      <path d="M9 7V4h6v3"></path>
+      <path d="M6 7l1 13h10l1-13"></path>
+      <path d="M10 11v5"></path>
+      <path d="M14 11v5"></path>
+    </svg>
+  `;
+
+}
+
+
+/* =========================================================
    PRODUCT CARD
-   No wishlist / heart button
 ========================================================= */
 
 function card(
@@ -529,9 +558,140 @@ function card(
     stock <= 0;
 
 
-  const bagLimitReached =
-    stock > 0 &&
-    inBag >= stock;
+  const canIncrease =
+    inBag < stock;
+
+
+  let actionMarkup;
+
+
+  /* =======================================================
+     NOT IN BAG
+  ======================================================== */
+
+  if (
+    inBag <= 0
+  ) {
+
+    actionMarkup = `
+      <button
+        class="btn btn-outline add"
+        type="button"
+        data-id="${NL.esc(
+          product.id
+        )}"
+        data-stock="${stock}"
+        data-in-bag="0"
+        ${
+          outOfStock
+            ? 'disabled'
+            : ''
+        }
+      >
+        ${
+          outOfStock
+            ? 'Out of stock'
+            : 'Add to bag'
+        }
+      </button>
+    `;
+
+
+  /* =======================================================
+     ALREADY IN BAG
+  ======================================================== */
+
+  } else {
+
+    const leftAction =
+      inBag === 1
+        ? `
+          <button
+            class="bag-qty-btn bag-qty-remove"
+            type="button"
+            data-quantity-action="remove"
+            data-id="${NL.esc(
+              product.id
+            )}"
+            aria-label="Remove from bag"
+            title="Remove from bag"
+          >
+            ${quantityRemoveIcon()}
+          </button>
+        `
+        : `
+          <button
+            class="bag-qty-btn bag-qty-minus"
+            type="button"
+            data-quantity-action="decrease"
+            data-id="${NL.esc(
+              product.id
+            )}"
+            aria-label="Decrease quantity"
+            title="Decrease quantity"
+          >
+            −
+          </button>
+        `;
+
+
+    const rightAction =
+      canIncrease
+        ? `
+          <button
+            class="bag-qty-btn bag-qty-plus"
+            type="button"
+            data-quantity-action="increase"
+            data-id="${NL.esc(
+              product.id
+            )}"
+            aria-label="Increase quantity"
+            title="Increase quantity"
+          >
+            +
+          </button>
+        `
+        : '';
+
+
+    actionMarkup = `
+      <div
+        class="bag-quantity-control ${
+          canIncrease
+            ? 'has-plus'
+            : 'no-plus'
+        }"
+        data-product-id="${NL.esc(
+          product.id
+        )}"
+        data-stock="${stock}"
+        data-quantity="${inBag}"
+      >
+
+        ${leftAction}
+
+        <span
+          class="bag-qty-value"
+          aria-live="polite"
+        >
+          In bag · ${inBag}
+        </span>
+
+        ${rightAction}
+
+      </div>
+
+
+      <button
+        class="btn btn-gold go-to-bag"
+        type="button"
+        data-go-to-bag
+      >
+        Go to bag
+      </button>
+    `;
+
+  }
 
 
   let stockText;
@@ -556,7 +716,12 @@ function card(
 
 
   return `
-    <article class="product-card">
+    <article
+      class="product-card"
+      data-product-card-id="${NL.esc(
+        product.id
+      )}"
+    >
 
       <div class="product-media">
 
@@ -601,7 +766,6 @@ function card(
 
 
       <div class="product-info">
-
 
         <div class="eyebrow">
           ${NL.esc(
@@ -664,51 +828,7 @@ function card(
 
         <div class="product-actions">
 
-
-          <button
-            class="btn btn-outline add"
-            type="button"
-            data-id="${NL.esc(
-              product.id
-            )}"
-            data-stock="${stock}"
-            data-in-bag="${inBag}"
-            ${
-              outOfStock ||
-              bagLimitReached
-                ? 'disabled'
-                : ''
-            }
-          >
-
-            ${
-              bagLimitReached
-                ? `In bag · ${inBag}`
-                : 'Add to bag'
-            }
-
-          </button>
-
-
-          <button
-            class="btn btn-gold buy-now"
-            type="button"
-            data-id="${NL.esc(
-              product.id
-            )}"
-            ${
-              outOfStock
-                ? 'disabled'
-                : ''
-            }
-          >
-            ${
-              outOfStock
-                ? 'Out of stock'
-                : 'Buy now'
-            }
-          </button>
-
+          ${actionMarkup}
 
         </div>
 
@@ -721,16 +841,49 @@ function card(
 
 
 /* =========================================================
-   UPDATE CARD AFTER CART CHANGE
+   UPDATE QUANTITY CONTROL
 ========================================================= */
 
-function updateShopCardState(
+function updateShopQuantityControl(
   button,
   stock,
   quantity
 ) {
 
-  if (!button) {
+  const cardElement =
+    button?.closest(
+      '.product-card'
+    );
+
+
+  if (!cardElement) {
+    return;
+  }
+
+
+  const productId =
+    button.dataset.id ||
+    cardElement
+      .querySelector(
+        '[data-product-id]'
+      )
+      ?.dataset.productId ||
+    cardElement.dataset.productCardId;
+
+
+  const actions =
+    cardElement.querySelector(
+      '.product-actions'
+    );
+
+
+  const stockHint =
+    cardElement.querySelector(
+      '.product-stock-hint'
+    );
+
+
+  if (!actions) {
     return;
   }
 
@@ -753,62 +906,191 @@ function updateShopCardState(
     );
 
 
-  const cardElement =
-    button.closest(
-      '.product-card'
-    );
-
-
-  const stockHint =
-    cardElement?.querySelector(
-      '.product-stock-hint'
-    );
-
+  /* =======================================================
+     QUANTITY IS ZERO
+     → RESTORE ADD TO BAG
+  ======================================================== */
 
   if (
-    safeQuantity >=
-    safeStock
+    safeQuantity <= 0
   ) {
 
-    button.disabled =
-      true;
+    actions.innerHTML = `
+      <button
+        class="btn btn-outline add"
+        type="button"
+        data-id="${NL.esc(
+          productId
+        )}"
+        data-stock="${safeStock}"
+        data-in-bag="0"
+        ${
+          safeStock <= 0
+            ? 'disabled'
+            : ''
+        }
+      >
+        ${
+          safeStock <= 0
+            ? 'Out of stock'
+            : 'Add to bag'
+        }
+      </button>
+    `;
 
-    button.textContent =
-      safeStock > 0
-        ? `In bag · ${safeQuantity}`
-        : 'Out of stock';
 
-  } else {
+    if (stockHint) {
 
-    button.disabled =
-      false;
+      stockHint.textContent =
+        safeStock > 0
+          ? `${safeStock} available`
+          : 'Out of stock';
 
-    button.textContent =
-      'Add to bag';
+    }
+
+
+    bindShopCardButtons(
+      cardElement
+    );
+
+    return;
 
   }
 
 
-  button.dataset.inBag =
-    String(
-      safeQuantity
-    );
+  /* =======================================================
+     QUANTITY ABOVE ZERO
+  ======================================================== */
+
+  const canIncrease =
+    safeQuantity <
+    safeStock;
 
 
-  button.dataset.stock =
-    String(
-      safeStock
-    );
+  const leftAction =
+    safeQuantity === 1
+      ? `
+        <button
+          class="bag-qty-btn bag-qty-remove"
+          type="button"
+          data-quantity-action="remove"
+          data-id="${NL.esc(
+            productId
+          )}"
+          aria-label="Remove from bag"
+          title="Remove from bag"
+        >
+          ${quantityRemoveIcon()}
+        </button>
+      `
+      : `
+        <button
+          class="bag-qty-btn bag-qty-minus"
+          type="button"
+          data-quantity-action="decrease"
+          data-id="${NL.esc(
+            productId
+          )}"
+          aria-label="Decrease quantity"
+          title="Decrease quantity"
+        >
+          −
+        </button>
+      `;
+
+
+  const rightAction =
+    canIncrease
+      ? `
+        <button
+          class="bag-qty-btn bag-qty-plus"
+          type="button"
+          data-quantity-action="increase"
+          data-id="${NL.esc(
+            productId
+          )}"
+          aria-label="Increase quantity"
+          title="Increase quantity"
+        >
+          +
+        </button>
+      `
+      : '';
+
+
+  actions.innerHTML = `
+    <div
+      class="bag-quantity-control ${
+        canIncrease
+          ? 'has-plus'
+          : 'no-plus'
+      }"
+      data-product-id="${NL.esc(
+        productId
+      )}"
+      data-stock="${safeStock}"
+      data-quantity="${safeQuantity}"
+    >
+
+      ${leftAction}
+
+      <span
+        class="bag-qty-value"
+        aria-live="polite"
+      >
+        In bag · ${safeQuantity}
+      </span>
+
+      ${rightAction}
+
+    </div>
+
+
+    <button
+      class="btn btn-gold go-to-bag"
+      type="button"
+      data-go-to-bag
+    >
+      Go to bag
+    </button>
+  `;
 
 
   if (stockHint) {
 
     stockHint.textContent =
-      safeQuantity > 0
-        ? `${safeStock} available · ${safeQuantity} in bag`
-        : `${safeStock} available`;
+      `${safeStock} available · ${safeQuantity} in bag`;
 
   }
+
+
+  bindShopCardButtons(
+    cardElement
+  );
+
+}
+
+
+/* =========================================================
+   UPDATE CARD AFTER CART CHANGE
+========================================================= */
+
+function updateShopCardState(
+  button,
+  stock,
+  quantity
+) {
+
+  if (!button) {
+    return;
+  }
+
+
+  updateShopQuantityControl(
+    button,
+    stock,
+    quantity
+  );
 
 }
 
@@ -902,7 +1184,6 @@ async function saveCartQuantity(
 
 /* =========================================================
    ADD ONE UNIT TO CART
-   Used by "Add to Bag"
 ========================================================= */
 
 async function addOneUnitToCart(
@@ -985,21 +1266,13 @@ async function addOneUnitToCart(
 
 
 /* =========================================================
-   BUY NOW CART ACTION
-
-   Product NOT in bag
-   → add exactly 1
-
-   Product ALREADY in bag
-   → leave quantity unchanged
-
-   Then:
-   → checkout.html
+   CHANGE CART QUANTITY
 ========================================================= */
 
-async function prepareBuyNow(
+async function changeShopCartQuantity(
   productId,
-  customerId
+  customerId,
+  nextQuantity
 ) {
 
   const stock =
@@ -1008,10 +1281,26 @@ async function prepareBuyNow(
     );
 
 
-  if (stock <= 0) {
+  const safeQuantity =
+    Math.max(
+      0,
+      Number(
+        nextQuantity || 0
+      )
+    );
+
+
+  if (
+    safeQuantity >
+    stock
+  ) {
 
     throw new Error(
-      'This saree is out of stock.'
+      `Only ${stock} unit${
+        stock === 1
+          ? ''
+          : 's'
+      } available.`
     );
 
   }
@@ -1023,77 +1312,18 @@ async function prepareBuyNow(
     );
 
 
-  const existing =
-    await getCartItem(
-      productId,
-      cart.id
-    );
-
-
-  /* =====================================================
-     NOT IN BAG
-     → ADD ONE
-  ====================================================== */
-
-  if (!existing) {
-
-    await saveCartQuantity(
-      cart.id,
-      productId,
-      1
-    );
-
-
-    return {
-      cart,
-      stock,
-      quantity:1
-    };
-
-  }
-
-
-  /* =====================================================
-     ALREADY IN BAG
-     → DO NOT CHANGE QUANTITY
-  ====================================================== */
-
-  const existingQuantity =
-    Math.max(
-      0,
-      Number(
-        existing.quantity || 0
-      )
-    );
-
-
-  /*
-     Safety check:
-     If stock has decreased below the quantity already
-     in the cart, don't silently create an invalid checkout.
-  */
-
-  if (
-    existingQuantity >
-    stock
-  ) {
-
-    throw new Error(
-      `Only ${stock} unit${
-        stock === 1
-          ? ''
-          : 's'
-      } currently available. Please update your bag.`
-    );
-
-  }
+  await saveCartQuantity(
+    cart.id,
+    productId,
+    safeQuantity
+  );
 
 
   return {
     cart,
     stock,
     quantity:
-      existingQuantity
+      safeQuantity
   };
 
 }
@@ -1157,11 +1387,32 @@ async function renderProducts(
     options.search
   ) {
 
-    query =
-      query.ilike(
-        'saree_name',
-        `%${options.search}%`
-      );
+    const searchTerm =
+      String(
+        options.search
+      )
+        .trim()
+        .replace(
+          /[%_,]/g,
+          ' '
+        );
+
+
+    if (searchTerm) {
+
+      query =
+        query.or(
+          [
+            `saree_name.ilike.%${searchTerm}%`,
+            `fabric.ilike.%${searchTerm}%`,
+            `colour.ilike.%${searchTerm}%`,
+            `pattern.ilike.%${searchTerm}%`,
+            `occasion.ilike.%${searchTerm}%`,
+            `description.ilike.%${searchTerm}%`
+          ].join(',')
+        );
+
+    }
 
   }
 
@@ -1251,17 +1502,9 @@ async function renderProducts(
   }
 
 
-  /* =======================================================
-     PROFILE
-  ======================================================== */
-
   const profile =
     await NL.profile();
 
-
-  /* =======================================================
-     CURRENT CART QUANTITIES
-  ======================================================== */
 
   const cartQuantities =
     profile?.id
@@ -1270,10 +1513,6 @@ async function renderProducts(
         )
       : {};
 
-
-  /* =======================================================
-     RENDER CARDS
-  ======================================================== */
 
   element.innerHTML =
     products
@@ -1287,10 +1526,6 @@ async function renderProducts(
       .join('');
 
 
-  /* =======================================================
-     CART BADGE
-  ======================================================== */
-
   if (
     profile?.id
   ) {
@@ -1302,13 +1537,40 @@ async function renderProducts(
   }
 
 
+  NL.qsa(
+    '.product-card',
+    element
+  ).forEach(cardElement => {
+
+    bindShopCardButtons(
+      cardElement
+    );
+
+  });
+
+}
+
+
+/* =========================================================
+   BIND PRODUCT CARD ACTIONS
+========================================================= */
+
+function bindShopCardButtons(
+  cardElement
+) {
+
+  if (!cardElement) {
+    return;
+  }
+
+
   /* =======================================================
-     ADD TO BAG EVENTS
+     ADD TO BAG
   ======================================================== */
 
   NL.qsa(
     '.add',
-    element
+    cardElement
   ).forEach(button => {
 
     button.onclick =
@@ -1329,12 +1591,12 @@ async function renderProducts(
 
 
   /* =======================================================
-     BUY NOW EVENTS
+     INCREASE
   ======================================================== */
 
   NL.qsa(
-    '.buy-now',
-    element
+    '[data-quantity-action="increase"]',
+    cardElement
   ).forEach(button => {
 
     button.onclick =
@@ -1344,10 +1606,91 @@ async function renderProducts(
         event.stopPropagation();
 
 
-        await shopBuyNow(
+        await shopChangeQuantity(
           button.dataset.id,
-          button
+          'increase',
+          cardElement
         );
+
+      };
+
+  });
+
+
+  /* =======================================================
+     DECREASE
+  ======================================================== */
+
+  NL.qsa(
+    '[data-quantity-action="decrease"]',
+    cardElement
+  ).forEach(button => {
+
+    button.onclick =
+      async event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        await shopChangeQuantity(
+          button.dataset.id,
+          'decrease',
+          cardElement
+        );
+
+      };
+
+  });
+
+
+  /* =======================================================
+     REMOVE
+  ======================================================== */
+
+  NL.qsa(
+    '[data-quantity-action="remove"]',
+    cardElement
+  ).forEach(button => {
+
+    button.onclick =
+      async event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        await shopChangeQuantity(
+          button.dataset.id,
+          'remove',
+          cardElement
+        );
+
+      };
+
+  });
+
+
+  /* =======================================================
+     GO TO BAG
+  ======================================================== */
+
+  NL.qsa(
+    '[data-go-to-bag]',
+    cardElement
+  ).forEach(button => {
+
+    button.onclick =
+      event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        location.href =
+          NL.path(
+            'cart.html'
+          );
 
       };
 
@@ -1358,8 +1701,6 @@ async function renderProducts(
 
 /* =========================================================
    ADD TO BAG — SHOP PAGE
-   +1 quantity
-   NO REDIRECT
 ========================================================= */
 
 async function shopAddToCart(
@@ -1379,7 +1720,7 @@ async function shopAddToCart(
 
 
   const originalText =
-    button?.textContent ||
+    button?.textContent?.trim() ||
     'Add to bag';
 
 
@@ -1416,9 +1757,7 @@ async function shopAddToCart(
 
 
     NL.toast(
-      result.quantity === 1
-        ? 'Saree added to your bag.'
-        : `${result.quantity} in your bag.`,
+      'Saree added to your bag.',
       'success'
     );
 
@@ -1454,13 +1793,13 @@ async function shopAddToCart(
 
 
 /* =========================================================
-   BUY NOW — SHOP PAGE
-   NEVER increases an existing quantity
+   CHANGE SHOP QUANTITY
 ========================================================= */
 
-async function shopBuyNow(
+async function shopChangeQuantity(
   productId,
-  button = null
+  action,
+  cardElement
 ) {
 
   const customer =
@@ -1474,28 +1813,93 @@ async function shopBuyNow(
   }
 
 
-  const originalText =
-    button?.textContent ||
-    'Buy now';
+  if (!cardElement) {
+
+    console.error(
+      'NOOLTHARI quantity error: product card not found.'
+    );
+
+    return;
+
+  }
+
+
+  const quantityControl =
+    cardElement.querySelector(
+      '.bag-quantity-control'
+    );
+
+
+  const currentQuantity =
+    Math.max(
+      0,
+      Number(
+        quantityControl?.dataset.quantity ||
+        0
+      )
+    );
+
+
+  let nextQuantity =
+    currentQuantity;
+
+
+  if (
+    action ===
+    'increase'
+  ) {
+
+    nextQuantity =
+      currentQuantity + 1;
+
+  } else if (
+    action ===
+    'decrease'
+  ) {
+
+    nextQuantity =
+      Math.max(
+        0,
+        currentQuantity - 1
+      );
+
+  } else if (
+    action ===
+    'remove'
+  ) {
+
+    nextQuantity =
+      0;
+
+  } else {
+
+    return;
+
+  }
+
+
+  const buttons =
+    cardElement.querySelectorAll(
+      '.bag-qty-btn'
+    );
+
+
+  buttons.forEach(button => {
+
+    button.disabled =
+      true;
+
+  });
 
 
   try {
 
-    if (button) {
-
-      button.disabled =
-        true;
-
-      button.textContent =
-        'Preparing...';
-
-    }
-
-
-    await prepareBuyNow(
-      productId,
-      customer.id
-    );
+    const result =
+      await changeShopCartQuantity(
+        productId,
+        customer.id,
+        nextQuantity
+      );
 
 
     await updateShopCartBadge(
@@ -1503,40 +1907,80 @@ async function shopBuyNow(
     );
 
 
-    /* =====================================================
-       DIRECT CHECKOUT
-    ====================================================== */
+    /*
+       IMPORTANT:
+       Use the actual quantity button that belongs
+       to this card.
 
-    location.href =
-      NL.path(
-        'checkout.html'
+       Never create a detached/dummy button here.
+    */
+
+    const stateButton =
+      cardElement.querySelector(
+        '.bag-qty-remove, ' +
+        '.bag-qty-minus, ' +
+        '.bag-qty-plus'
       );
+
+
+    if (!stateButton) {
+
+      console.error(
+        'NOOLTHARI quantity error: current quantity button not found.'
+      );
+
+      return;
+
+    }
+
+
+    updateShopQuantityControl(
+      stateButton,
+      result.stock,
+      result.quantity
+    );
+
+
+    if (
+      result.quantity <= 0
+    ) {
+
+      NL.toast(
+        'Saree removed from your bag.',
+        'success'
+      );
+
+    } else {
+
+      NL.toast(
+        `Quantity updated to ${result.quantity}.`,
+        'success'
+      );
+
+    }
 
 
   } catch (error) {
 
     console.error(
-      'NOOLTHARI buy-now error:',
+      'NOOLTHARI quantity update error:',
       error
     );
 
 
     NL.toast(
       error.message ||
-      'Unable to continue to checkout.',
+      'Unable to update bag quantity.',
       'error'
     );
 
 
-    if (button) {
+    buttons.forEach(button => {
 
       button.disabled =
         false;
 
-      button.textContent =
-        originalText;
-
-    }
+    });
 
   }
 

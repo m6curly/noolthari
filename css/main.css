@@ -268,7 +268,6 @@ h1{
 
 .brand small{
   position:relative;
-
   top:-1.1em;
 
   margin-left:2px;
@@ -299,7 +298,6 @@ h1{
   position:relative;
 
   display:inline-flex;
-
   align-items:center;
 
   height:42px;
@@ -376,15 +374,13 @@ h1{
   height:48px;
 
   display:grid;
-
   place-items:center;
 
   flex-shrink:0;
 
   color:var(--teal);
 
-  background:
-    rgba(255,255,255,.8);
+  background:rgba(255,255,255,.8);
 
   border:
     1px solid
@@ -464,7 +460,6 @@ h1{
   padding:0 5px;
 
   display:flex;
-
   align-items:center;
   justify-content:center;
 
@@ -589,7 +584,8 @@ h1{
   display:grid;
 
   grid-template-columns:
-    1fr .94fr;
+    1fr
+    .94fr;
 
   gap:66px;
 
@@ -686,7 +682,6 @@ h1{
   content:"";
 
   position:absolute;
-
   inset:12px;
 
   border:
@@ -702,7 +697,6 @@ h1{
   content:"";
 
   position:absolute;
-
   inset:26px;
 
   border:
@@ -748,6 +742,7 @@ h1{
   display:flex;
 
   align-items:flex-end;
+
   justify-content:space-between;
 
   gap:24px;
@@ -911,6 +906,8 @@ h1{
   letter-spacing:.05em;
 
   text-transform:uppercase;
+
+  white-space:normal;
 }
 
 .product-info .btn{
@@ -919,65 +916,8 @@ h1{
 
 
 /* =========================================================
-   WISHLIST
+   PRODUCT STOCK LABEL
 ========================================================= */
-
-.product-wishlist{
-  position:absolute;
-
-  top:13px;
-  right:13px;
-
-  z-index:4;
-
-  width:42px;
-  height:42px;
-
-  display:grid;
-
-  place-items:center;
-
-  border:
-    1px solid
-    rgba(200,148,51,.28);
-
-  border-radius:50%;
-
-  background:
-    rgba(255,255,255,.92);
-
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-
-  color:var(--teal);
-
-  font-size:23px;
-  line-height:1;
-
-  box-shadow:
-    0 8px 20px rgba(11,61,69,.09);
-
-  transition:
-    transform .2s ease,
-    color .2s ease,
-    background .2s ease,
-    border-color .2s ease;
-}
-
-.product-wishlist:hover{
-  transform:scale(1.06);
-
-  color:#A6404B;
-
-  border-color:
-    rgba(200,148,51,.5);
-}
-
-.product-wishlist.is-active{
-  color:#A6404B;
-
-  background:#fff;
-}
 
 .product-stock-label{
   position:absolute;
@@ -1027,29 +967,36 @@ h1{
   margin-top:4px;
 
   align-items:stretch;
+
+  min-width:0;
 }
 
 .product-actions .btn,
 .product-actions .bag-quantity-control{
   width:100%;
+
   min-width:0;
 }
 
 
 /* =========================================================
    BAG QUANTITY CONTROL
-   Flexible middle prevents quantity text clipping.
 ========================================================= */
 
 .bag-quantity-control{
   width:100%;
-  min-width:0;
 
+  min-width:0;
   min-height:46px;
 
-  display:flex;
+  display:grid;
 
-  align-items:center;
+  grid-template-columns:
+    42px
+    minmax(0,1fr)
+    42px;
+
+  align-items:stretch;
 
   overflow:hidden;
 
@@ -1062,23 +1009,32 @@ h1{
   background:#fff;
 
   color:var(--teal);
+}
 
-  box-shadow:none;
+
+/*
+   IMPORTANT:
+   Keep the third column even when the "+" button
+   is hidden. This keeps "In bag · 1" centered.
+*/
+
+.bag-quantity-control.no-plus{
+  grid-template-columns:
+    42px
+    minmax(0,1fr)
+    42px;
 }
 
 
 /* =========================================================
-   LEFT / RIGHT QUANTITY BUTTONS
+   QUANTITY BUTTONS
 ========================================================= */
 
 .bag-qty-btn{
-  flex:
-    0 0 38px;
+  width:42px;
+  min-width:42px;
 
-  width:38px;
-  min-width:38px;
-
-  height:44px;
+  min-height:44px;
 
   display:flex;
 
@@ -1110,6 +1066,16 @@ h1{
   color:var(--gold5);
 }
 
+.bag-qty-btn:disabled{
+  cursor:not-allowed;
+
+  opacity:.42;
+
+  color:var(--muted);
+
+  background:transparent;
+}
+
 .bag-qty-btn:focus-visible{
   outline:
     2px solid
@@ -1124,14 +1090,10 @@ h1{
 ========================================================= */
 
 .bag-qty-value{
-  flex:
-    1 1 auto;
-
   min-width:0;
 
-  width:auto;
-
-  height:44px;
+  width:100%;
+  min-height:44px;
 
   display:flex;
 
@@ -1139,22 +1101,24 @@ h1{
   justify-content:center;
 
   padding:
-    0 5px;
+    0 4px;
+
+  overflow:hidden;
 
   color:var(--teal);
 
   font:
-    600 10px/1
+    600 10.5px/1
     Poppins,
     sans-serif;
 
-  letter-spacing:0;
+  letter-spacing:.01em;
 
   white-space:nowrap;
 
   text-align:center;
 
-  overflow:visible;
+  text-overflow:clip;
 }
 
 
@@ -1365,6 +1329,7 @@ h1{
   color:var(--teal);
 
   font-size:12px;
+
   font-weight:600;
 
   letter-spacing:.02em;
@@ -1479,6 +1444,10 @@ h1{
   background:#fff;
 
   outline:none;
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease;
 }
 
 .toolbar input:focus,
@@ -1486,7 +1455,8 @@ h1{
   border-color:var(--gold4);
 
   box-shadow:
-    0 0 0 3px rgba(200,148,51,.1);
+    0 0 0 3px
+    rgba(200,148,51,.1);
 }
 
 
@@ -1562,7 +1532,8 @@ h1{
   border-color:var(--gold4);
 
   box-shadow:
-    0 6px 16px rgba(151,102,26,.1);
+    0 6px 16px
+    rgba(151,102,26,.1);
 }
 
 .thumb img{
@@ -1588,6 +1559,7 @@ h1{
   color:var(--gold5);
 
   font-size:27px;
+
   font-weight:700;
 
   margin-bottom:20px;
@@ -1596,7 +1568,9 @@ h1{
 .specs{
   display:grid;
 
-  grid-template-columns:155px 1fr;
+  grid-template-columns:
+    155px
+    1fr;
 
   border-top:
     1px solid
@@ -1817,7 +1791,8 @@ h1{
   color:#fff;
 
   box-shadow:
-    0 16px 45px rgba(0,0,0,.2);
+    0 16px 45px
+    rgba(0,0,0,.2);
 }
 
 .toast-error{
@@ -2013,7 +1988,10 @@ h1{
   display:grid;
 
   grid-template-columns:
-    1.35fr 1fr 1fr 1fr;
+    1.35fr
+    1fr
+    1fr
+    1fr;
 
   gap:38px;
 }
@@ -2141,7 +2119,8 @@ h1{
     rgba(229,192,103,.7);
 
   box-shadow:
-    0 6px 18px rgba(0,0,0,.18);
+    0 6px 18px
+    rgba(0,0,0,.18);
 }
 
 .admin-main{
@@ -2163,7 +2142,8 @@ h1{
   margin:3px 0;
 
   padding:
-    12px 14px 12px 17px;
+    12px 14px
+    12px 17px;
 
   color:#C9D9D8;
 
@@ -2291,8 +2271,10 @@ h1{
   padding:28px;
 
   box-shadow:
-    0 14px 40px rgba(11,61,69,.055),
-    0 2px 8px rgba(11,61,69,.025);
+    0 14px 40px
+      rgba(11,61,69,.055),
+    0 2px 8px
+      rgba(11,61,69,.025);
 
   transition:
     border-color .22s ease,
@@ -2305,8 +2287,10 @@ h1{
     rgba(200,148,51,.24);
 
   box-shadow:
-    0 18px 48px rgba(11,61,69,.07),
-    0 3px 12px rgba(11,61,69,.025);
+    0 18px 48px
+      rgba(11,61,69,.07),
+    0 3px 12px
+      rgba(11,61,69,.025);
 
   transform:translateY(-1px);
 }
@@ -2359,7 +2343,8 @@ h1{
   letter-spacing:.045em;
 
   box-shadow:
-    0 7px 18px rgba(18,77,86,.10);
+    0 7px 18px
+    rgba(18,77,86,.10);
 }
 
 
@@ -2682,7 +2667,8 @@ h1{
   color:var(--teal);
 
   box-shadow:
-    inset 0 -2px 0 var(--gold4);
+    inset 0 -2px 0
+    var(--gold4);
 }
 
 .auth-panel h2{
@@ -3068,26 +3054,38 @@ h1{
      BAG QUANTITY CONTROL — MOBILE
   ======================================================== */
 
-  .bag-quantity-control{
+  .bag-quantity-control,
+  .bag-quantity-control.no-plus{
+    grid-template-columns:
+      42px
+      minmax(0,1fr)
+      42px;
+
     min-height:44px;
   }
 
   .bag-qty-btn{
-    flex-basis:40px;
+    width:42px;
+    min-width:42px;
 
-    width:40px;
-    min-width:40px;
+    min-height:42px;
 
     height:42px;
+
+    font-size:18px;
   }
 
   .bag-qty-value{
+    min-height:42px;
+
     height:42px;
 
     padding:
-      0 5px;
+      0 3px;
 
     font-size:10px;
+
+    letter-spacing:.01em;
   }
 
   .bag-remove-icon{
@@ -3099,14 +3097,8 @@ h1{
     min-height:44px;
   }
 
-  .product-wishlist{
-    width:40px;
-    height:40px;
-
-    top:10px;
-    right:10px;
-
-    font-size:21px;
+  .product-stock-hint{
+    white-space:normal;
   }
 
 
@@ -3436,6 +3428,33 @@ h1{
     bottom:11px;
   }
 
+
+  /* =======================================================
+     SMALL PHONE QUANTITY CONTROL
+  ======================================================== */
+
+  .bag-quantity-control,
+  .bag-quantity-control.no-plus{
+    grid-template-columns:
+      40px
+      minmax(0,1fr)
+      40px;
+  }
+
+  .bag-qty-btn{
+    width:40px;
+    min-width:40px;
+
+    font-size:17px;
+  }
+
+  .bag-qty-value{
+    font-size:9.5px;
+
+    padding:
+      0 2px;
+  }
+
 }
 
 
@@ -3460,3 +3479,376 @@ h1{
   }
 
 }
+
+/* =========================================================
+   NOOLTHARI™
+   FINAL PRODUCT ACTION / BAG CONTROL FIX
+========================================================= */
+
+.product-actions{
+  display:grid;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    minmax(0,1fr);
+
+  gap:9px;
+
+  width:100%;
+  min-width:0;
+
+  align-items:stretch;
+}
+
+
+/* =========================================================
+   QUANTITY CONTROL
+========================================================= */
+
+.product-actions .bag-quantity-control{
+  width:100%;
+  min-width:0;
+  min-height:46px;
+
+  display:grid;
+
+  grid-template-columns:
+    36px
+    minmax(0,1fr)
+    36px;
+
+  align-items:stretch;
+
+  overflow:hidden;
+
+  border:
+    1px solid
+    var(--teal);
+
+  border-radius:5px;
+
+  background:#fff;
+
+  color:var(--teal);
+}
+
+
+/*
+   IMPORTANT:
+   Keep the same 3-column structure even when +
+   is hidden.
+
+   This keeps "In bag · 1" mathematically centered.
+*/
+
+.product-actions .bag-quantity-control.no-plus{
+  grid-template-columns:
+    36px
+    minmax(0,1fr)
+    36px;
+}
+
+
+/* =========================================================
+   QUANTITY BUTTONS
+========================================================= */
+
+.product-actions .bag-qty-btn{
+  width:36px;
+  min-width:36px;
+
+  height:44px;
+  min-height:44px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:0;
+
+  border:0;
+
+  background:transparent;
+
+  color:var(--teal);
+
+  font:
+    600 18px/1
+    Poppins,
+    sans-serif;
+
+  flex-shrink:0;
+}
+
+.product-actions .bag-qty-btn:hover{
+  background:
+    rgba(248,243,236,.85);
+
+  color:var(--gold5);
+}
+
+.product-actions .bag-qty-btn:disabled{
+  opacity:.42;
+
+  cursor:not-allowed;
+}
+
+
+/* =========================================================
+   BAG TEXT
+========================================================= */
+
+.product-actions .bag-qty-value{
+  width:100%;
+  min-width:0;
+
+  height:44px;
+  min-height:44px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:
+    0 2px;
+
+  overflow:visible;
+
+  color:var(--teal);
+
+  font:
+    600 11px/1
+    Poppins,
+    sans-serif;
+
+  letter-spacing:.02em;
+
+  white-space:nowrap;
+
+  text-align:center;
+}
+
+
+/* =========================================================
+   TRASH ICON
+========================================================= */
+
+.product-actions .bag-remove-icon{
+  width:14px;
+  height:14px;
+
+  display:block;
+
+  flex:0 0 auto;
+}
+
+
+/* =========================================================
+   GO TO BAG
+========================================================= */
+
+.product-actions .go-to-bag{
+  width:100%;
+  min-width:0;
+
+  min-height:46px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:
+    12px 8px;
+
+  font:
+    600 11px/1
+    Poppins,
+    sans-serif;
+
+  letter-spacing:.02em;
+
+  white-space:nowrap;
+}
+
+
+/*
+   Same text sizing on both controls:
+   In bag · X
+   GO TO BAG
+*/
+
+
+/* =========================================================
+   ADD TO BAG
+========================================================= */
+
+.product-actions .add{
+  width:100%;
+  min-width:0;
+
+  font:
+    600 11px/1
+    Poppins,
+    sans-serif;
+
+  letter-spacing:.02em;
+
+  white-space:nowrap;
+}
+
+
+/* =========================================================
+   TABLET / SMALL DESKTOP
+========================================================= */
+
+@media(max-width:1100px){
+
+  .product-actions .bag-quantity-control{
+    grid-template-columns:
+      34px
+      minmax(0,1fr)
+      34px;
+  }
+
+  .product-actions .bag-quantity-control.no-plus{
+    grid-template-columns:
+      34px
+      minmax(0,1fr)
+      34px;
+  }
+
+  .product-actions .bag-qty-btn{
+    width:34px;
+    min-width:34px;
+
+    font-size:17px;
+  }
+
+  .product-actions .bag-qty-value{
+    font-size:10px;
+
+    padding:
+      0 1px;
+  }
+
+  .product-actions .go-to-bag,
+  .product-actions .add{
+    font-size:10px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:700px){
+
+  .product-actions{
+    grid-template-columns:1fr;
+
+    gap:7px;
+  }
+
+
+  .product-actions .bag-quantity-control,
+  .product-actions .bag-quantity-control.no-plus{
+    grid-template-columns:
+      42px
+      minmax(0,1fr)
+      42px;
+
+    min-height:44px;
+  }
+
+
+  .product-actions .bag-qty-btn{
+    width:42px;
+    min-width:42px;
+
+    height:42px;
+    min-height:42px;
+
+    font-size:18px;
+  }
+
+
+  .product-actions .bag-qty-value{
+    height:42px;
+    min-height:42px;
+
+    padding:
+      0 3px;
+
+    font-size:11px;
+
+    letter-spacing:.02em;
+  }
+
+
+  .product-actions .go-to-bag,
+  .product-actions .add{
+    min-height:44px;
+
+    font-size:11px;
+
+    letter-spacing:.02em;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media(max-width:430px){
+
+  .product-actions .bag-quantity-control,
+  .product-actions .bag-quantity-control.no-plus{
+    grid-template-columns:
+      40px
+      minmax(0,1fr)
+      40px;
+  }
+
+
+  .product-actions .bag-qty-btn{
+    width:40px;
+    min-width:40px;
+
+    font-size:17px;
+  }
+
+
+  .product-actions .bag-qty-value{
+    font-size:10px;
+  }
+
+
+  .product-actions .go-to-bag,
+  .product-actions .add{
+    font-size:10px;
+  }
+
+}
+
+
+/* =========================================================
+   EXTRA PROTECTION AGAINST RESPONSIVE.CSS OVERRIDES
+========================================================= */
+
+@media(max-width:700px){
+
+  .product-actions .bag-quantity-control .bag-qty-value{
+    overflow:visible !important;
+    white-space:nowrap !important;
+    text-overflow:clip !important;
+  }
+
+}
+

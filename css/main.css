@@ -780,6 +780,8 @@ h1{
 
   overflow:hidden;
 
+  min-width:0;
+
   background:#fff;
 
   border:
@@ -853,6 +855,8 @@ h1{
 
 .product-info{
   padding:18px 18px 20px;
+
+  min-width:0;
 }
 
 .product-name{
@@ -971,6 +975,10 @@ h1{
   min-width:0;
 }
 
+.product-actions > *{
+  min-width:0;
+}
+
 .product-actions .btn,
 .product-actions .bag-quantity-control{
   width:100%;
@@ -991,10 +999,16 @@ h1{
 
   display:grid;
 
+  /*
+     Equal left/right columns are intentional.
+     This keeps "In bag · 1" perfectly centered
+     even when the + button disappears.
+  */
+
   grid-template-columns:
-    42px
+    36px
     minmax(0,1fr)
-    42px;
+    36px;
 
   align-items:stretch;
 
@@ -1011,18 +1025,11 @@ h1{
   color:var(--teal);
 }
 
-
-/*
-   IMPORTANT:
-   Keep the third column even when the "+" button
-   is hidden. This keeps "In bag · 1" centered.
-*/
-
 .bag-quantity-control.no-plus{
   grid-template-columns:
-    42px
+    36px
     minmax(0,1fr)
-    42px;
+    36px;
 }
 
 
@@ -1031,9 +1038,10 @@ h1{
 ========================================================= */
 
 .bag-qty-btn{
-  width:42px;
-  min-width:42px;
+  width:36px;
+  min-width:36px;
 
+  height:44px;
   min-height:44px;
 
   display:flex;
@@ -1050,9 +1058,11 @@ h1{
   color:var(--teal);
 
   font:
-    600 19px/1
+    600 18px/1
     Poppins,
     sans-serif;
+
+  flex-shrink:0;
 
   transition:
     color .2s ease,
@@ -1091,8 +1101,9 @@ h1{
 
 .bag-qty-value{
   min-width:0;
-
   width:100%;
+
+  height:44px;
   min-height:44px;
 
   display:flex;
@@ -1101,9 +1112,9 @@ h1{
   justify-content:center;
 
   padding:
-    0 4px;
+    0 2px;
 
-  overflow:hidden;
+  overflow:visible;
 
   color:var(--teal);
 
@@ -1118,7 +1129,7 @@ h1{
 
   text-align:center;
 
-  text-overflow:clip;
+  flex:1 1 auto;
 }
 
 
@@ -1127,8 +1138,8 @@ h1{
 ========================================================= */
 
 .bag-remove-icon{
-  width:15px;
-  height:15px;
+  width:14px;
+  height:14px;
 
   display:block;
 
@@ -1143,9 +1154,25 @@ h1{
 .go-to-bag{
   width:100%;
 
+  min-width:0;
   min-height:46px;
 
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:
+    12px 8px;
+
   white-space:nowrap;
+
+  font:
+    600 11px/1
+    Poppins,
+    sans-serif;
+
+  letter-spacing:.02em;
 }
 
 
@@ -1425,6 +1452,8 @@ h1{
   flex-wrap:wrap;
 
   margin-bottom:32px;
+
+  min-width:0;
 }
 
 .toolbar input,
@@ -1448,6 +1477,20 @@ h1{
   transition:
     border-color .2s ease,
     box-shadow .2s ease;
+}
+
+.toolbar input{
+  flex:
+    1 1 300px;
+
+  min-width:220px;
+}
+
+.toolbar select{
+  flex:
+    0 1 255px;
+
+  min-width:180px;
 }
 
 .toolbar input:focus,
@@ -2049,6 +2092,15 @@ h1{
 
 .admin-shell{
   min-height:100vh;
+  min-height:100dvh;
+
+  display:grid;
+
+  grid-template-columns:
+    260px
+    minmax(0,1fr);
+
+  align-items:stretch;
 
   background:
     radial-gradient(
@@ -2057,15 +2109,28 @@ h1{
       transparent 25%
     ),
     #F6F1E9;
-
-  display:grid;
-
-  grid-template-columns:
-    260px
-    minmax(0,1fr);
 }
 
 .admin-side{
+  position:sticky;
+
+  top:0;
+
+  align-self:start;
+
+  width:260px;
+
+  height:100vh;
+  height:100dvh;
+
+  min-height:100vh;
+  min-height:100dvh;
+
+  overflow-y:auto;
+  overflow-x:hidden;
+
+  scrollbar-width:thin;
+
   background:
     linear-gradient(
       180deg,
@@ -2077,15 +2142,20 @@ h1{
 
   padding:26px 18px;
 
-  position:sticky;
-
-  top:0;
-
-  height:100vh;
-
   border-right:
     1px solid
     rgba(200,148,51,.12);
+}
+
+.admin-side::-webkit-scrollbar{
+  width:5px;
+}
+
+.admin-side::-webkit-scrollbar-thumb{
+  background:
+    rgba(255,255,255,.16);
+
+  border-radius:99px;
 }
 
 .admin-logo{
@@ -2125,6 +2195,9 @@ h1{
 
 .admin-main{
   min-width:0;
+
+  min-height:100vh;
+  min-height:100dvh;
 
   padding:42px;
 }
@@ -2769,6 +2842,39 @@ h1{
       );
   }
 
+  .product-actions .bag-quantity-control{
+    grid-template-columns:
+      34px
+      minmax(0,1fr)
+      34px;
+  }
+
+  .product-actions .bag-quantity-control.no-plus{
+    grid-template-columns:
+      34px
+      minmax(0,1fr)
+      34px;
+  }
+
+  .product-actions .bag-qty-btn{
+    width:34px;
+    min-width:34px;
+
+    font-size:17px;
+  }
+
+  .product-actions .bag-qty-value{
+    font-size:10px;
+  }
+
+  .product-actions .go-to-bag{
+    font-size:10px;
+  }
+
+  .product-actions .add{
+    font-size:10px;
+  }
+
 }
 
 
@@ -2864,14 +2970,29 @@ h1{
 
   .admin-shell{
     grid-template-columns:1fr;
+
+    min-height:100vh;
+    min-height:100dvh;
   }
 
   .admin-side{
-    position:static;
+    position:relative;
+
+    top:auto;
+
+    width:100%;
 
     height:auto;
 
+    min-height:0;
+
+    overflow:visible;
+
     border-right:0;
+  }
+
+  .admin-main{
+    min-height:0;
   }
 
   .admin-grid-two{
@@ -3036,7 +3157,7 @@ h1{
 
 
   /* =======================================================
-     PRODUCT ACTIONS — MOBILE
+     MOBILE PRODUCT ACTIONS
   ======================================================== */
 
   .product-actions{
@@ -3051,11 +3172,11 @@ h1{
 
 
   /* =======================================================
-     BAG QUANTITY CONTROL — MOBILE
+     MOBILE BAG QUANTITY
   ======================================================== */
 
-  .bag-quantity-control,
-  .bag-quantity-control.no-plus{
+  .product-actions .bag-quantity-control,
+  .product-actions .bag-quantity-control.no-plus{
     grid-template-columns:
       42px
       minmax(0,1fr)
@@ -3064,41 +3185,146 @@ h1{
     min-height:44px;
   }
 
-  .bag-qty-btn{
+  .product-actions .bag-qty-btn{
     width:42px;
     min-width:42px;
 
-    min-height:42px;
-
     height:42px;
+    min-height:42px;
 
     font-size:18px;
   }
 
-  .bag-qty-value{
-    min-height:42px;
+  .product-actions .bag-qty-value{
+    width:100%;
 
     height:42px;
+    min-height:42px;
 
     padding:
       0 3px;
 
-    font-size:10px;
+    font-size:11px;
 
-    letter-spacing:.01em;
+    letter-spacing:.02em;
+
+    overflow:visible;
+
+    white-space:nowrap;
+
+    text-align:center;
   }
 
-  .bag-remove-icon{
+  .product-actions .go-to-bag,
+  .product-actions .add{
+    width:100%;
+
+    min-height:44px;
+
+    font-size:11px;
+
+    letter-spacing:.02em;
+  }
+
+  .product-actions .bag-remove-icon{
     width:14px;
     height:14px;
   }
 
-  .go-to-bag{
-    min-height:44px;
+
+  /* =======================================================
+     MOBILE SHOP TOOLBAR — FROZEN
+  ======================================================== */
+
+  .toolbar{
+    position:fixed !important;
+
+    top:78px;
+
+    left:13px;
+    right:13px;
+
+    z-index:95;
+
+    width:auto;
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin:0 !important;
+
+    padding:
+      9px 0
+      11px;
+
+    background:
+      rgba(252,250,247,.98);
+
+    border-bottom:
+      1px solid
+      rgba(200,148,51,.14);
+
+    box-shadow:
+      0 8px 24px
+      rgba(11,61,69,.07);
+
+    backdrop-filter:
+      blur(18px)
+      saturate(120%);
+
+    -webkit-backdrop-filter:
+      blur(18px)
+      saturate(120%);
+
+    transform:translateZ(0);
+
+    will-change:transform;
   }
 
-  .product-stock-hint{
-    white-space:normal;
+  .toolbar input{
+    width:100% !important;
+
+    flex:
+      1 1 100%;
+
+    min-width:0;
+
+    min-height:50px;
+
+    padding:
+      12px 16px;
+
+    font-size:16px;
+  }
+
+  .toolbar select{
+    flex:
+      1 1 calc(50% - 5px);
+
+    width:auto;
+
+    min-width:0;
+
+    min-height:50px;
+
+    padding:
+      12px 14px;
+
+    font-size:16px;
+  }
+
+  /*
+     The first product grid must be pushed below
+     the frozen search/filter bar.
+  */
+
+  .toolbar + .grid{
+    margin-top:120px;
   }
 
 
@@ -3430,29 +3656,63 @@ h1{
 
 
   /* =======================================================
-     SMALL PHONE QUANTITY CONTROL
+     SMALL PHONE BAG CONTROL
   ======================================================== */
 
-  .bag-quantity-control,
-  .bag-quantity-control.no-plus{
+  .product-actions .bag-quantity-control,
+  .product-actions .bag-quantity-control.no-plus{
     grid-template-columns:
       40px
       minmax(0,1fr)
       40px;
   }
 
-  .bag-qty-btn{
+  .product-actions .bag-qty-btn{
     width:40px;
     min-width:40px;
 
     font-size:17px;
   }
 
-  .bag-qty-value{
-    font-size:9.5px;
+  .product-actions .bag-qty-value{
+    font-size:10px;
 
     padding:
       0 2px;
+  }
+
+
+  /* =======================================================
+     SMALL PHONE FROZEN TOOLBAR
+  ======================================================== */
+
+  .toolbar{
+    top:78px;
+
+    left:11px;
+    right:11px;
+
+    gap:8px;
+
+    padding:
+      8px 0
+      10px;
+  }
+
+  .toolbar input,
+  .toolbar select{
+    min-height:48px;
+
+    font-size:16px;
+  }
+
+  .toolbar select{
+    padding:
+      11px 12px;
+  }
+
+  .toolbar + .grid{
+    margin-top:116px;
   }
 
 }
@@ -3479,376 +3739,3 @@ h1{
   }
 
 }
-
-/* =========================================================
-   NOOLTHARI™
-   FINAL PRODUCT ACTION / BAG CONTROL FIX
-========================================================= */
-
-.product-actions{
-  display:grid;
-
-  grid-template-columns:
-    minmax(0,1fr)
-    minmax(0,1fr);
-
-  gap:9px;
-
-  width:100%;
-  min-width:0;
-
-  align-items:stretch;
-}
-
-
-/* =========================================================
-   QUANTITY CONTROL
-========================================================= */
-
-.product-actions .bag-quantity-control{
-  width:100%;
-  min-width:0;
-  min-height:46px;
-
-  display:grid;
-
-  grid-template-columns:
-    36px
-    minmax(0,1fr)
-    36px;
-
-  align-items:stretch;
-
-  overflow:hidden;
-
-  border:
-    1px solid
-    var(--teal);
-
-  border-radius:5px;
-
-  background:#fff;
-
-  color:var(--teal);
-}
-
-
-/*
-   IMPORTANT:
-   Keep the same 3-column structure even when +
-   is hidden.
-
-   This keeps "In bag · 1" mathematically centered.
-*/
-
-.product-actions .bag-quantity-control.no-plus{
-  grid-template-columns:
-    36px
-    minmax(0,1fr)
-    36px;
-}
-
-
-/* =========================================================
-   QUANTITY BUTTONS
-========================================================= */
-
-.product-actions .bag-qty-btn{
-  width:36px;
-  min-width:36px;
-
-  height:44px;
-  min-height:44px;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  padding:0;
-
-  border:0;
-
-  background:transparent;
-
-  color:var(--teal);
-
-  font:
-    600 18px/1
-    Poppins,
-    sans-serif;
-
-  flex-shrink:0;
-}
-
-.product-actions .bag-qty-btn:hover{
-  background:
-    rgba(248,243,236,.85);
-
-  color:var(--gold5);
-}
-
-.product-actions .bag-qty-btn:disabled{
-  opacity:.42;
-
-  cursor:not-allowed;
-}
-
-
-/* =========================================================
-   BAG TEXT
-========================================================= */
-
-.product-actions .bag-qty-value{
-  width:100%;
-  min-width:0;
-
-  height:44px;
-  min-height:44px;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  padding:
-    0 2px;
-
-  overflow:visible;
-
-  color:var(--teal);
-
-  font:
-    600 11px/1
-    Poppins,
-    sans-serif;
-
-  letter-spacing:.02em;
-
-  white-space:nowrap;
-
-  text-align:center;
-}
-
-
-/* =========================================================
-   TRASH ICON
-========================================================= */
-
-.product-actions .bag-remove-icon{
-  width:14px;
-  height:14px;
-
-  display:block;
-
-  flex:0 0 auto;
-}
-
-
-/* =========================================================
-   GO TO BAG
-========================================================= */
-
-.product-actions .go-to-bag{
-  width:100%;
-  min-width:0;
-
-  min-height:46px;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  padding:
-    12px 8px;
-
-  font:
-    600 11px/1
-    Poppins,
-    sans-serif;
-
-  letter-spacing:.02em;
-
-  white-space:nowrap;
-}
-
-
-/*
-   Same text sizing on both controls:
-   In bag · X
-   GO TO BAG
-*/
-
-
-/* =========================================================
-   ADD TO BAG
-========================================================= */
-
-.product-actions .add{
-  width:100%;
-  min-width:0;
-
-  font:
-    600 11px/1
-    Poppins,
-    sans-serif;
-
-  letter-spacing:.02em;
-
-  white-space:nowrap;
-}
-
-
-/* =========================================================
-   TABLET / SMALL DESKTOP
-========================================================= */
-
-@media(max-width:1100px){
-
-  .product-actions .bag-quantity-control{
-    grid-template-columns:
-      34px
-      minmax(0,1fr)
-      34px;
-  }
-
-  .product-actions .bag-quantity-control.no-plus{
-    grid-template-columns:
-      34px
-      minmax(0,1fr)
-      34px;
-  }
-
-  .product-actions .bag-qty-btn{
-    width:34px;
-    min-width:34px;
-
-    font-size:17px;
-  }
-
-  .product-actions .bag-qty-value{
-    font-size:10px;
-
-    padding:
-      0 1px;
-  }
-
-  .product-actions .go-to-bag,
-  .product-actions .add{
-    font-size:10px;
-  }
-
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media(max-width:700px){
-
-  .product-actions{
-    grid-template-columns:1fr;
-
-    gap:7px;
-  }
-
-
-  .product-actions .bag-quantity-control,
-  .product-actions .bag-quantity-control.no-plus{
-    grid-template-columns:
-      42px
-      minmax(0,1fr)
-      42px;
-
-    min-height:44px;
-  }
-
-
-  .product-actions .bag-qty-btn{
-    width:42px;
-    min-width:42px;
-
-    height:42px;
-    min-height:42px;
-
-    font-size:18px;
-  }
-
-
-  .product-actions .bag-qty-value{
-    height:42px;
-    min-height:42px;
-
-    padding:
-      0 3px;
-
-    font-size:11px;
-
-    letter-spacing:.02em;
-  }
-
-
-  .product-actions .go-to-bag,
-  .product-actions .add{
-    min-height:44px;
-
-    font-size:11px;
-
-    letter-spacing:.02em;
-  }
-
-}
-
-
-/* =========================================================
-   SMALL PHONES
-========================================================= */
-
-@media(max-width:430px){
-
-  .product-actions .bag-quantity-control,
-  .product-actions .bag-quantity-control.no-plus{
-    grid-template-columns:
-      40px
-      minmax(0,1fr)
-      40px;
-  }
-
-
-  .product-actions .bag-qty-btn{
-    width:40px;
-    min-width:40px;
-
-    font-size:17px;
-  }
-
-
-  .product-actions .bag-qty-value{
-    font-size:10px;
-  }
-
-
-  .product-actions .go-to-bag,
-  .product-actions .add{
-    font-size:10px;
-  }
-
-}
-
-
-/* =========================================================
-   EXTRA PROTECTION AGAINST RESPONSIVE.CSS OVERRIDES
-========================================================= */
-
-@media(max-width:700px){
-
-  .product-actions .bag-quantity-control .bag-qty-value{
-    overflow:visible !important;
-    white-space:nowrap !important;
-    text-overflow:clip !important;
-  }
-
-}
-

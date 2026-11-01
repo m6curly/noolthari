@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         const next =
-          NL.query.get('next');
+          NL.internalUrl(NL.query.get('next'));
 
 
         location.href =

@@ -11,6 +11,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  try {
+    if (typeof syncGuestCartToAccount === 'function') {
+      await syncGuestCartToAccount(customer.id);
+    }
+  } catch (error) {
+    console.error('Guest bag sync failed before checkout:', error);
+    NL.toast('We could not safely sync your bag. Please return to your bag and try again.', 'error');
+    return;
+  }
+
 
   /* =======================================================
      ELEMENTS
@@ -28,6 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const payButton =
     NL.qs('#pay-btn');
 
+  const pendingPaymentNote = NL.qs('#pending-payment-note');
+  const pendingOrderLink = NL.qs('#pending-order-link');
 
   if (!addressList || !addressForm || !checkoutTotal || !payButton) {
     return;
@@ -417,244 +429,231 @@ document.addEventListener('DOMContentLoaded', async () => {
      PAYMENT
   ======================================================== */
 
-  payButton.onclick =
-    async () => {
+  // Reuse an existing pending Razorpay order after a refresh or a closed
+  // checkout. This prevents duplicate charges and survives device navigation.
+  let pendingPaymentResponse = null;
+  let activePaymentData = null;
 
-      const addressId =
-        NL.qs(
-          'input[name="address"]:checked'
-        )?.value;
+  function resetPaymentButton(label = 'Pay securely') {
+    payButton.disabled = false;
+    payButton.textContent = label;
+  }
 
+  function showPendingPayment(paymentData) {
+    if (!paymentData || !(Number(paymentData.amount) > 0)) return;
+    checkoutTotal.textContent = NL.money(Number(paymentData.amount) / 100);
+    if (pendingPaymentNote) pendingPaymentNote.hidden = false;
+  }
 
-      if (!addressId) {
+  async function restorePendingPayment() {
+    const result = await sb
+      .from('orders')
+      .select('id, status, order_number, reservation_expires_at, payments(razorpay_order_id, amount, status, razorpay_payment_id)')
+      .eq('customer_id', customer.id)
+      .in('status', ['payment_pending', 'cancelled'])
+      .order('created_at', { ascending: false })
+      .limit(25);
 
-        NL.toast(
-          'Select a shipping address.',
-          'error'
-        );
+    if (result.error) {
+      console.error('Pending payment lookup error:', result.error);
+      return;
+    }
 
-        return;
+    const candidates = result.data || [];
+    const getPayment = order => Array.isArray(order?.payments)
+      ? order.payments[0]
+      : order?.payments;
+
+    // Captured payments are surfaced first, even when a reservation has
+    // expired or an expiry job already cancelled the order. Never offer a
+    // second charge until this payment has been reconciled/refunded.
+    const capturedOrder = candidates.find(order => getPayment(order)?.status === 'captured');
+    if (capturedOrder) {
+      const payment = getPayment(capturedOrder);
+      checkoutTotal.textContent = NL.money(Number(payment.amount));
+      activePaymentData = null;
+      payButton.disabled = true;
+      payButton.textContent = 'Payment received';
+      if (pendingPaymentNote) {
+        pendingPaymentNote.hidden = false;
+        pendingPaymentNote.textContent = 'Your payment has been captured. Do not pay again. Order confirmation is being checked; contact support if the status does not update.';
       }
-
-
-      payButton.disabled =
-        true;
-
-      payButton.textContent =
-        'Preparing secure payment…';
-
-
-      try {
-
-        /* -----------------------------------------------
-           CREATE RAZORPAY ORDER
-        ------------------------------------------------ */
-
-        const createResult =
-          await sb.functions.invoke(
-            NOOLTHARI_CONFIG.PAYMENT_FUNCTION_CREATE,
-            {
-              body: {
-                address_id:
-                  addressId
-              }
-            }
-          );
-
-
-        if (createResult.error) {
-          throw createResult.error;
-        }
-
-
-        const paymentData =
-          createResult.data;
-
-
-        if (
-          !paymentData?.razorpay_order_id
-        ) {
-
-          throw new Error(
-            paymentData?.message ||
-            'Could not create payment order.'
-          );
-
-        }
-
-
-        /* -----------------------------------------------
-           RAZORPAY CHECKOUT
-        ------------------------------------------------ */
-
-        const razorpay =
-          new Razorpay({
-
-            key:
-              NOOLTHARI_CONFIG.RAZORPAY_KEY_ID,
-
-            amount:
-              paymentData.amount,
-
-            currency:
-              'INR',
-
-            name:
-              'NOOLTHARI™',
-
-            description:
-              'Premium saree order',
-
-            order_id:
-              paymentData.razorpay_order_id,
-
-            prefill: {
-
-              name:
-                customer.name,
-
-              email:
-                customer.email
-
-            },
-
-            theme: {
-              color:
-                '#124D56'
-            },
-
-
-            /* -------------------------------------------
-               PAYMENT SUCCESS
-            -------------------------------------------- */
-
-            handler:
-              async paymentResponse => {
-
-                try {
-
-                  const verifyResult =
-                    await sb.functions.invoke(
-                      NOOLTHARI_CONFIG.PAYMENT_FUNCTION_VERIFY,
-                      {
-                        body:
-                          paymentResponse
-                      }
-                    );
-
-
-                  if (
-                    verifyResult.error
-                  ) {
-                    throw verifyResult.error;
-                  }
-
-
-                  const verifyData =
-                    verifyResult.data;
-
-
-                  if (
-                    !verifyData?.verified
-                  ) {
-
-                    throw new Error(
-                      verifyData?.message ||
-                      'Payment verification failed.'
-                    );
-
-                  }
-
-
-                  location.href =
-                    NL.path(
-                      'order-details.html?id=' +
-                      verifyData.order_id
-                    );
-
-
-                } catch (error) {
-
-                  console.error(
-                    'Payment verification error:',
-                    error
-                  );
-
-
-                  NL.toast(
-                    error.message ||
-                    'Payment verification failed.',
-                    'error'
-                  );
-
-
-                  payButton.disabled =
-                    false;
-
-                  payButton.textContent =
-                    'Pay securely';
-
-                }
-
-              }
-
-          });
-
-
-        /* -----------------------------------------------
-           PAYMENT FAILED
-        ------------------------------------------------ */
-
-        razorpay.on(
-          'payment.failed',
-          event => {
-
-            NL.toast(
-              event.error?.description ||
-              'Payment failed.',
-              'error'
-            );
-
-
-            payButton.disabled =
-              false;
-
-            payButton.textContent =
-              'Pay securely';
-
-          }
-        );
-
-
-        /* -----------------------------------------------
-           OPEN PAYMENT
-        ------------------------------------------------ */
-
-        razorpay.open();
-
-      } catch (error) {
-
-        console.error(
-          'Payment start error:',
-          error
-        );
-
-
-        NL.toast(
-          error.message ||
-          'Unable to start payment.',
-          'error'
-        );
-
-
-        payButton.disabled =
-          false;
-
-        payButton.textContent =
-          'Pay securely';
-
+      if (pendingOrderLink) {
+        pendingOrderLink.href = NL.path(`order-details.html?id=${encodeURIComponent(capturedOrder.id)}`);
+        pendingOrderLink.hidden = false;
       }
+      return;
+    }
 
+    const order = candidates.find(item =>
+      item.status === 'payment_pending' &&
+      item.reservation_expires_at &&
+      new Date(item.reservation_expires_at).getTime() > Date.now()
+    );
+    const payment = getPayment(order);
+
+    if (!order?.id || !payment?.razorpay_order_id || !(Number(payment.amount) > 0)) {
+      return;
+    }
+
+    activePaymentData = {
+      order_id: order.id,
+      razorpay_order_id: payment.razorpay_order_id,
+      amount: Math.round(Number(payment.amount) * 100),
+      currency: 'INR'
     };
+    resetPaymentButton('Continue payment');
+    showPendingPayment(activePaymentData);
+    if (pendingPaymentNote) {
+      pendingPaymentNote.textContent = 'A payment is already in progress for this saved order. Continue the same secure payment; changes made to your bag are not included in this order.';
+    }
+    if (pendingOrderLink) pendingOrderLink.hidden = true;
+  }
+
+  async function verifyPaymentResponse(paymentResponse) {
+    payButton.disabled = true;
+    payButton.textContent = 'Verifying payment…';
+
+    try {
+      const verifyResult = await sb.functions.invoke(
+        NOOLTHARI_CONFIG.PAYMENT_FUNCTION_VERIFY,
+        { body: paymentResponse }
+      );
+
+      if (verifyResult.error) throw verifyResult.error;
+
+      const verifyData = verifyResult.data;
+      if (!verifyData?.verified || !verifyData?.order_id) {
+        throw new Error(
+          verifyData?.message || 'Payment verification is still pending.'
+        );
+      }
+
+      pendingPaymentResponse = null;
+      activePaymentData = null;
+      location.href = NL.path(
+        'order-details.html?id=' + encodeURIComponent(verifyData.order_id)
+      );
+      return true;
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      pendingPaymentResponse = paymentResponse;
+      resetPaymentButton('Retry payment verification');
+      NL.toast(
+        'Your payment may have succeeded, but confirmation is pending. Do not pay again. Use “Retry payment verification” to check the same payment.',
+        'warning'
+      );
+      return false;
+    }
+  }
+
+  function openRazorpayCheckout(paymentData) {
+    payButton.disabled = true;
+    payButton.textContent = 'Opening secure payment…';
+
+    const razorpay = new Razorpay({
+      key: NOOLTHARI_CONFIG.RAZORPAY_KEY_ID,
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'INR',
+      name: 'NOOLTHARI™',
+      description: 'Premium saree order',
+      order_id: paymentData.razorpay_order_id,
+      prefill: {
+        name: customer.name || '',
+        email: customer.email || ''
+      },
+      theme: { color: '#124D56' },
+      modal: {
+        ondismiss: () => {
+          // Keep the 30-minute reservation and reuse its Razorpay order if the
+          // customer closes the modal. Do not cancel while a payment may settle.
+          resetPaymentButton(activePaymentData ? 'Continue payment' : 'Pay securely');
+        }
+      },
+      handler: async paymentResponse => {
+        pendingPaymentResponse = paymentResponse;
+        await verifyPaymentResponse(paymentResponse);
+      }
+    });
+
+    razorpay.on('payment.failed', event => {
+      // The gateway modal can offer another attempt against the same order.
+      NL.toast(
+        event.error?.description || 'Payment attempt failed. You can retry in the secure payment window.',
+        'error'
+      );
+    });
+
+    razorpay.open();
+  }
+
+  // A pending order may have been created before a browser refresh or network
+  // interruption. Rehydrate it from the user's own order/payment rows.
+  await restorePendingPayment();
+
+  payButton.onclick = async () => {
+    if (pendingPaymentResponse) {
+      await verifyPaymentResponse(pendingPaymentResponse);
+      return;
+    }
+
+    if (activePaymentData) {
+      try {
+        openRazorpayCheckout(activePaymentData);
+      } catch (error) {
+        console.error('Could not reopen Razorpay checkout:', error);
+        resetPaymentButton('Continue payment');
+        NL.toast('Unable to open the secure payment window. Please try again.', 'error');
+      }
+      return;
+    }
+
+    const addressId = NL.qs('input[name="address"]:checked')?.value;
+    if (!addressId) {
+      NL.toast('Select a shipping address.', 'error');
+      return;
+    }
+
+    payButton.disabled = true;
+    payButton.textContent = 'Preparing secure payment…';
+
+    try {
+      const createResult = await sb.functions.invoke(
+        NOOLTHARI_CONFIG.PAYMENT_FUNCTION_CREATE,
+        { body: { address_id: addressId } }
+      );
+
+      if (createResult.error) throw createResult.error;
+
+      const paymentData = createResult.data;
+      if (!paymentData?.razorpay_order_id || !paymentData?.order_id || !paymentData?.amount) {
+        throw new Error(paymentData?.message || 'Could not create payment order.');
+      }
+
+      activePaymentData = paymentData;
+      showPendingPayment(paymentData);
+      if (pendingPaymentNote) {
+        pendingPaymentNote.textContent = 'A payment is already in progress for this saved order. Continue the same secure payment; changes made to your bag are not included in this order.';
+      }
+      try {
+        openRazorpayCheckout(paymentData);
+      } catch (error) {
+        console.error('Could not open Razorpay checkout:', error);
+        resetPaymentButton('Continue payment');
+        NL.toast('Your bag and payment reservation are safe. Tap “Continue payment” to retry.', 'warning');
+      }
+    } catch (error) {
+      console.error('Payment start error:', error);
+      resetPaymentButton();
+      // If the server completed order creation but the response was lost,
+      // restore and reuse that order instead of starting a second charge.
+      await restorePendingPayment();
+      if (activePaymentData) {
+        NL.toast('A secure payment is already pending. Continue the same payment; your bag has been kept safe.', 'warning');
+      } else {
+        NL.toast(error.message || 'Unable to start payment.', 'error');
+      }
+    }
+  };
 
 });

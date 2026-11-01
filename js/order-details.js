@@ -353,6 +353,10 @@ document.addEventListener(
       order.payments?.[0] ||
       null;
 
+    const paymentDone = [
+      'paid', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered'
+    ].includes(order.status);
+
 
     /* =====================================================
        ORDER STATUS
@@ -496,10 +500,11 @@ document.addEventListener(
       );
 
 
+    const safeTrackingUrl =
+      NL.safeHttpUrl(shipment?.tracking_url);
+
     const hasTrackingUrl =
-      Boolean(
-        shipment?.tracking_url
-      );
+      Boolean(safeTrackingUrl);
 
 
     let trackingHtml =
@@ -560,7 +565,7 @@ document.addEventListener(
                   <a
                     class="btn btn-outline"
                     href="${escapeAttribute(
-                      shipment.tracking_url
+                      safeTrackingUrl
                     )}"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -831,6 +836,12 @@ document.addEventListener(
 
       <div class="order-detail-card">
 
+        ${payment?.status === 'captured' && !paymentDone ? `
+          <div class="shipping-box" role="alert" style="margin-bottom:18px;border-left:4px solid var(--warning)">
+            <strong>Payment captured — order confirmation needs review</strong>
+            <p>Your payment has been recorded, but this order is not confirmed yet. Do not pay again. Contact NOOLTHARI support and share this order number so the payment can be checked.</p>
+          </div>
+        ` : ''}
 
         <!-- ===============================================
              ORDER STATUS

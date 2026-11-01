@@ -1,0 +1,12 @@
+{
+  "name": "noolthari-storefront",
+  "version": "2.1.0",
+  "private": true,
+  "description": "NOOLTHARI premium static storefront and admin commerce system",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "check": "node scripts/preflight.mjs",
+    "update": "node scripts/update-github.mjs",
+    "deploy": "node scripts/deploy-vercel.mjs"
+  }
+}

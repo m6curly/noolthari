@@ -340,7 +340,7 @@ async function loadEditProduct() {
 
   const result =
     await sb
-      .from('products')
+      .from('admin_products')
       .select('*')
       .eq(
         'id',
@@ -709,7 +709,7 @@ async function createWatermarkedImage(file) {
 
 
   ctx.font =
-    `${NOOLTHARI_WATERMARK.fontWeight} ${fontSize}px Poppins, Arial, sans-serif`;
+    `${NOOLTHARI_WATERMARK.fontWeight} ${fontSize}px Arial, Helvetica, sans-serif`;
 
 
   ctx.textAlign =
@@ -1001,6 +1001,27 @@ async function saveProduct(formElement) {
      - blouse_length
   */
 
+  const rawSalePrice = form.get('sale_price');
+  const sellingPrice = Number(form.get('selling_price') || 0);
+  const purchasePrice = Number(form.get('purchase_price') || 0);
+  const salePrice = rawSalePrice === '' || rawSalePrice === null
+    ? null
+    : Number(rawSalePrice);
+  const stockQuantity = Number(form.get('stock_quantity') || 0);
+
+  if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
+    throw new Error('Selling price must be greater than zero.');
+  }
+  if (!Number.isFinite(purchasePrice) || purchasePrice < 0) {
+    throw new Error('Purchase price cannot be negative.');
+  }
+  if (salePrice !== null && (!Number.isFinite(salePrice) || salePrice < 0 || salePrice >= sellingPrice)) {
+    throw new Error('Sale price must be zero or lower than the selling price.');
+  }
+  if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
+    throw new Error('Stock must be a whole number zero or greater.');
+  }
+
   const payload = {
 
     saree_name:
@@ -1043,37 +1064,13 @@ async function saveProduct(formElement) {
         'occasion'
       ),
 
-    purchase_price:
-      Number(
-        form.get(
-          'purchase_price'
-        ) || 0
-      ),
+    purchase_price: purchasePrice,
 
-    selling_price:
-      Number(
-        form.get(
-          'selling_price'
-        ) || 0
-      ),
+    selling_price: sellingPrice,
 
-    sale_price:
-      form.get(
-        'sale_price'
-      )
-        ? Number(
-            form.get(
-              'sale_price'
-            )
-          )
-        : null,
+    sale_price: salePrice,
 
-    stock_quantity:
-      Number(
-        form.get(
-          'stock_quantity'
-        ) || 0
-      ),
+    stock_quantity: stockQuantity,
 
     blouse_included:
       form.get(

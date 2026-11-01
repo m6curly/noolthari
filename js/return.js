@@ -86,6 +86,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   const orders =
     ordersResult.data || [];
 
+  const existingReturnsResult = await sb
+    .from('return_requests')
+    .select('order_item_id, status')
+    .eq('customer_id', profile.id);
+
+  if (existingReturnsResult.error) {
+    console.error('Existing return lookup error:', existingReturnsResult.error);
+    NL.toast('Unable to check your previous return requests. Please reload and try again.', 'error');
+    return;
+  }
+
+  const alreadyRequested = new Set(
+    (existingReturnsResult.data || [])
+      .filter(item => item.status !== 'rejected')
+      .map(item => String(item.order_item_id))
+  );
+
+  const eligibleOrders = orders.map(order => ({
+    ...order,
+    order_items: (order.order_items || []).filter(item => !alreadyRequested.has(String(item.id)))
+  }));
 
   /* =======================================================
      POPULATE ORDER ITEMS
@@ -98,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   `;
 
 
-  orders.forEach(order => {
+  eligibleOrders.forEach(order => {
 
     (order.order_items || [])
       .forEach(item => {
@@ -139,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     orderItemSelect.innerHTML = `
       <option value="">
-        No delivered order items available
+        No new eligible delivered items available
       </option>
     `;
 
@@ -188,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ---------------------------------------------------- */
 
       const selectedOrder =
-        orders.find(
+        eligibleOrders.find(
           order =>
             (order.order_items || [])
               .some(
@@ -228,6 +249,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
+
+      /* ---------------------------------------------------
+         Validate optional evidence before creating the request.
+      ---------------------------------------------------- */
+
+      const evidence = form.get('evidence');
+      if (evidence && typeof evidence === 'object' && evidence.size > 0) {
+        const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+        if (!allowedTypes.has(evidence.type) || evidence.size > 5 * 1024 * 1024) {
+          NL.toast('Evidence must be a JPG, PNG, WebP or PDF file up to 5 MB.', 'error');
+          return;
+        }
+      }
 
       /* ---------------------------------------------------
          Return request data
@@ -299,18 +333,13 @@ document.addEventListener('DOMContentLoaded', async () => {
          EVIDENCE IMAGE
       ================================================== */
 
-      const evidence =
-        form.get(
-          'evidence'
-        );
-
-
       if (
         evidence &&
         typeof evidence === 'object' &&
         evidence.size > 0
       ) {
 
+        let uploadedPath = null;
         try {
 
           const safeFileName =
@@ -323,6 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const path =
             `${profile.id}/${returnId}/${safeFileName}`;
+          uploadedPath = path;
 
 
           const uploadResult =
@@ -367,20 +397,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Return evidence upload error:',
             error
           );
-
-
-          /*
-             The return request itself already exists.
-             Tell the customer that the request was created,
-             but the evidence upload needs attention.
-          */
+          if (uploadedPath) {
+            const cleanup = await sb.storage.from('return-evidence').remove([uploadedPath]);
+            if (cleanup.error) console.error('Orphaned evidence cleanup failed:', cleanup.error);
+          }
 
           NL.toast(
-            'Return request submitted, but the evidence image could not be uploaded.',
-            'error'
+            `Return request ${returnId.slice(0, 8)} was submitted, but evidence could not be attached. Please contact support with this reference.`,
+            'warning'
           );
-
-
+          returnForm.reset();
+          orderItemSelect.selectedIndex = 0;
           return;
 
         }

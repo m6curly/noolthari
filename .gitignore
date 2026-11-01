@@ -1,0 +1,21 @@
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+
+# Local editor / OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Tool outputs
+*.log
+*.tmp
+
+# Local Vercel project metadata and dependencies
+.vercel/
+node_modules/
+
+.vercel
+.env*

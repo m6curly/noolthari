@@ -74,6 +74,9 @@ window.NL = {
           'INR',
 
         maximumFractionDigits:
+          2,
+
+        minimumFractionDigits:
           0
       }
     ).format(
@@ -166,6 +169,35 @@ window.NL = {
        NL.path('product.html?id=123')
        NL.path('admin/index.html')
   ======================================================== */
+
+  // Permit only same-origin destinations for post-login return paths.
+  internalUrl: value => {
+    if (typeof value !== 'string' || !value.trim()) return null;
+    try {
+      const url = new URL(value, window.location.origin);
+      if (url.origin !== window.location.origin) return null;
+      return url.pathname + url.search + url.hash;
+    } catch {
+      return null;
+    }
+  },
+
+
+  // Tracking URLs are customer-clickable, so allow HTTPS only and reject
+  // credentials or executable/non-web schemes. Bare domains get https://.
+  safeHttpUrl: value => {
+    let raw = String(value ?? '').trim();
+    if (!raw) return '';
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(raw)) raw = `https://${raw}`;
+    try {
+      const url = new URL(raw);
+      if (url.protocol !== 'https:' || url.username || url.password) return '';
+      return url.href;
+    } catch {
+      return '';
+    }
+  },
+
 
   path: relativePath => {
 

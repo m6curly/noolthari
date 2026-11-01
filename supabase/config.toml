@@ -1,4 +1,4 @@
-project_id = "YOUR-PROJECT-REF"
+project_id = "moptzrldmubkfteemyql"
 
 [functions.create-razorpay-order]
 verify_jwt = true
@@ -10,4 +10,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.expire-payment-reservations]
+verify_jwt = false
+
+[functions.send-order-notifications]
 verify_jwt = false

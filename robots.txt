@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /account.html
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /orders.html
+Disallow: /order-details.html
+Disallow: /track-order.html
+Disallow: /return.html
+Disallow: /login.html
+Disallow: /forgot-password.html
+Disallow: /reset-password.html
+
+Sitemap: https://www.noolthari.com/sitemap.xml

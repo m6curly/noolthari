@@ -45,8 +45,7 @@ document.addEventListener(
       'submitted',
       'approved',
       'rejected',
-      'refund_processing',
-      'refunded'
+      'refund_processing'
     ];
 
 
@@ -473,6 +472,9 @@ document.addEventListener(
               const currentStatus =
                 returnRequest.status ||
                 'submitted';
+              const availableStatuses = currentStatus === 'refunded'
+                ? [...statuses, 'refunded']
+                : statuses;
 
 
               const evidenceMarkup =
@@ -517,17 +519,13 @@ document.addEventListener(
                     >
 
                       ${
-                        statuses
+                        availableStatuses
                           .map(
                             status => `
                               <option
                                 value="${status}"
-                                ${
-                                  status ===
-                                  currentStatus
-                                    ? 'selected'
-                                    : ''
-                                }
+                                ${status === currentStatus ? 'selected' : ''}
+                                ${status === 'refunded' ? 'disabled' : ''}
                               >
                                 ${status.replaceAll(
                                   '_',

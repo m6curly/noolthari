@@ -124,9 +124,9 @@
   font:
     500
     36px/1.08
-    "Cormorant Garamond",
-    Georgia,
-    serif;
+    Arial,
+    Helvetica,
+    sans-serif;
 
   letter-spacing:-.01em;
 }
@@ -272,7 +272,7 @@
   font:
     600
     11px/1.2
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.09em;
@@ -656,7 +656,7 @@
   font:
     600
     11px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   text-transform:uppercase;

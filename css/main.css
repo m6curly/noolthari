@@ -70,11 +70,8 @@ body{
 
   font:
     400 15px/1.75
-    Poppins,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
+    Arial,
+    Helvetica,
     sans-serif;
 
   -webkit-font-smoothing:antialiased;
@@ -143,9 +140,9 @@ h6,
 .site-footer h3,
 .stat strong{
   font-family:
-    "Cormorant Garamond",
-    Georgia,
-    serif;
+    Arial,
+    Helvetica,
+    sans-serif;
 
   color:var(--teal);
   font-weight:500;
@@ -220,9 +217,9 @@ h1{
 
   font:
     600 38px/1
-    "Cormorant Garamond",
-    Georgia,
-    serif;
+    Arial,
+    Helvetica,
+    sans-serif;
 
   letter-spacing:.14em;
   white-space:nowrap;
@@ -274,7 +271,7 @@ h1{
 
   font:
     700 9px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.12em;
@@ -306,7 +303,7 @@ h1{
 
   font:
     600 13px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.065em;
@@ -475,7 +472,7 @@ h1{
 
   font:
     700 10px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   box-shadow:
@@ -502,7 +499,7 @@ h1{
 
   font:
     600 13px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.045em;
@@ -539,7 +536,7 @@ h1{
 
   font:
     700 12px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.05em;
@@ -556,7 +553,7 @@ h1{
 
   font:
     600 12px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.045em;
@@ -601,7 +598,7 @@ h1{
 
   font:
     600 10px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.24em;
@@ -904,7 +901,7 @@ h1{
 
   font:
     600 10px/1.4
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.05em;
@@ -946,7 +943,7 @@ h1{
 
   font:
     600 9px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.07em;
@@ -1059,7 +1056,7 @@ h1{
 
   font:
     600 18px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   flex-shrink:0;
@@ -1120,7 +1117,7 @@ h1{
 
   font:
     600 10.5px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.01em;
@@ -1169,7 +1166,7 @@ h1{
 
   font:
     600 11px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.02em;
@@ -1210,7 +1207,7 @@ h1{
 
   font:
     600 12px/1
-    Poppins,
+    Arial,
     sans-serif;
 
   letter-spacing:.065em;
@@ -2169,9 +2166,9 @@ h1{
 
   font:
     500 25px/1
-    "Cormorant Garamond",
-    Georgia,
-    serif;
+    Arial,
+    Helvetica,
+    sans-serif;
 
   margin-bottom:32px;
 }
@@ -2376,9 +2373,9 @@ h1{
 
   font:
     500 36px/1.08
-    "Cormorant Garamond",
-    Georgia,
-    serif;
+    Arial,
+    Helvetica,
+    sans-serif;
 
   letter-spacing:-.01em;
 }

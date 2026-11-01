@@ -182,6 +182,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       <div class="admin-grid-two">
 
+        ${payment?.status === 'captured' && !paymentDone ? `
+          <div class="admin-card" role="alert" style="grid-column:1/-1;border-left:4px solid #9A6A18">
+            <h2>Captured payment requires reconciliation</h2>
+            <p>Razorpay reports this payment as captured, but the order is not finalized. Do not collect another payment or fulfil blindly. Check the Razorpay settlement, stock reservation and order history, then arrange fulfilment or refund.</p>
+          </div>
+        ` : ''}
 
         <!-- =============================================
              ORDER DETAILS
@@ -818,13 +824,20 @@ document.addEventListener('DOMContentLoaded', async () => {
               ).trim();
 
 
-            const trackingUrl =
+            const rawTrackingUrl =
               String(
                 form.get(
                   'tracking_url'
                 ) ||
                 ''
               ).trim();
+
+            const trackingUrl =
+              NL.safeHttpUrl(rawTrackingUrl);
+
+            if (rawTrackingUrl && !trackingUrl) {
+              throw new Error('Enter a valid HTTPS tracking URL.');
+            }
 
 
             if (

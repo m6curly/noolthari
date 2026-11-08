@@ -1,570 +1,201 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
-
-  <meta
-    name="theme-color"
-    content="#0B3D45"
-  >
-
-  <meta
-    name="description"
-    content="Add a new NOOLTHARI™ saree product."
-  >
-
-  <title>
-    Add Product | NOOLTHARI™
-  </title>
-
-
-  <!-- =====================================================
-       FONTS
-  ====================================================== -->
-<!-- =====================================================
-       STYLES
-  ====================================================== -->
-
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#123e42">
+  <meta name="description" content="Add a NOOLTHARI saree to the product catalogue.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Add product | NOOLTHARI™</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link
-    rel="stylesheet"
-    href="../css/main.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="../css/admin.css"
-
-  >
-
-  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
 </head>
-
-
 <body data-root="../">
-
-
-  <!-- =====================================================
-       ADMIN LAYOUT
-  ====================================================== -->
-
   <div class="admin-shell">
-
-
-    <!-- ===================================================
-         SIDEBAR
-    ==================================================== -->
-
     <aside class="admin-side">
-
       <div class="admin-top">
-
-
-        <a
-          class="admin-logo"
-          href="index.html"
-          aria-label="NOOLTHARI Admin Dashboard"
-        >
-
-          <img
-            src="../assets/logo/noolthari-logo.webp"
-            alt="NOOLTHARI™"
-            loading="eager"
-          >
-
-          <span>
-            NOOLTHARI™
-          </span>
-
+        <a class="admin-logo" href="index.html" aria-label="NOOLTHARI Admin Dashboard">
+          <img src="../assets/logo/noolthari-logo.webp" alt="NOOLTHARI™"><span>NOOLTHARI™</span>
         </a>
-
-
-        <button
-          class="admin-mobile-toggle"
-          data-admin-menu
-          type="button"
-          aria-label="Open admin menu"
-          aria-expanded="false"
-        >
-          Menu
-        </button>
-
+        <button class="admin-mobile-toggle" data-admin-menu type="button" aria-label="Open admin menu" aria-expanded="false">Menu</button>
       </div>
-
-
-      <!-- =================================================
-           ADMIN NAVIGATION
-      ================================================== -->
-
-      <nav
-        class="admin-nav"
-        aria-label="Admin navigation"
-      >
-
-        <a href="index.html">
-          Dashboard
-        </a>
-
+      <nav class="admin-nav" aria-label="Admin navigation">
+        <a href="index.html">Dashboard</a>
         <a href="activity.html">Activity</a>
-
-        <a
-          href="products.html"
-          class="active"
-          aria-current="page"
-        >
-          Products
-        </a>
-
-        <a href="categories.html">
-          Categories
-        </a>
-
-        <a href="orders.html">
-          Orders
-        </a>
-
-        <a href="customers.html">
-          Customers
-        </a>
-
-        <a href="returns.html">
-          Returns
-        </a>
-
-        <a href="messages.html">
-          Messages
-        </a>
-
-        <a href="accounting.html">
-          Finance
-        </a>
-
-
-        <a href="../index.html">
-          View store
-        </a>
-
-        <a href="../account.html">
-          Account
-        </a>
-
-        <a
-          href="#"
-          data-logout
-        >
-          Sign out
-        </a>
-
+        <a href="products.html" class="active" aria-current="page">Products</a>
+        <a href="categories.html">Categories</a>
+        <a href="orders.html">Orders</a>
+        <a href="customers.html">Customers</a>
+        <a href="returns.html">Returns</a>
+        <a href="messages.html">Messages</a>
+        <a href="accounting.html">Finance</a>
+        <a href="../index.html">View store</a>
+        <a href="../account.html">Account</a>
+        <a href="#" data-logout>Sign out</a>
       </nav>
-
     </aside>
 
-
-    <!-- =====================================================
-         MAIN CONTENT
-    ====================================================== -->
-
     <main class="admin-main">
-
-
-      <header class="admin-page-header">
-
-        <div class="eyebrow">
-          Catalog
+      <header class="admin-page-header editor-page-header">
+        <div>
+          <div class="eyebrow">Product catalogue</div>
+          <h1 class="page-title" id="editor-title">Add a product</h1>
+          <p class="finance-note">Upload the saree photos, add the essential details and set your prices. The store listing is created automatically.</p>
         </div>
-
-
-        <h1 class="page-title">
-          Add saree
-        </h1>
-
-
-        <p class="finance-note">
-          Add product information, pricing, stock and images to the
-          NOOLTHARI™ catalog.
-        </p>
-
+        <a class="btn btn-outline" href="products.html">Back to products</a>
       </header>
 
+      <form id="product-form" class="admin-product-form" novalidate>
+        <section class="admin-card editor-section" aria-labelledby="photo-section-title">
+          <div class="editor-section-heading">
+            <div><span class="editor-step">01</span><h2 id="photo-section-title">Product photos</h2></div>
+            <p>Clear photos help customers see the saree properly.</p>
+          </div>
+          <label class="image-upload-area" for="images">
+            <span class="upload-icon" aria-hidden="true">＋</span>
+            <strong>Choose product photos</strong>
+            <span>JPG, PNG or WebP · Up to 8 photos · 15 MB each</span>
+            <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+          </label>
+          <p class="editor-help">A light, single NOOLTHARI™ watermark is added to each photo before it is uploaded. Preview below shows the watermarked version.</p>
+          <div id="product-image-preview" class="image-preview-grid" aria-live="polite"></div>
+          <div id="existing-product-images" class="image-preview-grid existing-image-grid" aria-label="Currently saved product photos"></div>
+          <p id="image-processing-status" class="editor-status" role="status" aria-live="polite"></p>
+        </section>
 
-      <!-- ===================================================
-           PRODUCT FORM
-      ==================================================== -->
+        <div class="editor-columns">
+          <div class="editor-main-column">
+            <section class="admin-card editor-section" aria-labelledby="basics-title">
+              <div class="editor-section-heading">
+                <div><span class="editor-step">02</span><h2 id="basics-title">Product information</h2></div>
+                <p>Only the details customers need to understand the saree.</p>
+              </div>
+              <div class="editor-grid">
+                <div class="editor-field editor-span-2">
+                  <label for="saree-name">Product title <span class="required-mark">*</span></label>
+                  <input id="saree-name" name="saree_name" type="text" maxlength="160" placeholder="e.g. Peacock Blue Semi Silk Kanchipuram Saree" autocomplete="off" required>
+                </div>
+                <div class="editor-field">
+                  <label for="category">Category <span class="required-mark">*</span></label>
+                  <select id="category" name="category_id" required>
+                    <option value="">Loading categories…</option>
+                  </select>
+                </div>
+                <div class="editor-field">
+                  <label for="sku">SKU <span class="optional-mark">Auto-generated when blank</span></label>
+                  <input id="sku" name="sku" type="text" maxlength="60" placeholder="Leave blank to generate automatically" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="editor-field editor-span-2">
+                  <label for="instagram-url">Instagram video / Reel link <span class="optional-mark">Optional</span></label>
+                  <input id="instagram-url" name="instagram_url" type="url" inputmode="url" maxlength="2048" placeholder="https://www.instagram.com/reel/…" autocomplete="url">
+                  <small>Customers will see a “Watch on Instagram” link on this product page.</small>
+                </div>
+                <div class="editor-field editor-span-2">
+                  <label for="description">Product description</label>
+                  <textarea id="description" name="description" rows="5" maxlength="3000" placeholder="Describe the saree, its look, weave, border and what makes it special."></textarea>
+                </div>
+                <div class="editor-field">
+                  <label for="fabric">Fabric</label>
+                  <input id="fabric" name="fabric" type="text" maxlength="100" placeholder="e.g. Semi silk">
+                </div>
+                <div class="editor-field">
+                  <label for="colour">Colour</label>
+                  <input id="colour" name="colour" type="text" maxlength="100" placeholder="e.g. Peacock blue">
+                </div>
+                <div class="editor-field">
+                  <label for="pattern">Pattern / border</label>
+                  <input id="pattern" name="pattern" type="text" maxlength="160" placeholder="e.g. Traditional zari border">
+                </div>
+                <div class="editor-field">
+                  <label for="occasion">Occasion</label>
+                  <input id="occasion" name="occasion" type="text" maxlength="120" placeholder="e.g. Festive, wedding">
+                </div>
+                <div class="editor-field">
+                  <label for="saree-length">Saree length</label>
+                  <input id="saree-length" name="saree_length" type="text" maxlength="60" placeholder="e.g. 6.3 metres">
+                </div>
+                <div class="editor-field">
+                  <label for="blouse-length">Blouse piece length</label>
+                  <input id="blouse-length" name="blouse_length" type="text" maxlength="60" placeholder="e.g. 0.8 metres">
+                </div>
+                <div class="editor-field editor-span-2">
+                  <label for="care-instructions">Care instructions</label>
+                  <textarea id="care-instructions" name="care_instructions" rows="3" maxlength="1000" placeholder="e.g. Dry clean recommended. Store in a cotton bag."></textarea>
+                </div>
+              </div>
+            </section>
 
-      <section
-        class="admin-card"
-        aria-label="Add saree product"
-      >
-
-        <form
-          id="product-form"
-          class="admin-form"
-        >
-
-
-          <!-- =================================================
-               BASIC PRODUCT INFORMATION
-          ================================================== -->
-
-
-          <div class="field">
-
-            <label for="saree-name">
-              Saree name
-            </label>
-
-            <input
-              id="saree-name"
-              name="saree_name"
-              type="text"
-              required
-            >
-
+            <section class="admin-card editor-section" aria-labelledby="pricing-title">
+              <div class="editor-section-heading">
+                <div><span class="editor-step">03</span><h2 id="pricing-title">Pricing and stock</h2></div>
+                <p>Your purchase cost stays private. Customers only see the selling price.</p>
+              </div>
+              <div class="editor-grid editor-pricing-grid">
+                <div class="editor-field">
+                  <label for="purchase-price">Your cost price (₹) <span class="required-mark">*</span></label>
+                  <input id="purchase-price" name="purchase_price" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="What you paid" required>
+                </div>
+                <div class="editor-field">
+                  <label for="selling-price">Regular price (₹) <span class="required-mark">*</span></label>
+                  <input id="selling-price" name="selling_price" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Displayed price" required>
+                </div>
+                <div class="editor-field">
+                  <label for="sale-price">Offer price (₹) <span class="optional-mark">Optional</span></label>
+                  <input id="sale-price" name="sale_price" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Leave blank for no offer">
+                </div>
+                <div class="editor-field">
+                  <label for="stock-quantity">Available stock <span class="required-mark">*</span></label>
+                  <input id="stock-quantity" name="stock_quantity" type="number" min="0" max="1000000" step="1" inputmode="numeric" placeholder="Quantity available" required>
+                </div>
+              </div>
+              <div id="price-insight" class="price-insight" aria-live="polite">Enter your cost price and selling price to see the estimated margin.</div>
+            </section>
           </div>
 
+          <aside class="editor-side-column">
+            <section class="admin-card editor-section" aria-labelledby="publish-title">
+              <div class="editor-section-heading">
+                <div><span class="editor-step">04</span><h2 id="publish-title">Store settings</h2></div>
+              </div>
+              <div class="editor-toggle-list">
+                <label class="editor-toggle"><input name="active_toggle" type="checkbox" checked><span><strong>Show in store</strong><small>Customers can view and order this product.</small></span></label>
+                <label class="editor-toggle"><input name="featured" type="checkbox"><span><strong>Featured product</strong><small>Allow this saree to appear in featured sections.</small></span></label>
+                <label class="editor-toggle"><input name="bestseller" type="checkbox"><span><strong>Bestseller</strong><small>Mark this item as a bestseller.</small></span></label>
+                <label class="editor-toggle"><input name="blouse_included" type="checkbox"><span><strong>Blouse piece included</strong><small>Show this detail on the product page.</small></span></label>
+              </div>
+            </section>
+            <section class="admin-card editor-help-card">
+              <h3>What happens after saving?</h3>
+              <ol>
+                <li>The product appears in your online catalogue.</li>
+                <li>Customers see the selling / offer price, not your cost price.</li>
+                <li>Verified Razorpay payments update the order and stock automatically.</li>
+                <li>Sales and product costs feed into the finance summary.</li>
+              </ol>
+            </section>
+          </aside>
+        </div>
 
-          <div class="field">
-
-            <label for="sku">
-              SKU
-            </label>
-
-            <input
-              id="sku"
-              name="sku"
-              type="text"
-              required
-              spellcheck="false"
-            >
-
+        <div class="editor-submit-bar">
+          <p id="product-form-status" class="editor-status" role="status" aria-live="polite"></p>
+          <div class="editor-submit-actions">
+            <a class="btn btn-outline" href="products.html">Cancel</a>
+            <button class="btn btn-gold" type="submit" data-save-product>Save product</button>
           </div>
-
-
-          <div class="field">
-
-            <label for="category">
-              Category
-            </label>
-
-            <select
-              id="category"
-              name="category_id"
-              required
-            ></select>
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="fabric">
-              Fabric
-            </label>
-
-            <input
-              id="fabric"
-              name="fabric"
-              type="text"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="colour">
-              Colour
-            </label>
-
-            <input
-              id="colour"
-              name="colour"
-              type="text"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="pattern">
-              Pattern
-            </label>
-
-            <input
-              id="pattern"
-              name="pattern"
-              type="text"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="occasion">
-              Occasion
-            </label>
-
-            <input
-              id="occasion"
-              name="occasion"
-              type="text"
-            >
-
-          </div>
-
-
-          <!-- =================================================
-               PRICING
-          ================================================== -->
-
-
-          <div class="field">
-
-            <label for="purchase-price">
-              Purchase price
-            </label>
-
-            <input
-              id="purchase-price"
-              name="purchase_price"
-              type="number"
-              min="0"
-              step="0.01"
-              inputmode="decimal"
-              required
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="selling-price">
-              Selling price
-            </label>
-
-            <input
-              id="selling-price"
-              name="selling_price"
-              type="number"
-              min="0"
-              step="0.01"
-              inputmode="decimal"
-              required
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="sale-price">
-              Sale price
-              <span style="font-weight:400;color:#888;">
-                (optional)
-              </span>
-            </label>
-
-            <input
-              id="sale-price"
-              name="sale_price"
-              type="number"
-              min="0"
-              step="0.01"
-              inputmode="decimal"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="stock-quantity">
-              Stock
-            </label>
-
-            <input
-              id="stock-quantity"
-              name="stock_quantity"
-              type="number"
-              min="0"
-              step="1"
-              inputmode="numeric"
-              required
-            >
-
-          </div>
-
-
-          <!-- =================================================
-               DESCRIPTION
-          ================================================== -->
-
-
-          <div class="field full">
-
-            <label for="description">
-              Description
-            </label>
-
-            <textarea
-              id="description"
-              name="description"
-              rows="6"
-            ></textarea>
-
-          </div>
-
-
-          <!-- =================================================
-               PRODUCT OPTIONS
-          ================================================== -->
-
-
-          <div class="field">
-
-            <label>
-              <input
-                name="blouse_included"
-                type="checkbox"
-              >
-
-              Blouse included
-
-            </label>
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              <input
-                name="featured"
-                type="checkbox"
-              >
-
-              Featured
-
-            </label>
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              <input
-                name="active_toggle"
-                type="checkbox"
-                checked
-              >
-
-              Product active
-
-            </label>
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              <input
-                name="bestseller"
-                type="checkbox"
-              >
-
-              Bestseller
-
-            </label>
-
-          </div>
-
-
-          <!-- =================================================
-               PRODUCT IMAGES
-          ================================================== -->
-
-          <div class="field full">
-
-            <label for="images">
-              Product images
-            </label>
-
-            <input
-              id="images"
-              name="images"
-              type="file"
-              accept="image/*"
-              multiple
-            >
-
-            <small>
-              Images are watermarked with NOOLTHARI™ before
-              being uploaded to Supabase Storage.
-            </small>
-
-          </div>
-
-
-          <!-- =================================================
-               SUBMIT
-          ================================================== -->
-
-          <div class="full">
-
-            <button
-              class="btn btn-gold"
-              type="submit"
-            >
-              Save product
-            </button>
-
-          </div>
-
-
-        </form>
-
-      </section>
-
+        </div>
+      </form>
     </main>
-
   </div>
 
-
-  <!-- =====================================================
-       JAVASCRIPT
-       Existing paths preserved
-  ====================================================== -->
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
-  ></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
   <script src="../js/config.js"></script>
-
   <script src="../js/supabase.js"></script>
-
   <script src="../js/utils.js"></script>
-
   <script src="../js/app.js"></script>
-
   <script src="../admin/js/products.js"></script>
-
-
 </body>
-
 </html>

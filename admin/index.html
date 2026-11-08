@@ -1,387 +1,114 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
-
-  <meta
-    name="theme-color"
-    content="#0B3D45"
-  >
-
-  <meta
-    name="description"
-    content="NOOLTHARI™ Admin Dashboard."
-  >
-
-  <title>
-    Admin Dashboard | NOOLTHARI™
-  </title>
-
-
-  <!-- =====================================================
-       FONTS
-  ====================================================== -->
-<!-- =====================================================
-       STYLES
-  ====================================================== -->
-
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#123e42">
+  <meta name="description" content="NOOLTHARI business and store dashboard.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Business dashboard | NOOLTHARI™</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link
-    rel="stylesheet"
-    href="../css/main.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="../css/admin.css"
-
-  >
-
-  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
 </head>
-
-
 <body data-root="../">
-
-
-  <!-- =====================================================
-       ADMIN LAYOUT
-  ====================================================== -->
-
   <div class="admin-shell">
-
-
-    <!-- ===================================================
-         SIDEBAR
-    ==================================================== -->
-
     <aside class="admin-side">
-
       <div class="admin-top">
-
-
-        <a
-          class="admin-logo"
-          href="index.html"
-          aria-label="NOOLTHARI Admin Dashboard"
-        >
-
-          <img
-            src="../assets/logo/noolthari-logo.webp"
-            alt="NOOLTHARI™"
-            loading="eager"
-          >
-
-
-          <span>
-            NOOLTHARI™
-          </span>
-
+        <a class="admin-logo" href="index.html" aria-label="NOOLTHARI Admin Dashboard">
+          <img src="../assets/logo/noolthari-logo.webp" alt="NOOLTHARI™"><span>NOOLTHARI™</span>
         </a>
-
-
-        <button
-          class="admin-mobile-toggle"
-          data-admin-menu
-          type="button"
-          aria-label="Open admin menu"
-          aria-expanded="false"
-        >
-          Menu
-        </button>
-
+        <button class="admin-mobile-toggle" data-admin-menu type="button" aria-label="Open admin menu" aria-expanded="false">Menu</button>
       </div>
-
-
-      <!-- =================================================
-           ADMIN NAVIGATION
-      ================================================== -->
-
-      <nav
-        class="admin-nav"
-        aria-label="Admin navigation"
-      >
-
-        <a
-          href="index.html"
-          class="active"
-          aria-current="page"
-        >
-          Dashboard
-        </a>
-
-        <a href="products.html">
-          Products
-        </a>
-
-        <a href="categories.html">
-          Categories
-        </a>
-
-        <a href="orders.html">
-          Orders
-        </a>
-
-        <a href="customers.html">
-          Customers
-        </a>
-
-        <a href="returns.html">
-          Returns
-        </a>
-
-        <a href="messages.html">
-          Messages
-        </a>
-
-        <a href="accounting.html">
-          Finance
-        </a>
-
-
-        <a href="../index.html">
-          View store
-        </a>
-
-        <a href="../account.html">
-          Account
-        </a>
-
-        <a
-          href="#"
-          data-logout
-        >
-          Sign out
-        </a>
-
+      <nav class="admin-nav" aria-label="Admin navigation">
+        <a href="index.html" class="active" aria-current="page">Dashboard</a>
+        <a href="activity.html">Activity</a>
+        <a href="products.html">Products</a>
+        <a href="categories.html">Categories</a>
+        <a href="orders.html">Orders</a>
+        <a href="customers.html">Customers</a>
+        <a href="returns.html">Returns</a>
+        <a href="messages.html">Messages</a>
+        <a href="accounting.html">Finance</a>
+        <a href="../index.html">View store</a>
+        <a href="../account.html">Account</a>
+        <a href="#" data-logout>Sign out</a>
       </nav>
-
     </aside>
 
-
-    <!-- =====================================================
-         MAIN CONTENT
-    ====================================================== -->
-
-    <main class="admin-main">
-
-
-      <!-- ===================================================
-           PAGE HEADER
-      ==================================================== -->
-
-      <header class="admin-page-header">
-
-        <div class="eyebrow">
-          NOOLTHARI™ ADMIN
+    <main class="admin-main admin-dashboard-main">
+      <header class="admin-page-header dashboard-welcome">
+        <div>
+          <div class="eyebrow">NOOLTHARI™ · STORE MANAGEMENT</div>
+          <h1 class="page-title">Business dashboard</h1>
+          <p class="finance-note">Your products, orders, customers and business figures in one place.</p>
         </div>
-
-
-        <h1 class="page-title">
-          Business dashboard
-        </h1>
-
+        <a class="btn btn-gold dashboard-primary-action" href="product-add.html">＋ Add new product</a>
       </header>
 
-
-      <!-- ===================================================
-           DASHBOARD STATISTICS
-      ==================================================== -->
-
-      <section
-        class="stat-grid"
-        aria-label="Business dashboard statistics"
-      >
-
-
-        <!-- PRODUCTS -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Products
-          </div>
-
-          <strong id="s-products">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- ORDERS -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Orders
-          </div>
-
-          <strong id="s-orders">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- CUSTOMERS -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Customers
-          </div>
-
-          <strong id="s-customers">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- RETURNS -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Open returns
-          </div>
-
-          <strong id="s-returns">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- SALES -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            YTD sales
-          </div>
-
-          <strong id="s-sales">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- PROFIT -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            YTD profit
-          </div>
-
-          <strong id="s-profit">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- CASH -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Cash / bank snapshot
-          </div>
-
-          <strong id="cash-balance">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- INVENTORY -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Inventory value
-          </div>
-
-          <strong id="inventory-value">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- LOW STOCK -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Low stock
-          </div>
-
-          <strong id="low-stock">
-            —
-          </strong>
-
-        </div>
-
-
-        <!-- EQUITY -->
-
-        <div class="stat">
-
-          <div class="eyebrow">
-            Net equity snapshot
-          </div>
-
-          <strong id="equity-value">
-            —
-          </strong>
-
-        </div>
-
-
+      <section class="admin-quick-actions" aria-label="Quick actions">
+        <a href="products.html"><span class="quick-action-icon" aria-hidden="true">▧</span><span><strong>Products</strong><small>Manage your catalogue</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
+        <a href="orders.html"><span class="quick-action-icon" aria-hidden="true">▤</span><span><strong>Orders</strong><small>Payments and delivery</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
+        <a href="customers.html"><span class="quick-action-icon" aria-hidden="true">♙</span><span><strong>Customers</strong><small>Customer information</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
+        <a href="accounting.html"><span class="quick-action-icon" aria-hidden="true">₹</span><span><strong>Finance</strong><small>Sales, costs and expenses</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
       </section>
 
+      <section class="dashboard-section" aria-labelledby="overview-heading">
+        <div class="dashboard-section-heading">
+          <div><div class="eyebrow">STORE OVERVIEW</div><h2 id="overview-heading">Business at a glance</h2></div>
+          <span id="dashboard-period" class="dashboard-period">This calendar year</span>
+        </div>
+        <div class="stat-grid dashboard-stat-grid" aria-label="Business dashboard statistics">
+          <div class="stat"><div class="eyebrow">Products</div><strong id="s-products">—</strong><small>All products in catalogue</small></div>
+          <div class="stat"><div class="eyebrow">Total orders</div><strong id="s-orders">—</strong><small>Including pending orders</small></div>
+          <div class="stat"><div class="eyebrow">Customers</div><strong id="s-customers">—</strong><small>Registered customer accounts</small></div>
+          <div class="stat"><div class="eyebrow">Open returns</div><strong id="s-returns">—</strong><small>Needs your attention</small></div>
+          <div class="stat stat-finance"><div class="eyebrow">Paid sales · YTD</div><strong id="s-sales">—</strong><small>Verified paid orders</small></div>
+          <div class="stat stat-finance"><div class="eyebrow">Estimated profit · YTD</div><strong id="s-profit">—</strong><small>Sales less saved product costs and expenses</small></div>
+          <div class="stat"><div class="eyebrow">Paid order value</div><strong id="cash-balance">—</strong><small>Not a bank / Razorpay settlement balance</small></div>
+          <div class="stat"><div class="eyebrow">Inventory cost value</div><strong id="inventory-value">—</strong><small>Active stock at saved cost price</small></div>
+          <div class="stat"><div class="eyebrow">Low stock</div><strong id="low-stock">—</strong><small>Active products with 3 or fewer units</small></div>
+          <div class="stat"><div class="eyebrow">Estimated net position</div><strong id="equity-value">—</strong><small>Management estimate</small></div>
+        </div>
+      </section>
 
+      <section class="dashboard-bottom-grid">
+        <div class="admin-card recent-orders-card">
+          <div class="dashboard-section-heading">
+            <div><div class="eyebrow">LATEST ACTIVITY</div><h2>Recent orders</h2></div>
+            <a class="text-link" href="orders.html">View all orders →</a>
+          </div>
+          <div id="recent-orders-list" class="recent-orders-list" aria-live="polite">
+            <p class="dashboard-loading">Loading recent orders…</p>
+          </div>
+        </div>
+
+        <aside class="admin-card dashboard-help-card">
+          <div class="eyebrow">DAILY WORKFLOW</div>
+          <h2>Keep your store running smoothly.</h2>
+          <ol>
+            <li><span>1</span><div><strong>Add your sarees</strong><small>Upload photos, product details, price and stock.</small></div></li>
+            <li><span>2</span><div><strong>Review new orders</strong><small>Payment verification and stock updates are handled by the payment flow.</small></div></li>
+            <li><span>3</span><div><strong>Pack and dispatch</strong><small>Update delivery progress from the Orders section.</small></div></li>
+            <li><span>4</span><div><strong>Check business figures</strong><small>Review recorded sales, cost price and expenses in Finance.</small></div></li>
+          </ol>
+          <a class="btn btn-outline" href="accounting.html">Open finance summary</a>
+        </aside>
+      </section>
+
+      <p class="dashboard-footnote">Finance figures are calculated from the orders, product costs and expenses recorded in this store. Razorpay payouts and bank deposits must still be reconciled against your Razorpay and bank statements.</p>
+      <p id="dashboard-status" class="editor-status" role="status" aria-live="polite"></p>
     </main>
-
   </div>
 
-
-  <!-- =====================================================
-       JAVASCRIPT
-       Existing paths preserved
-  ====================================================== -->
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
-  ></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
   <script src="../js/config.js"></script>
-
   <script src="../js/supabase.js"></script>
-
   <script src="../js/utils.js"></script>
-
   <script src="../js/app.js"></script>
-
   <script src="../admin/js/dashboard.js"></script>
-
-
 </body>
-
 </html>

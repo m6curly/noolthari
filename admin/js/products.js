@@ -1,1486 +1,749 @@
 /* =========================================================
    NOOLTHARI™ ADMIN PRODUCTS
-   Product CRUD + watermark + safe product removal
+   Product editor, Instagram video link, responsive watermark
+   and safe product listing/removal.
 ========================================================= */
 
+const NOOLTHARI_WATERMARK = Object.freeze({
+  text: 'NOOLTHARI™',
+  maxImageEdge: 2400,
+  opacity: 0.22,
+  fontRatio: 0.028,
+  quality: 0.92,
+  maxFiles: 8,
+  maxFileBytes: 15 * 1024 * 1024
+});
 
-/* =========================================================
-   REMOVE UNWANTED LENGTH FIELDS
-   Keeps Add/Edit UI free from:
-   - saree_length
-   - blouse_length
-========================================================= */
+let activeProductId = null;
+let loadedProduct = null;
+let existingProductImageCount = 0;
+let holdUntilUploadComplete = false;
+const watermarkedImageCache = new Map();
+const uploadedImageKeys = new Set();
+const previewObjectUrls = [];
 
-function removeLengthFieldsFromProductForm() {
-
-  const selectors = [
-    '[name="saree_length"]',
-    '[name="blouse_length"]'
-  ];
-
-  selectors.forEach(selector => {
-
-    const input =
-      document.querySelector(selector);
-
-    if (!input) {
-      return;
-    }
-
-    const wrapper =
-      input.closest('.field') ||
-      input.closest('.form-group');
-
-    if (wrapper) {
-      wrapper.remove();
-      return;
-    }
-
-    input.remove();
-
-  });
-
+function productFileKey(file) {
+  return [file.name, file.size, file.lastModified].join('|');
 }
 
+function setEditorStatus(message, kind = '') {
+  const status = NL.qs('#product-form-status');
+  if (status) {
+    status.textContent = message || '';
+    status.className = `editor-status${kind ? ` is-${kind}` : ''}`;
+  }
+}
 
-/* =========================================================
-   PRODUCT LIST
-========================================================= */
+function setImageStatus(message, kind = '') {
+  const status = NL.qs('#image-processing-status');
+  if (status) {
+    status.textContent = message || '';
+    status.className = `editor-status${kind ? ` is-${kind}` : ''}`;
+  }
+}
 
-async function adminProductTable() {
+function formatRupees(value) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2
+  }).format(Number(value || 0));
+}
 
-  const table =
-    NL.qs('#products-table');
+function makeSku() {
+  const randomPart = (typeof crypto !== 'undefined' && crypto.getRandomValues)
+    ? Array.from(crypto.getRandomValues(new Uint8Array(3)), value => value.toString(16).padStart(2, '0')).join('').toUpperCase()
+    : Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `NT-${Date.now().toString(36).slice(-5).toUpperCase()}-${randomPart}`;
+}
 
-  if (!table) {
+function slugify(value) {
+  return String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function normalizeInstagramUrl(value) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return null;
+
+  let url;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    throw new Error('Enter a complete Instagram link beginning with https://.');
+  }
+
+  const allowedHosts = new Set(['instagram.com', 'www.instagram.com', 'm.instagram.com']);
+  if (url.protocol !== 'https:' || !allowedHosts.has(url.hostname.toLowerCase())) {
+    throw new Error('Please use a valid Instagram Reel or video link.');
+  }
+  if (url.pathname === '/' || url.pathname.length < 2) {
+    throw new Error('Paste the direct Instagram Reel or video link, not only the Instagram homepage.');
+  }
+  return url.href;
+}
+
+function updatePriceInsight() {
+  const cost = Number(NL.qs('[name="purchase_price"]')?.value || 0);
+  const regular = Number(NL.qs('[name="selling_price"]')?.value || 0);
+  const offerInput = NL.qs('[name="sale_price"]')?.value;
+  const offer = offerInput === '' || offerInput == null ? null : Number(offerInput);
+  const output = NL.qs('#price-insight');
+  if (!output) return;
+
+  if (!Number.isFinite(cost) || !Number.isFinite(regular) || cost < 0 || regular <= 0) {
+    output.textContent = 'Enter your cost price and selling price to see the estimated margin.';
+    output.classList.remove('is-positive', 'is-negative');
     return;
   }
 
+  const actualSelling = offer != null && Number.isFinite(offer) && offer > 0 && offer < regular
+    ? offer
+    : regular;
+  const margin = actualSelling - cost;
+  const marginPercent = actualSelling > 0 ? (margin / actualSelling) * 100 : 0;
+  const label = offer != null && offer > 0 && offer < regular ? 'Offer price' : 'Selling price';
+  output.textContent = `${label}: ${formatRupees(actualSelling)}  ·  Estimated gross margin: ${formatRupees(margin)} (${marginPercent.toFixed(1)}%) per saree`;
+  output.classList.toggle('is-positive', margin >= 0);
+  output.classList.toggle('is-negative', margin < 0);
+}
 
-  const result =
-    await sb
-      .from('products')
-      .select(
-        `
-          id,
-          saree_name,
-          sku,
-          selling_price,
-          stock_quantity,
-          status,
-          categories(name)
-        `
-      )
-      .order(
-        'created_at',
-        {
-          ascending: false
-        }
-      );
+/* ---------------------------------------------------------
+   Product listing
+--------------------------------------------------------- */
+async function adminProductTable() {
+  const table = NL.qs('#products-table');
+  if (!table) return;
 
+  const result = await sb
+    .from('products')
+    .select(`
+      id, saree_name, sku, selling_price, sale_price,
+      stock_quantity, status, categories(name),
+      product_images(public_url, sort_order)
+    `)
+    .order('created_at', { ascending: false });
 
   if (result.error) {
-
-    console.error(
-      'Product table error:',
-      result.error
-    );
-
-    NL.toast(
-      result.error.message,
-      'error'
-    );
-
+    console.error('Product table error:', result.error);
+    NL.toast(result.error.message || 'Unable to load products.', 'error');
+    table.innerHTML = '<tr><td colspan="6">Products could not be loaded. Please refresh.</td></tr>';
     return;
   }
 
-
-  const products =
-    result.data || [];
-
-
+  const products = result.data || [];
   if (!products.length) {
-
-    table.innerHTML = `
-      <tr>
-        <td colspan="6">
-          No products yet.
-        </td>
-      </tr>
-    `;
-
+    table.innerHTML = '<tr><td colspan="6">No products yet. Add your first saree to start the catalogue.</td></tr>';
     return;
   }
 
+  table.innerHTML = products.map(product => {
+    const inactive = product.status === 'inactive';
+    const image = (product.product_images || [])
+      .slice()
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))[0]?.public_url;
+    const actualPrice = Number(product.sale_price) > 0 && Number(product.sale_price) < Number(product.selling_price)
+      ? Number(product.sale_price)
+      : Number(product.selling_price || 0);
 
-  table.innerHTML =
-    products
-      .map(product => {
-
-        const inactive =
-          product.status === 'inactive';
-
-
-        return `
-          <tr>
-
-            <td>
-              ${NL.esc(
-                product.saree_name || ''
-              )}
-            </td>
-
-            <td>
-              ${NL.esc(
-                product.sku || ''
-              )}
-            </td>
-
-            <td>
-              ${NL.money(
-                product.selling_price || 0
-              )}
-            </td>
-
-            <td>
-              ${Number(
-                product.stock_quantity || 0
-              )}
-            </td>
-
-            <td>
-              ${NL.esc(
-                product.status || ''
-              )}
-            </td>
-
-            <td>
-
-              <div
-                style="
-                  display:flex;
-                  gap:8px;
-                  align-items:center;
-                  flex-wrap:wrap;
-                "
-              >
-
-                <a
-                  class="btn btn-outline"
-                  href="${NL.path(
-                    'admin/product-edit.html?id=' +
-                    product.id
-                  )}"
-                >
-                  Edit
-                </a>
-
-
-                <button
-                  class="btn product-remove-btn"
-                  type="button"
-                  data-remove-product="${NL.esc(
-                    product.id
-                  )}"
-                  data-product-name="${NL.esc(
-                    product.saree_name || ''
-                  )}"
-                  ${inactive ? 'disabled' : ''}
-                >
-
-                  ${
-                    inactive
-                      ? 'Removed'
-                      : 'Remove'
-                  }
-
-                </button>
-
-              </div>
-
-            </td>
-
-          </tr>
-        `;
-
-      })
-      .join('');
-
+    return `
+      <tr>
+        <td>
+          <div class="product-table-name">
+            ${image ? `<img src="${NL.esc(image)}" alt="" loading="lazy">` : '<span class="product-table-placeholder" aria-hidden="true">N</span>'}
+            <span><strong>${NL.esc(product.saree_name || 'Untitled product')}</strong><small>${NL.esc(product.categories?.name || 'Uncategorised')}</small></span>
+          </div>
+        </td>
+        <td>${NL.esc(product.sku || '—')}</td>
+        <td>${NL.money(actualPrice)}</td>
+        <td>${Number(product.stock_quantity || 0)}</td>
+        <td><span class="product-status ${inactive ? 'is-inactive' : 'is-active'}">${inactive ? 'Inactive' : 'Active'}</span></td>
+        <td>
+          <div class="product-row-actions">
+            <a class="btn btn-outline" href="${NL.path(`admin/product-edit.html?id=${encodeURIComponent(product.id)}`)}">Edit</a>
+            <button class="btn product-remove-btn" type="button"
+              data-remove-product="${NL.esc(product.id)}"
+              data-product-name="${NL.esc(product.saree_name || '')}"
+              ${inactive ? 'disabled' : ''}>${inactive ? 'Inactive' : 'Hide'}</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
 
   bindProductRemoveButtons();
-
 }
-
-
-/* =========================================================
-   PRODUCT REMOVE
-   Safe removal = inactive
-   Existing orders/history remain intact.
-========================================================= */
 
 function bindProductRemoveButtons() {
+  NL.qsa('[data-remove-product]').forEach(button => {
+    button.onclick = async () => {
+      const productId = button.dataset.removeProduct;
+      const productName = button.dataset.productName || 'this product';
+      if (!productId) return;
 
-  NL.qsa(
-    '[data-remove-product]'
-  ).forEach(button => {
+      const confirmed = window.confirm(
+        `Hide “${productName}” from the online store?\n\nThe product, stock history and existing orders will be preserved. You can edit and activate it again later.`
+      );
+      if (!confirmed) return;
 
-    button.onclick =
-      async () => {
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Saving…';
 
-        const productId =
-          button.dataset.removeProduct;
-
-        const productName =
-          button.dataset.productName ||
-          'this product';
-
-
-        if (!productId) {
-          return;
-        }
-
-
-        const confirmed =
-          window.confirm(
-            `Remove "${productName}" from the store?\n\n` +
-            `The product will become inactive and will no longer appear to customers. ` +
-            `Existing orders and accounting history will be preserved.`
-          );
-
-
-        if (!confirmed) {
-          return;
-        }
-
-
-        const originalText =
-          button.textContent;
-
-
-        button.disabled =
-          true;
-
-        button.textContent =
-          'Removing...';
-
-
-        try {
-
-          const result =
-            await sb
-              .from('products')
-              .update({
-                status: 'inactive',
-                updated_at:
-                  new Date().toISOString()
-              })
-              .eq(
-                'id',
-                productId
-              );
-
-
-          if (result.error) {
-            throw result.error;
-          }
-
-
-          NL.toast(
-            'Product removed from the store.',
-            'success'
-          );
-
-
-          await adminProductTable();
-
-
-        } catch (error) {
-
-          console.error(
-            'Product removal error:',
-            error
-          );
-
-
-          NL.toast(
-            error.message ||
-            'Unable to remove product.',
-            'error'
-          );
-
-
-          button.disabled =
-            false;
-
-          button.textContent =
-            originalText;
-
-        }
-
-      };
-
-  });
-
-}
-
-
-/* =========================================================
-   LOAD PRODUCT FOR EDIT
-========================================================= */
-
-async function loadEditProduct() {
-
-  const id =
-    NL.query.get('id');
-
-  if (!id) {
-    return;
-  }
-
-
-  const result =
-    await sb
-      .from('admin_products')
-      .select('*')
-      .eq(
-        'id',
-        id
-      )
-      .single();
-
-
-  if (result.error) {
-
-    console.error(
-      'Load product error:',
-      result.error
-    );
-
-    NL.toast(
-      result.error.message,
-      'error'
-    );
-
-    return;
-  }
-
-
-  const product =
-    result.data;
-
-
-  const setField =
-    (name, value) => {
-
-      const element =
-        document.querySelector(
-          `[name="${name}"]`
-        );
-
-      if (element) {
-        element.value =
-          value ?? '';
+      try {
+        const result = await sb
+          .from('products')
+          .update({ status: 'inactive', updated_at: new Date().toISOString() })
+          .eq('id', productId);
+        if (result.error) throw result.error;
+        NL.toast('Product hidden from the store. Its data has been preserved.', 'success');
+        await adminProductTable();
+      } catch (error) {
+        console.error('Product status update failed:', error);
+        NL.toast(error.message || 'Unable to update product.', 'error');
+        button.disabled = false;
+        button.textContent = originalText;
       }
-
     };
-
-
-  setField(
-    'saree_name',
-    product.saree_name
-  );
-
-  setField(
-    'sku',
-    product.sku
-  );
-
-  setField(
-    'fabric',
-    product.fabric
-  );
-
-  setField(
-    'colour',
-    product.colour
-  );
-
-  setField(
-    'pattern',
-    product.pattern
-  );
-
-  setField(
-    'occasion',
-    product.occasion
-  );
-
-  setField(
-    'purchase_price',
-    product.purchase_price
-  );
-
-  setField(
-    'selling_price',
-    product.selling_price
-  );
-
-  setField(
-    'sale_price',
-    product.sale_price ?? ''
-  );
-
-  setField(
-    'stock_quantity',
-    product.stock_quantity
-  );
-
-  setField(
-    'description',
-    product.description
-  );
-
-
-  const category =
-    document.querySelector(
-      '[name="category_id"]'
-    );
-
-  if (category) {
-    category.value =
-      product.category_id || '';
-  }
-
-
-  const blouseIncluded =
-    document.querySelector(
-      '[name="blouse_included"]'
-    );
-
-  if (blouseIncluded) {
-    blouseIncluded.checked =
-      !!product.blouse_included;
-  }
-
-
-  const featured =
-    document.querySelector(
-      '[name="featured"]'
-    );
-
-  if (featured) {
-    featured.checked =
-      !!product.featured;
-  }
-
-
-  const bestseller =
-    document.querySelector(
-      '[name="bestseller"]'
-    );
-
-  if (bestseller) {
-    bestseller.checked =
-      !!product.bestseller;
-  }
-
-
-  const activeToggle =
-    document.querySelector(
-      '[name="active_toggle"]'
-    );
-
-  if (activeToggle) {
-    activeToggle.checked =
-      product.status === 'active';
-  }
-
+  });
 }
 
-
-/* =========================================================
-   WATERMARK SETTINGS
-========================================================= */
-
-const NOOLTHARI_WATERMARK = {
-
-  text: 'NOOLTHARI',
-
-  color: '#787878',
-
-  opacity: 0.42,
-
-  fontSizeRatio: 0.052,
-
-  fontWeight: 600,
-
-  angle: -26,
-
-  spacingXRatio: 0.38,
-
-  spacingYRatio: 0.19,
-
-  quality: 0.94
-
-};
-
-
-/* =========================================================
-   LOAD IMAGE FROM FILE
-========================================================= */
-
-function loadImageFromFile(file) {
-
-  return new Promise(
-    (resolve, reject) => {
-
-      const url =
-        URL.createObjectURL(file);
-
-
-      const image =
-        new Image();
-
-
-      image.onload = () => {
-
-        URL.revokeObjectURL(url);
-
-        resolve(image);
-
-      };
-
-
-      image.onerror = () => {
-
-        URL.revokeObjectURL(url);
-
-        reject(
-          new Error(
-            'Unable to read image.'
-          )
-        );
-
-      };
-
-
-      image.src =
-        url;
-
+/* ---------------------------------------------------------
+   Device-correct photo decoding and watermark rendering
+--------------------------------------------------------- */
+async function decodeImageFile(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return { source: bitmap, width: bitmap.width, height: bitmap.height, cleanup: () => bitmap.close?.() };
+    } catch (error) {
+      console.info('ImageBitmap decode fallback:', error?.message || error);
     }
-  );
+  }
 
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error('This photo format could not be opened. Please use JPG, PNG or WebP.'));
+      element.src = objectUrl;
+    });
+    return {
+      source: image,
+      width: image.naturalWidth || image.width,
+      height: image.naturalHeight || image.height,
+      cleanup: () => URL.revokeObjectURL(objectUrl)
+    };
+  } catch (error) {
+    URL.revokeObjectURL(objectUrl);
+    throw error;
+  }
 }
 
-
-/* =========================================================
-   CREATE WATERMARKED IMAGE
-   Repeated diagonal NOOLTHARI pattern
-========================================================= */
+function averageLuminance(ctx, width, height, centerX, centerY, sampleWidth, sampleHeight) {
+  const x = Math.max(0, Math.min(width - 1, Math.round(centerX - sampleWidth / 2)));
+  const y = Math.max(0, Math.min(height - 1, Math.round(centerY - sampleHeight / 2)));
+  const w = Math.max(1, Math.min(sampleWidth, width - x));
+  const h = Math.max(1, Math.min(sampleHeight, height - y));
+  try {
+    const pixels = ctx.getImageData(x, y, w, h).data;
+    let total = 0;
+    let count = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      total += (0.2126 * pixels[i]) + (0.7152 * pixels[i + 1]) + (0.0722 * pixels[i + 2]);
+      count++;
+    }
+    return count ? total / count : 128;
+  } catch {
+    return 128;
+  }
+}
 
 async function createWatermarkedImage(file) {
-
-  const image =
-    await loadImageFromFile(file);
-
-
-  const width =
-    image.naturalWidth ||
-    image.width;
-
-  const height =
-    image.naturalHeight ||
-    image.height;
-
-
-  if (
-    !width ||
-    !height
-  ) {
-
-    throw new Error(
-      'Invalid image dimensions.'
-    );
-
+  if (!(file instanceof Blob) || !String(file.type || '').startsWith('image/')) {
+    throw new Error('Please select a supported image file.');
+  }
+  if (file.size > NOOLTHARI_WATERMARK.maxFileBytes) {
+    throw new Error(`“${file.name}” is larger than 15 MB. Please choose a smaller photo.`);
   }
 
+  const decoded = await decodeImageFile(file);
+  try {
+    const sourceWidth = Number(decoded.width);
+    const sourceHeight = Number(decoded.height);
+    if (!sourceWidth || !sourceHeight) throw new Error('The selected photo has invalid dimensions.');
 
-  const canvas =
-    document.createElement(
-      'canvas'
+    const scale = Math.min(1, NOOLTHARI_WATERMARK.maxImageEdge / Math.max(sourceWidth, sourceHeight));
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
+    if (!context) throw new Error('Photo processing is not supported by this browser. Please try an updated browser.');
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(decoded.source, 0, 0, width, height);
+
+    // One small, restrained brand mark. Colour automatically contrasts with
+    // the underlying photo so it remains visible without hiding the saree.
+    const minDimension = Math.min(width, height);
+    const fontSize = Math.max(12, Math.min(38, Math.round(minDimension * NOOLTHARI_WATERMARK.fontRatio)));
+    const text = NOOLTHARI_WATERMARK.text;
+    context.save();
+    context.font = `500 ${fontSize}px Georgia, 'Times New Roman', serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+
+    const markX = Math.round(width * 0.72);
+    const markY = Math.round(height * 0.91);
+    const textWidth = context.measureText(text).width;
+    const luminance = averageLuminance(
+      context, width, height, markX, markY,
+      Math.max(fontSize * 5, textWidth * 0.8),
+      Math.max(fontSize * 2, 20)
     );
-
-
-  canvas.width =
-    width;
-
-  canvas.height =
-    height;
-
-
-  const ctx =
-    canvas.getContext(
-      '2d',
-      {
-        alpha: false
-      }
-    );
-
-
-  if (!ctx) {
-
-    throw new Error(
-      'Image processing is not supported by this browser.'
-    );
-
-  }
-
-
-  /* -------------------------------------------------------
-     Draw original photograph
-  ------------------------------------------------------- */
-
-  ctx.drawImage(
-    image,
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  /* -------------------------------------------------------
-     Watermark dimensions
-  ------------------------------------------------------- */
-
-  const fontSize =
-    Math.max(
-      28,
-      Math.round(
-        Math.min(
-          width,
-          height
-        ) *
-        NOOLTHARI_WATERMARK.fontSizeRatio
-      )
-    );
-
-
-  const diagonal =
-    Math.sqrt(
-      width * width +
-      height * height
-    );
-
-
-  const spacingX =
-    Math.max(
-      170,
-      Math.round(
-        width *
-        NOOLTHARI_WATERMARK.spacingXRatio
-      )
-    );
-
-
-  const spacingY =
-    Math.max(
-      95,
-      Math.round(
-        height *
-        NOOLTHARI_WATERMARK.spacingYRatio
-      )
-    );
-
-
-  /* -------------------------------------------------------
-     Draw repeated watermark
-  ------------------------------------------------------- */
-
-  ctx.save();
-
-
-  ctx.globalAlpha =
-    NOOLTHARI_WATERMARK.opacity;
-
-
-  ctx.fillStyle =
-    NOOLTHARI_WATERMARK.color;
-
-
-  ctx.font =
-    `${NOOLTHARI_WATERMARK.fontWeight} ${fontSize}px Arial, Helvetica, sans-serif`;
-
-
-  ctx.textAlign =
-    'center';
-
-  ctx.textBaseline =
-    'middle';
-
-
-  /*
-     Light white shadow improves readability
-     on darker saree areas.
-  */
-
-  ctx.shadowColor =
-    'rgba(255,255,255,.38)';
-
-  ctx.shadowBlur =
-    3;
-
-
-  ctx.translate(
-    width / 2,
-    height / 2
-  );
-
-
-  ctx.rotate(
-    NOOLTHARI_WATERMARK.angle *
-    Math.PI /
-    180
-  );
-
-
-  for (
-    let y = -diagonal;
-    y <= diagonal;
-    y += spacingY
-  ) {
-
-    const rowNumber =
-      Math.round(
-        y / spacingY
-      );
-
-
-    const rowOffset =
-      (
-        (
-          rowNumber % 2
-        ) *
-        spacingX
-      ) / 2;
-
-
-    for (
-      let x = -diagonal;
-      x <= diagonal;
-      x += spacingX
-    ) {
-
-      ctx.fillText(
-        NOOLTHARI_WATERMARK.text,
-        x + rowOffset,
-        y
-      );
-
-    }
-
-  }
-
-
-  ctx.restore();
-
-
-  /* -------------------------------------------------------
-     Convert to JPEG
-  ------------------------------------------------------- */
-
-  const blob =
-    await new Promise(
-      (resolve, reject) => {
-
-        canvas.toBlob(
-          result => {
-
-            if (!result) {
-
-              reject(
-                new Error(
-                  'Unable to create watermarked image.'
-                )
-              );
-
-              return;
-            }
-
-
-            resolve(result);
-
-          },
-          'image/jpeg',
-          NOOLTHARI_WATERMARK.quality
-        );
-
-      }
-    );
-
-
-  const cleanName =
-    file.name.replace(
-      /\.(png|jpe?g|webp|gif)$/i,
-      ''
-    );
-
-
-  return new File(
-    [blob],
-    `${cleanName}.jpg`,
-    {
+    const useLightMark = luminance < 132;
+
+    context.globalAlpha = NOOLTHARI_WATERMARK.opacity;
+    context.fillStyle = useLightMark ? '#ffffff' : '#173f3d';
+    context.shadowColor = useLightMark ? 'rgba(0,0,0,.52)' : 'rgba(255,255,255,.75)';
+    context.shadowBlur = Math.max(1, fontSize * 0.08);
+    context.translate(markX, markY);
+    context.rotate(-4 * Math.PI / 180);
+    context.fillText(text, 0, 0);
+    context.restore();
+
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(result => {
+        if (result) resolve(result);
+        else reject(new Error('The watermarked photo could not be created. Please try another photo.'));
+      }, 'image/jpeg', NOOLTHARI_WATERMARK.quality);
+    });
+
+    const baseName = String(file.name || 'noolthari-product').replace(/\.[^/.]+$/, '').replace(/[^a-z0-9_-]/gi, '-').slice(0, 80);
+    return new File([blob], `${baseName}-noolthari.jpg`, {
       type: 'image/jpeg',
       lastModified: Date.now()
-    }
-  );
-
+    });
+  } finally {
+    decoded.cleanup?.();
+  }
 }
 
+function clearPreviewUrls() {
+  previewObjectUrls.splice(0).forEach(url => URL.revokeObjectURL(url));
+}
 
-/* =========================================================
-   UPLOAD WATERMARKED PRODUCT IMAGE
-========================================================= */
+async function prepareProductImagePreviews(input) {
+  const preview = NL.qs('#product-image-preview');
+  if (!preview || !input) return;
 
-async function uploadWatermarkedProductImage(
-  productId,
-  file,
-  sortOrder
-) {
-
-  if (
-    !file ||
-    !file.type.startsWith(
-      'image/'
-    )
-  ) {
-    return null;
+  clearPreviewUrls();
+  preview.innerHTML = '';
+  const files = Array.from(input.files || []);
+  if (!files.length) {
+    setImageStatus('', '');
+    return;
   }
 
-
-  /* Create permanent watermarked copy */
-
-  const watermarkedFile =
-    await createWatermarkedImage(
-      file
-    );
-
-
-  /* Safe filename */
-
-  const cleanName =
-    watermarkedFile.name
-      .replace(
-        /\.[^/.]+$/,
-        ''
-      )
-      .replace(
-        /[^a-zA-Z0-9._-]/g,
-        '_'
-      );
-
-
-  const path =
-    `${productId}/${crypto.randomUUID()}-${cleanName}.jpg`;
-
-
-  /* Upload only watermarked image */
-
-  const upload =
-    await sb
-      .storage
-      .from('product-images')
-      .upload(
-        path,
-        watermarkedFile,
-        {
-          cacheControl:
-            '31536000',
-
-          upsert:
-            false,
-
-          contentType:
-            'image/jpeg'
-        }
-      );
-
-
-  if (upload.error) {
-    throw upload.error;
+  if (files.length + existingProductImageCount > NOOLTHARI_WATERMARK.maxFiles) {
+    input.value = '';
+    setImageStatus(`A product can have up to ${NOOLTHARI_WATERMARK.maxFiles} photos in total. This product already has ${existingProductImageCount}.`, 'error');
+    return;
   }
 
+  setImageStatus('Preparing photo previews and adding the light watermark…', '');
+  const fragment = document.createDocumentFragment();
+  try {
+    for (const file of files) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new Error(`“${file.name}” is not JPG, PNG or WebP. Please convert it and try again.`);
+      }
+      const key = productFileKey(file);
+      let watermarkedFile = watermarkedImageCache.get(key);
+      if (!watermarkedFile) {
+        watermarkedFile = await createWatermarkedImage(file);
+        watermarkedImageCache.set(key, watermarkedFile);
+      }
 
-  /* Public URL */
+      const objectUrl = URL.createObjectURL(watermarkedFile);
+      previewObjectUrls.push(objectUrl);
+      const item = document.createElement('div');
+      item.className = 'image-preview-item';
+      const image = document.createElement('img');
+      image.src = objectUrl;
+      image.alt = `Watermarked preview of ${file.name}`;
+      const caption = document.createElement('span');
+      caption.textContent = file.name;
+      item.append(image, caption);
+      fragment.appendChild(item);
+    }
+    preview.appendChild(fragment);
+    setImageStatus(`${files.length} photo${files.length === 1 ? '' : 's'} ready. Check the light NOOLTHARI™ watermark in the preview.`, 'success');
+  } catch (error) {
+    preview.innerHTML = '';
+    setImageStatus(error.message || 'Unable to prepare the selected photos.', 'error');
+    NL.toast(error.message || 'Unable to prepare photos.', 'error');
+  }
+}
 
-  const publicUrl =
-    sb
-      .storage
-      .from('product-images')
-      .getPublicUrl(
-        path
-      )
-      .data
-      .publicUrl;
+async function uploadWatermarkedProductImage(productId, file, sortOrder, isPrimary) {
+  const key = productFileKey(file);
+  let watermarkedFile = watermarkedImageCache.get(key);
+  if (!watermarkedFile) {
+    watermarkedFile = await createWatermarkedImage(file);
+    watermarkedImageCache.set(key, watermarkedFile);
+  }
 
+  const uniqueId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const safeBaseName = watermarkedFile.name.replace(/\.[^/.]+$/, '').replace(/[^a-z0-9._-]/gi, '_');
+  const path = `${productId}/${uniqueId}-${safeBaseName}.jpg`;
 
-  /* Save image reference */
+  const upload = await sb.storage.from('product-images').upload(path, watermarkedFile, {
+    cacheControl: '31536000',
+    upsert: false,
+    contentType: 'image/jpeg'
+  });
+  if (upload.error) throw upload.error;
 
-  const imageRecord =
-    await sb
-      .from('product_images')
-      .insert({
-        product_id:
-          productId,
-
-        path:
-          path,
-
-        public_url:
-          publicUrl,
-
-        sort_order:
-          sortOrder,
-
-        is_primary:
-          sortOrder === 0
-
-      })
-      .select('id')
-      .single();
-
+  const publicUrl = sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+  const imageRecord = await sb.from('product_images').insert({
+    product_id: productId,
+    path,
+    public_url: publicUrl,
+    sort_order: sortOrder,
+    is_primary: isPrimary
+  }).select('id').single();
 
   if (imageRecord.error) {
-
-    /* Remove Storage file if database insert fails */
-
-    await sb
-      .storage
-      .from('product-images')
-      .remove([
-        path
-      ]);
-
-
+    await sb.storage.from('product-images').remove([path]);
     throw imageRecord.error;
-
   }
-
-
-  return {
-    id:
-      imageRecord.data.id,
-
-    path,
-
-    publicUrl
-  };
-
+  return imageRecord.data;
 }
 
+async function uploadProductImages(productId, input) {
+  const files = Array.from(input?.files || []);
+  if (!files.length) return;
 
-/* =========================================================
-   SAVE PRODUCT
-========================================================= */
+  const existingResult = await sb
+    .from('product_images')
+    .select('id,sort_order,is_primary')
+    .eq('product_id', productId)
+    .order('sort_order', { ascending: false });
+  if (existingResult.error) throw existingResult.error;
 
-async function saveProduct(formElement) {
+  const existingImages = existingResult.data || [];
+  const lastImage = existingImages[0];
+  let nextSortOrder = lastImage ? Number(lastImage.sort_order || 0) + 1 : 0;
+  let hasPrimary = existingImages.some(image => Boolean(image.is_primary));
 
-  const form =
-    new FormData(
-      formElement
-    );
-
-
-  const id =
-    NL.query.get('id');
-
-
-  /*
-     Intentionally excluded:
-     - saree_length
-     - blouse_length
-  */
-
-  const rawSalePrice = form.get('sale_price');
-  const sellingPrice = Number(form.get('selling_price') || 0);
-  const purchasePrice = Number(form.get('purchase_price') || 0);
-  const salePrice = rawSalePrice === '' || rawSalePrice === null
-    ? null
-    : Number(rawSalePrice);
-  const stockQuantity = Number(form.get('stock_quantity') || 0);
-
-  if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
-    throw new Error('Selling price must be greater than zero.');
-  }
-  if (!Number.isFinite(purchasePrice) || purchasePrice < 0) {
-    throw new Error('Purchase price cannot be negative.');
-  }
-  if (salePrice !== null && (!Number.isFinite(salePrice) || salePrice < 0 || salePrice >= sellingPrice)) {
-    throw new Error('Sale price must be zero or lower than the selling price.');
-  }
-  if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
-    throw new Error('Stock must be a whole number zero or greater.');
-  }
-
-  const payload = {
-
-    saree_name:
-      form.get(
-        'saree_name'
-      ),
-
-    sku:
-      form.get(
-        'sku'
-      ),
-
-    category_id:
-      form.get(
-        'category_id'
-      ),
-
-    description:
-      form.get(
-        'description'
-      ),
-
-    fabric:
-      form.get(
-        'fabric'
-      ),
-
-    colour:
-      form.get(
-        'colour'
-      ),
-
-    pattern:
-      form.get(
-        'pattern'
-      ),
-
-    occasion:
-      form.get(
-        'occasion'
-      ),
-
-    purchase_price: purchasePrice,
-
-    selling_price: sellingPrice,
-
-    sale_price: salePrice,
-
-    stock_quantity: stockQuantity,
-
-    blouse_included:
-      form.get(
-        'blouse_included'
-      ) === 'on',
-
-    featured:
-      form.get(
-        'featured'
-      ) === 'on',
-
-    bestseller:
-      form.get(
-        'bestseller'
-      ) === 'on',
-
-    status:
-      id
-        ? (
-            form.get(
-              'active_toggle'
-            ) === 'on'
-              ? 'active'
-              : 'inactive'
-          )
-        : 'active',
-
-    slug:
-      (
-        form.get(
-          'saree_name'
-        ) || ''
-      )
-        .toLowerCase()
-        .trim()
-        .replace(
-          /[^a-z0-9]+/g,
-          '-'
-        )
-        .replace(
-          /^-+|-+$/g,
-          ''
-        )
-
-  };
-
-
-  /* =======================================================
-     INSERT / UPDATE
-  ======================================================== */
-
-  let result;
-
-
-  if (id) {
-
-    result =
-      await sb
-        .from('products')
-        .update(
-          payload
-        )
-        .eq(
-          'id',
-          id
-        )
-        .select('id')
-        .single();
-
-  } else {
-
-    result =
-      await sb
-        .from('products')
-        .insert(
-          payload
-        )
-        .select('id')
-        .single();
-
-  }
-
-
-  if (result.error) {
-    throw result.error;
-  }
-
-
-  return result.data.id;
-
-}
-
-
-/* =========================================================
-   UPLOAD PRODUCT IMAGES
-========================================================= */
-
-async function uploadProductImages(
-  productId,
-  input
-) {
-
-  if (
-    !input?.files?.length
-  ) {
-    return;
-  }
-
-
-  const files =
-    Array.from(
-      input.files
-    );
-
-
-  let sortOrder =
-    0;
-
-
-  for (
-    const file of files
-  ) {
-
-    if (
-      !file.type.startsWith(
-        'image/'
-      )
-    ) {
-      continue;
-    }
-
+  const failures = [];
+  for (const file of files) {
+    const key = productFileKey(file);
+    if (uploadedImageKeys.has(key)) continue;
 
     try {
-
-      await uploadWatermarkedProductImage(
-        productId,
-        file,
-        sortOrder
-      );
-
-
-      sortOrder++;
-
+      await uploadWatermarkedProductImage(productId, file, nextSortOrder, !hasPrimary);
+      uploadedImageKeys.add(key);
+      existingProductImageCount++;
+      nextSortOrder++;
+      hasPrimary = true;
+      setImageStatus(`Uploaded ${uploadedImageKeys.size} selected photo${uploadedImageKeys.size === 1 ? '' : 's'}…`, 'success');
     } catch (error) {
-
-      console.error(
-        'Watermark upload error:',
-        error
-      );
-
-
-      NL.toast(
-        `Image "${file.name}" could not be uploaded.`,
-        'error'
-      );
-
+      console.error(`Photo upload failed for ${file.name}:`, error);
+      failures.push(`${file.name}: ${error.message || 'upload failed'}`);
     }
-
   }
 
+  if (failures.length) {
+    throw new Error(`Product details are saved, but ${failures.length} photo(s) could not be uploaded. Check your connection and press Save again. ${failures.join(' · ')}`);
+  }
 }
 
-
-/* =========================================================
-   LOAD CATEGORIES
-========================================================= */
-
+/* ---------------------------------------------------------
+   Categories and product edit loading
+--------------------------------------------------------- */
 async function loadProductCategories() {
+  const select = NL.qs('#category');
+  if (!select) return;
 
-  const result =
-    await sb
-      .from('categories')
-      .select(
-        'id,name'
-      )
-      .order(
-        'name'
-      );
+  const result = await sb.from('categories').select('id,name').order('name');
+  if (result.error) throw result.error;
 
-
-  if (result.error) {
-    throw result.error;
-  }
-
-
-  const categories =
-    result.data || [];
-
-
-  const select =
-    NL.qs('#category');
-
-
-  if (!select) {
-    return;
-  }
-
-
-  select.innerHTML =
-    categories
-      .map(
-        category => `
-          <option
-            value="${NL.esc(
-              category.id
-            )}"
-          >
-            ${NL.esc(
-              category.name
-            )}
-          </option>
-        `
-      )
-      .join('');
-
+  const categories = result.data || [];
+  select.innerHTML = '<option value="">Choose a category</option>' + categories.map(category => `
+    <option value="${NL.esc(category.id)}">${NL.esc(category.name)}</option>
+  `).join('');
 }
 
+function setField(name, value) {
+  const element = document.querySelector(`[name="${name}"]`);
+  if (element) element.value = value ?? '';
+}
 
-/* =========================================================
-   INITIALIZE PRODUCT FORM
-========================================================= */
+function setCheckbox(name, value) {
+  const element = document.querySelector(`[name="${name}"]`);
+  if (element) element.checked = Boolean(value);
+}
+
+async function renderExistingProductImages(productId) {
+  const container = NL.qs('#existing-product-images');
+  if (!container) return;
+
+  const result = await sb
+    .from('product_images')
+    .select('id,public_url,sort_order')
+    .eq('product_id', productId)
+    .order('sort_order', { ascending: true });
+  if (result.error) throw result.error;
+
+  const images = result.data || [];
+  existingProductImageCount = images.length;
+  container.innerHTML = images.map((item, index) => `
+    <div class="image-preview-item saved-image">
+      <img src="${NL.esc(item.public_url || '')}" alt="Saved product photo ${index + 1}" loading="lazy">
+      <span>Saved photo ${index + 1}</span>
+    </div>
+  `).join('');
+}
+
+async function loadEditProduct() {
+  if (!activeProductId) return;
+
+  const result = await sb
+    .from('admin_products')
+    .select('*')
+    .eq('id', activeProductId)
+    .single();
+  if (result.error) throw result.error;
+
+  loadedProduct = result.data;
+  const product = loadedProduct;
+  setField('saree_name', product.saree_name);
+  setField('sku', product.sku);
+  setField('category_id', product.category_id);
+  setField('instagram_url', product.instagram_url);
+  setField('description', product.description);
+  setField('fabric', product.fabric);
+  setField('colour', product.colour);
+  setField('pattern', product.pattern);
+  setField('occasion', product.occasion);
+  setField('saree_length', product.saree_length);
+  setField('blouse_length', product.blouse_length);
+  setField('care_instructions', product.care_instructions);
+  setField('purchase_price', product.purchase_price);
+  setField('selling_price', product.selling_price);
+  setField('sale_price', product.sale_price);
+  setField('stock_quantity', product.stock_quantity);
+  setCheckbox('blouse_included', product.blouse_included);
+  setCheckbox('featured', product.featured);
+  setCheckbox('bestseller', product.bestseller);
+  setCheckbox('active_toggle', product.status === 'active');
+
+  const title = NL.qs('#editor-title');
+  if (title) title.textContent = 'Edit product';
+  document.title = 'Edit product | NOOLTHARI™';
+  const saveButton = NL.qs('[data-save-product]');
+  if (saveButton) saveButton.textContent = 'Save changes';
+
+  await renderExistingProductImages(activeProductId);
+  updatePriceInsight();
+}
+
+/* ---------------------------------------------------------
+   Save product and initialize editor
+--------------------------------------------------------- */
+async function saveProduct(formElement) {
+  const form = new FormData(formElement);
+  const name = String(form.get('saree_name') || '').trim();
+  const categoryId = String(form.get('category_id') || '').trim();
+  const sku = String(form.get('sku') || '').trim().toUpperCase() || makeSku();
+  const rawPurchasePrice = form.get('purchase_price');
+  const rawSellingPrice = form.get('selling_price');
+  const rawSalePrice = form.get('sale_price');
+  const rawStockQuantity = form.get('stock_quantity');
+  const purchasePrice = Number(rawPurchasePrice);
+  const sellingPrice = Number(rawSellingPrice);
+  const salePrice = rawSalePrice === '' || rawSalePrice == null ? null : Number(rawSalePrice);
+  const stockQuantity = Number(rawStockQuantity);
+  const imageInput = NL.qs('[name="images"]');
+  const selectedFiles = Array.from(imageInput?.files || []);
+
+  if (!name) throw new Error('Enter a product title.');
+  if (!categoryId) throw new Error('Choose a product category.');
+  if (rawPurchasePrice == null || String(rawPurchasePrice).trim() === '' || !Number.isFinite(purchasePrice) || purchasePrice < 0 || purchasePrice > 9999999999.99) {
+    throw new Error('Enter the actual cost price you paid. It must be zero or more.');
+  }
+  if (rawSellingPrice == null || String(rawSellingPrice).trim() === '' || !Number.isFinite(sellingPrice) || sellingPrice <= 0 || sellingPrice > 9999999999.99) {
+    throw new Error('Enter a regular selling price greater than zero.');
+  }
+  if (salePrice !== null && (!Number.isFinite(salePrice) || salePrice <= 0 || salePrice >= sellingPrice || salePrice > 9999999999.99)) {
+    throw new Error('Offer price must be greater than zero and lower than the regular price.');
+  }
+  if (rawStockQuantity == null || String(rawStockQuantity).trim() === '' || !Number.isInteger(stockQuantity) || stockQuantity < 0 || stockQuantity > 1000000) {
+    throw new Error('Enter the available stock as a whole number (zero or more).');
+  }
+  if (selectedFiles.length + existingProductImageCount > NOOLTHARI_WATERMARK.maxFiles) {
+    throw new Error(`A product can have up to ${NOOLTHARI_WATERMARK.maxFiles} photos in total.`);
+  }
+  if (!activeProductId && selectedFiles.length === 0) throw new Error('Please add at least one product photo before publishing.');
+  const requestedStatus = form.get('active_toggle') === 'on' ? 'active' : 'inactive';
+  if (requestedStatus === 'active' && existingProductImageCount + selectedFiles.length === 0) {
+    throw new Error('Add at least one product photo before showing this saree in the store.');
+  }
+
+  const reservedQuantity = Number(loadedProduct?.reserved_quantity || 0);
+  if (activeProductId && stockQuantity < reservedQuantity) {
+    throw new Error(`There are ${reservedQuantity} units reserved in pending orders. Available stock cannot be set below ${reservedQuantity}.`);
+  }
+
+  const instagramUrl = normalizeInstagramUrl(form.get('instagram_url'));
+  if ((!activeProductId || existingProductImageCount === 0) && selectedFiles.length > 0) holdUntilUploadComplete = true;
+  const existingSlug = String(loadedProduct?.slug || '').trim();
+  const baseSlug = slugify(name) || `saree-${Date.now()}`;
+  const slug = activeProductId && existingSlug
+    ? existingSlug
+    : `${baseSlug}-${slugify(sku).toLowerCase()}`;
+
+  const payload = {
+    saree_name: name,
+    sku,
+    slug,
+    category_id: categoryId,
+    instagram_url: instagramUrl,
+    description: String(form.get('description') || '').trim() || null,
+    fabric: String(form.get('fabric') || '').trim() || null,
+    colour: String(form.get('colour') || '').trim() || null,
+    pattern: String(form.get('pattern') || '').trim() || null,
+    occasion: String(form.get('occasion') || '').trim() || null,
+    saree_length: String(form.get('saree_length') || '').trim() || null,
+    blouse_length: String(form.get('blouse_length') || '').trim() || null,
+    care_instructions: String(form.get('care_instructions') || '').trim() || null,
+    purchase_price: purchasePrice,
+    selling_price: sellingPrice,
+    sale_price: salePrice,
+    stock_quantity: stockQuantity,
+    blouse_included: form.get('blouse_included') === 'on',
+    featured: form.get('featured') === 'on',
+    bestseller: form.get('bestseller') === 'on',
+    status: holdUntilUploadComplete ? 'inactive' : requestedStatus,
+    updated_at: new Date().toISOString()
+  };
+
+  let result;
+  if (activeProductId) {
+    result = await sb.from('products').update(payload).eq('id', activeProductId).select('id').single();
+  } else {
+    result = await sb.from('products').insert(payload).select('id').single();
+  }
+  if (result.error) throw result.error;
+
+  activeProductId = result.data.id;
+  loadedProduct = { ...(loadedProduct || {}), ...payload, id: activeProductId };
+  if (!NL.query.get('id')) {
+    const editUrl = new URL(location.href);
+    editUrl.searchParams.set('id', activeProductId);
+    history.replaceState({ productId: activeProductId }, '', editUrl.href);
+  }
+  const skuField = NL.qs('[name="sku"]');
+  if (skuField) skuField.value = sku;
+  return activeProductId;
+}
 
 async function initializeProductForm() {
+  const form = NL.qs('#product-form');
+  if (!form) return false;
 
-  const form =
-    NL.qs(
-      '#product-form'
-    );
-
-
-  if (!form) {
-    return false;
-  }
-
-
-  /* Remove unwanted length fields */
-
-  removeLengthFieldsFromProductForm();
-
-
-  /* Load categories */
-
+  activeProductId = NL.query.get('id');
   try {
-
     await loadProductCategories();
-
+    if (activeProductId) await loadEditProduct();
   } catch (error) {
-
-    console.error(
-      'Categories load error:',
-      error
-    );
-
-    NL.toast(
-      error.message,
-      'error'
-    );
-
+    console.error('Product editor initialization failed:', error);
+    setEditorStatus(error.message || 'The editor could not load. Please refresh.', 'error');
+    NL.toast(error.message || 'Unable to load the product editor.', 'error');
+    const saveButton = NL.qs('[data-save-product]');
+    if (saveButton) saveButton.disabled = true;
     return true;
   }
 
+  const imageInput = NL.qs('[name="images"]');
+  imageInput?.addEventListener('change', () => prepareProductImagePreviews(imageInput));
 
-  /* Edit mode */
+  ['purchase_price', 'selling_price', 'sale_price'].forEach(name => {
+    NL.qs(`[name="${name}"]`)?.addEventListener('input', updatePriceInsight);
+  });
+  updatePriceInsight();
 
-  if (
-    NL.query.get('id')
-  ) {
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const submitButton = NL.qs('[data-save-product]');
+    const originalText = submitButton?.textContent || 'Save product';
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Saving…';
+    }
+    setEditorStatus('Saving product details…', '');
 
-    await loadEditProduct();
+    let productSaved = false;
+    try {
+      const productId = await saveProduct(form);
+      productSaved = true;
+      setEditorStatus('Product details saved. Uploading photos…', '');
+      await uploadProductImages(productId, imageInput);
 
-  }
+      const requestedStatus = form.querySelector('[name="active_toggle"]')?.checked ? 'active' : 'inactive';
+      if (requestedStatus === 'active' && existingProductImageCount === 0) {
+        throw new Error('The product has no saved photo yet. Upload at least one photo before publishing.');
+      }
+      const visibilityResult = await sb.from('products').update({
+        status: requestedStatus,
+        updated_at: new Date().toISOString()
+      }).eq('id', productId);
+      if (visibilityResult.error) throw new Error(`Photos are saved, but product visibility could not be updated: ${visibilityResult.error.message}`);
+      holdUntilUploadComplete = false;
 
-
-  /* Save */
-
-  form.onsubmit =
-    async event => {
-
-      event.preventDefault();
-
-
-      const submitButton =
-        form.querySelector(
-          'button[type="submit"], .btn'
-        );
-
-
-      const originalText =
-        submitButton?.textContent ||
-        'Save product';
-
-
+      NL.toast('Product saved successfully.', 'success');
+      setEditorStatus('Saved successfully. Returning to your product list…', 'success');
+      location.href = NL.path('admin/products.html');
+    } catch (error) {
+      console.error('Product save/upload failed:', error);
+      const message = productSaved
+        ? (error.message || 'Product details are saved, but photo upload is incomplete. Press Save again to retry the remaining photos.')
+        : (error.message || 'Unable to save this product.');
+      setEditorStatus(message, 'error');
+      NL.toast(productSaved ? 'Product details are saved. Review the message and try saving again.' : message, 'error');
       if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent =
-          'Saving...';
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
       }
+    }
+  });
 
-
-      try {
-
-        const productId =
-          await saveProduct(
-            form
-          );
-
-
-        const imageInput =
-          NL.qs(
-            '[name="images"]'
-          );
-
-
-        await uploadProductImages(
-          productId,
-          imageInput
-        );
-
-
-        NL.toast(
-          'Product saved successfully.',
-          'success'
-        );
-
-
-        setTimeout(
-          () => {
-
-            location.href =
-              NL.path(
-                'admin/products.html'
-              );
-
-          },
-          700
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          'Product save error:',
-          error
-        );
-
-
-        NL.toast(
-          error.message ||
-          'Unable to save product.',
-          'error'
-        );
-
-
-        if (submitButton) {
-
-          submitButton.disabled =
-            false;
-
-          submitButton.textContent =
-            originalText;
-
-        }
-
-      }
-
-    };
-
-
+  window.addEventListener('beforeunload', clearPreviewUrls, { once: true });
   return true;
-
 }
 
+/* ---------------------------------------------------------
+   Main
+--------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', async () => {
+  const admin = await NL.requireRole('admin');
+  if (!admin) return;
 
-/* =========================================================
-   MAIN
-========================================================= */
+  const isProductForm = await initializeProductForm();
+  if (isProductForm) return;
 
-document.addEventListener(
-  'DOMContentLoaded',
-  async () => {
-
-    const admin =
-      await NL.requireRole(
-        'admin'
-      );
-
-
-    if (!admin) {
-      return;
-    }
-
-
-    const isForm =
-      await initializeProductForm();
-
-
-    if (isForm) {
-      return;
-    }
-
-
-    if (
-      NL.qs(
-        '#products-table'
-      )
-    ) {
-
-      await adminProductTable();
-
-    }
-
-  }
-);
+  if (NL.qs('#products-table')) await adminProductTable();
+});

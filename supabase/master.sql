@@ -8,7 +8,7 @@ do $$ begin create type public.shipment_status as enum ('not_shipped','shipped',
 
 create table if not exists public.profiles(id uuid primary key references auth.users(id) on delete cascade,name text,email text,phone text,role public.user_role not null default 'customer',created_at timestamptz not null default now(),updated_at timestamptz not null default now());
 create table if not exists public.categories(id uuid primary key default gen_random_uuid(),name text not null unique,slug text not null unique,active boolean not null default true,created_at timestamptz not null default now());
-create table if not exists public.products(id uuid primary key default gen_random_uuid(),sku text not null unique,saree_name text not null,slug text unique,category_id uuid references public.categories(id),description text,fabric text,colour text,pattern text,occasion text,saree_length text,blouse_length text,blouse_included boolean not null default false,care_instructions text,purchase_price numeric(12,2) not null default 0,selling_price numeric(12,2) not null default 0,sale_price numeric(12,2),stock_quantity integer not null default 0,reserved_quantity integer not null default 0,status text not null default 'active' check(status in ('active','inactive')),featured boolean not null default false,bestseller boolean not null default false,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),check(stock_quantity>=0),check(reserved_quantity>=0),check(selling_price>=0),check(purchase_price>=0));
+create table if not exists public.products(id uuid primary key default gen_random_uuid(),sku text not null unique,saree_name text not null,slug text unique,category_id uuid references public.categories(id),description text,fabric text,colour text,pattern text,occasion text,instagram_url text,saree_length text,blouse_length text,blouse_included boolean not null default false,care_instructions text,purchase_price numeric(12,2) not null default 0,selling_price numeric(12,2) not null default 0,sale_price numeric(12,2),stock_quantity integer not null default 0,reserved_quantity integer not null default 0,status text not null default 'active' check(status in ('active','inactive')),featured boolean not null default false,bestseller boolean not null default false,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),check(stock_quantity>=0),check(reserved_quantity>=0),check(selling_price>=0),check(purchase_price>=0),check(instagram_url is null or (length(btrim(instagram_url)) between 1 and 2048 and btrim(instagram_url) ~* '^https://(www\.|m\.)?instagram\.com/[^[:space:]]+$')));
 create table if not exists public.product_images(id uuid primary key default gen_random_uuid(),product_id uuid not null references public.products(id) on delete cascade,path text not null,public_url text,sort_order integer not null default 0,is_primary boolean not null default false,created_at timestamptz not null default now());
 create table if not exists public.addresses(id uuid primary key default gen_random_uuid(),customer_id uuid not null references public.profiles(id) on delete cascade,full_name text not null,phone text not null,address_line1 text not null,address_line2 text,city text not null,state text not null,postal_code text not null,country text not null default 'India',created_at timestamptz not null default now());
 create table if not exists public.cart(id uuid primary key default gen_random_uuid(),customer_id uuid not null unique references public.profiles(id) on delete cascade,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
@@ -494,13 +494,48 @@ grant execute on function public.admin_balance_snapshot() to authenticated;
 -- Safe admin order-status function; prevents customers from altering fulfilment.
 create or replace function public.admin_set_order_status(p_order_id uuid,p_status public.order_status)
 returns void language plpgsql security definer set search_path=public as $$
+declare
+  v_current public.order_status;
+  v_current_rank integer;
+  v_next_rank integer;
 begin
   if not public.is_admin() then raise exception 'FORBIDDEN'; end if;
-  update public.orders set status=p_status, updated_at=now() where id=p_order_id;
+  if p_status not in ('confirmed','processing','shipped','out_for_delivery','delivered') then
+    raise exception 'INVALID_FULFILMENT_STATUS';
+  end if;
+
+  select status into v_current
+  from public.orders
+  where id=p_order_id
+  for update;
   if not found then raise exception 'ORDER_NOT_FOUND'; end if;
+
+  v_current_rank := case v_current
+    when 'paid' then 0
+    when 'confirmed' then 1
+    when 'processing' then 2
+    when 'shipped' then 3
+    when 'out_for_delivery' then 4
+    when 'delivered' then 5
+    else -1
+  end;
+  v_next_rank := case p_status
+    when 'confirmed' then 1
+    when 'processing' then 2
+    when 'shipped' then 3
+    when 'out_for_delivery' then 4
+    when 'delivered' then 5
+    else -1
+  end;
+
+  if v_current_rank < 0 or v_next_rank < v_current_rank then
+    raise exception 'ORDER_STATUS_CANNOT_MOVE_BACKWARDS_OR_BYPASS_PAYMENT';
+  end if;
+
+  update public.orders set status=p_status, updated_at=now() where id=p_order_id;
 end;
 $$;
-revoke all on function public.admin_set_order_status(uuid,public.order_status) from public;
+revoke all on function public.admin_set_order_status(uuid,public.order_status) from public, anon, authenticated;
 grant execute on function public.admin_set_order_status(uuid,public.order_status) to authenticated;
 
 -- NOOLTHARI safe follow-up migration
@@ -1435,7 +1470,7 @@ grant execute on function public.sync_guest_cart(uuid, jsonb) to authenticated;
 revoke select on table public.products from public, anon, authenticated;
 grant select (
   id, sku, saree_name, slug, category_id, description, fabric, colour, pattern,
-  occasion, saree_length, blouse_length, blouse_included, care_instructions,
+  occasion, instagram_url, saree_length, blouse_length, blouse_included, care_instructions,
   selling_price, sale_price, stock_quantity, status, featured, bestseller,
   created_at, updated_at
 ) on table public.products to anon, authenticated;

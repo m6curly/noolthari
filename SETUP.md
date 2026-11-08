@@ -5,7 +5,7 @@
 **Choose exactly one path:**
 
 - **Brand-new Supabase project:** back up nothing (there is no data yet), then run `supabase/master.sql` once.
-- **Existing/live project with customers, orders or products:** first create a Supabase backup. Apply `20261031_security_integrity_and_contact.sql` if it has not already been applied, then apply `20261101_v2_wishlist_admin_audit.sql` once. Do not run the full master file on a live store.
+- **Existing/live project with customers, orders or products:** first create a Supabase backup. Apply `20261031_security_integrity_and_contact.sql` if it has not already been applied, then apply `20261101_v2_wishlist_admin_audit.sql` and `20261108_product_instagram_and_fulfilment.sql` once each, in that order, if they are not already installed. Do not run the full master file on a live store.
 
 1. Open Supabase → your project → **SQL Editor**.
 2. For a new project, open `supabase/master.sql`. For an existing project, apply the dated migrations in order as described above; do not re-run a migration that is already recorded as applied.
@@ -147,17 +147,18 @@ npm run deploy
 
 The first direct deployment asks you to link this folder. Select the existing NOOLTHARI Vercel project. `npm run deploy` validates the project first and then deploys production. It does not push to GitHub; use `npm run update` for the GitHub + automatic Vercel route.
 
-The scripts do not change Supabase schema, customer/order records, Razorpay settings, or Vercel environment secrets. Apply the additive Supabase migration separately and only once as described in section A. No terminal script can safely infer or replace your real production credentials.
+The scripts do not change Supabase schema, customer/order records, Razorpay settings, or Vercel environment secrets. Apply the additive Supabase migration separately and only once as described in section A. Run that migration before deploying the updated frontend, because the product page reads the new optional `instagram_url` field. No terminal script can safely infer or replace your real production credentials.
 
 
 ## K. NOOLTHARI V2 upgrade (existing/live database)
 
 1. Take a fresh Supabase database backup.
-2. Run `supabase/migrations/20261101_v2_wishlist_admin_audit.sql` once in SQL Editor. This adds customer-owned wishlists, privacy-conscious admin activity logs, contact-form rate limiting, and the email notification outbox. It does not replace products, orders, customers, stock or payment data.
-3. Deploy the notification function: `supabase functions deploy send-order-notifications`.
-4. For transactional email, create/verify a sending domain with Resend and set these Edge Function secrets in Supabase: `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL` (for example `NOOLTHARI Orders <orders@your-verified-domain>`), plus a separate long random `NOTIFICATION_CRON_SECRET` (do not reuse the reservation-expiry secret). The from-address must belong to a domain verified by your email provider.
-5. Schedule `POST https://YOUR-PROJECT.supabase.co/functions/v1/send-order-notifications` every 2–5 minutes with header `x-cron-secret: YOUR_NOTIFICATION_CRON_SECRET`. Use a trusted scheduler; never place the secret in browser JavaScript, HTML or GitHub. The endpoint processes a limited retryable batch and records sent/failed results.
-6. Visit Admin → Activity to confirm that new admin changes are being logged. It shows a limited summary and intentionally omits addresses, phone numbers, email addresses and payment secrets.
+2. Run `supabase/migrations/20261101_v2_wishlist_admin_audit.sql` once in SQL Editor if it is not already installed. This adds customer-owned wishlists, privacy-conscious admin activity logs, contact-form rate limiting, and the email notification outbox. It does not replace products, orders, customers, stock or payment data.
+3. Before deploying the Nov 8 product/admin update, run `supabase/migrations/20261108_product_instagram_and_fulfilment.sql` once. This adds only the optional product Instagram URL, its safe public read grant, refreshes the protected admin product view and restricts order fulfilment updates to an already-paid order moving forward. Existing customer/product/order/payment records are preserved. Do not run `master.sql` against the live project.
+4. Deploy the notification function: `supabase functions deploy send-order-notifications`.
+5. For transactional email, create/verify a sending domain with Resend and set these Edge Function secrets in Supabase: `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL` (for example `NOOLTHARI Orders <orders@your-verified-domain>`), plus a separate long random `NOTIFICATION_CRON_SECRET` (do not reuse the reservation-expiry secret). The from-address must belong to a domain verified by your email provider.
+6. Schedule `POST https://YOUR-PROJECT.supabase.co/functions/v1/send-order-notifications` every 2–5 minutes with header `x-cron-secret: YOUR_NOTIFICATION_CRON_SECRET`. Use a trusted scheduler; never place the secret in browser JavaScript, HTML or GitHub. The endpoint processes a limited retryable batch and records sent/failed results.
+7. Visit Admin → Activity to confirm that new admin changes are being logged. It shows a limited summary and intentionally omits addresses, phone numbers, email addresses and payment secrets.
 
 For a brand-new empty Supabase project, use `supabase/master.sql` once; it includes the V2 schema. Never run the full master file on an existing production database. The V2 migration also restricts browser-readable product columns so internal purchase cost and reserved stock are not exposed through the public products API.
 

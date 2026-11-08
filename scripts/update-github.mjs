@@ -74,8 +74,17 @@ function commitAndPush(cwd) {
   }
 
   const upstream = git(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], cwd, { allowFailure: true });
-  if (upstream) git(['push'], cwd, { interactive: true });
-  else git(['push', '--set-upstream', 'origin', branch], cwd, { interactive: true });
+  git(['fetch', 'origin'], cwd, { interactive: true });
+
+  if (upstream) {
+    // Bring remote commits in before pushing. This is a normal rebase, never a force-push.
+    git(['rebase', upstream], cwd, { interactive: true });
+    git(['push'], cwd, { interactive: true });
+  } else {
+    const remoteBranch = git(['rev-parse', '--verify', `refs/remotes/origin/${branch}`], cwd, { allowFailure: true });
+    if (remoteBranch) git(['rebase', `origin/${branch}`], cwd, { interactive: true });
+    git(['push', '--set-upstream', 'origin', branch], cwd, { interactive: true });
+  }
 }
 
 async function bootstrapFromZip(repositoryUrl) {

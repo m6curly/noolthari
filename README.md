@@ -1,6 +1,6 @@
 # NOOLTHARI™ — Master Commerce Build
 
-This is the single master static e-commerce project for NOOLTHARI™. It is designed for GitHub Pages + Supabase + Razorpay and does not require Node.js, npm, React, Next.js or a build step.
+This is the single master static e-commerce project for NOOLTHARI™. It is designed for Vercel (or GitHub Pages) + Supabase + Razorpay and does not require Node.js, npm, React, Next.js or a build step.
 
 ## What is already wired
 
@@ -19,7 +19,7 @@ The website has no COD option.
 ## Important one-time backend setup
 
 1. Create a Supabase project.
-2. For a brand-new Supabase project, run `supabase/master.sql` once. For an existing project with customer/order data, do **not** rerun the full master schema; apply the dated additive migrations in order only after taking a backup: `20261031_security_integrity_and_contact.sql`, then `20261101_v2_wishlist_admin_audit.sql`.
+2. For a brand-new Supabase project, run `supabase/master.sql` once. For an existing project with customer/order data, do **not** rerun the full master schema; apply the dated additive migrations in order only after taking a backup: `20261031_security_integrity_and_contact.sql`, then `20261101_v2_wishlist_admin_audit.sql`, then `20261108_product_instagram_and_fulfilment.sql`.
 3. In Supabase Auth, configure your email confirmation preference.
 4. Sign up once through the website as a normal account.
 5. In Supabase SQL Editor promote that user to admin with:
@@ -64,7 +64,7 @@ There is no cash-on-delivery path in the application. Every checkout path is onl
 
 The ZIP includes `supabase/migrations/20261031_security_integrity_and_contact.sql`. Back up the Supabase project first, then apply this migration once in SQL Editor. It does not drop orders or customer data. It closes the profile-role escalation and public payment-finalization RPC issues, adds the missing contact inbox schema, restores return-evidence metadata inserts, and makes payment reservations/cart handling safer. Do not run the entire master SQL against a live database merely to apply these fixes.
 
-See `AUDIT-REPORT.md` for the V2 changes and the live checks that still require your project/test credentials. For existing projects, apply `20261101_v2_wishlist_admin_audit.sql` once after the October migration; it adds the wishlist, activity log, contact rate limit and email outbox.
+See `AUDIT-REPORT.md` for the V2 changes and the live checks that still require your project/test credentials. For existing projects, apply `20261101_v2_wishlist_admin_audit.sql` once after the October migration; it adds the wishlist, activity log, contact rate limit and email outbox. Before deploying the November 8 product editor/customer-page changes, also apply `20261108_product_instagram_and_fulfilment.sql` once. It adds an optional Instagram video link to products and restricts admin fulfilment updates to already-paid orders moving forward.
 
 ## Terminal workflow (VS Code)
 
@@ -77,7 +77,9 @@ npm run update    # Commit current project changes and push to GitHub
 npm run deploy    # Direct production deployment to the linked Vercel project
 ```
 
-First-time GitHub setup: run `npm run update` from this project folder and paste the URL of your existing NOOLTHARI GitHub repository. Because this ZIP has no Git history, the script clones the remote into a temporary staging folder, overlays the repaired project files, preserves files that exist only in the remote repository, runs checks again, commits and pushes without force-pushing, then attaches the Git history to this folder for future updates. Afterward, connect that same GitHub repository to the existing Vercel project once in the Vercel dashboard and set its production branch (normally `main`). Future `npm run update` pushes trigger Vercel automatically through that Git integration.
+On Windows PowerShell, use `npm.cmd` instead of `npm` if the PowerShell execution policy blocks `npm.ps1` (for example, `npm.cmd run check`).
+
+First-time GitHub setup: run `npm run update` from this project folder and paste the URL of your existing NOOLTHARI GitHub repository. Because this ZIP has no Git history, the script clones the remote into a temporary staging folder, overlays the repaired project files, preserves files that exist only in the remote repository, runs checks again, commits and pushes without force-pushing, then attaches the Git history to this folder for future updates. On normal repeat updates the helper fetches the remote and rebases your local commit(s) onto the current branch before pushing; if a rebase conflict occurs, stop and resolve it in Git before continuing—never force-push. Afterward, connect that same GitHub repository to the existing Vercel project once in the Vercel dashboard and set its production branch (normally `main`). Future `npm run update` pushes trigger Vercel automatically through that Git integration.
 
 For direct deploys without relying on GitHub auto-deployment, run `npx vercel login` once and then `npm run deploy`. The first deployment links this folder to a Vercel project; choose the **existing NOOLTHARI project**, not a new project. Direct Vercel deploy does not push code to GitHub, so use `npm run update` when both GitHub and Vercel should receive the update.
 
@@ -99,6 +101,16 @@ The supplied project does not invent your shipping charges, free-shipping thresh
 ## V2.1 storefront refinement
 
 This update keeps the existing HTML page names, asset paths, `js/config.js`, Supabase client setup, `.vercel/project.json`, Vercel routing, payment functions and database migrations in place. It refines the storefront header/footer and touch layouts, standardizes navigation icons, and removes Colour and Occasion dropdowns from The Collection while retaining product data/search fields. No live database change is required for these visual/filter updates.
+
+
+## November 8, 2026 product/admin update
+
+- The product editor is reorganised around photos, customer-facing product information, Instagram Reel/video URL, cost/regular/offer price, stock and store visibility. Blank SKUs are generated automatically.
+- Product photos are orientation-corrected before watermarking; each image receives one small, low-opacity `NOOLTHARI™` mark instead of repeated brand text. The watermarked preview is shown before upload. Failed photo uploads are reported and can be retried without deliberately duplicating already-uploaded images.
+- The customer product page shows a restrained “Watch on Instagram” link when the product has a valid HTTPS Instagram URL. Care instructions are displayed when provided.
+- The dashboard adds quick actions and recent orders. Paid-order value is not labelled as actual bank cash; Razorpay settlements still need statement reconciliation.
+- Order fulfilment updates can move forward only after payment is verified. Admin UI cannot manually set `paid` or `refunded`; gateway payment/refund state must come from the payment system.
+- Existing Razorpay Edge Function source and `js/config.js` are retained. Apply the additive Supabase migration before deploying these frontend changes.
 
 
 For the complete Supabase schema, migration order, Edge Function source and notification setup, read **SUPABASE-UPDATE-GUIDE.md**. The complete SQL and TypeScript source remains under `supabase/`.

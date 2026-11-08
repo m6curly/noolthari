@@ -386,3 +386,16 @@ input,select,textarea{font-size:16px}
 @supports(padding:max(0px)){
   .site-footer{padding-bottom:max(22px,env(safe-area-inset-bottom))}
 }
+
+/* Customer product-page support for product video links and care notes. */
+.product-instagram-link{display:inline-flex;align-items:center;gap:9px;width:fit-content;max-width:100%;margin-top:17px;padding:11px 14px;border:1px solid rgba(17,100,102,.2);border-radius:4px;background:#f7faf7;color:#23574f;text-decoration:none;transition:border-color .18s ease,background .18s ease}
+.product-instagram-link:hover{border-color:rgba(17,100,102,.45);background:#eef6ef}
+.instagram-link-mark{display:grid;place-items:center;flex:0 0 27px;width:27px;height:27px;border-radius:50%;background:#e9f0e9;color:#23615a;font-size:15px}
+.product-instagram-link>span:nth-child(2){display:grid;gap:3px;min-width:0}
+.product-instagram-link strong{font-size:10px;font-weight:600}
+.product-instagram-link small{color:#7a8780;font-size:9px}
+.instagram-link-arrow{margin-left:3px;font-size:13px}
+.product-care-note{margin-top:17px;padding-top:14px;border-top:1px solid rgba(23,63,61,.09);color:#718078;font-size:11px;line-height:1.75}
+.product-care-note strong{display:block;margin-bottom:4px;color:#38534a;font-size:10px;letter-spacing:.04em}
+.product-care-note p{margin:0}
+@media(max-width:620px){.product-instagram-link{width:100%}}

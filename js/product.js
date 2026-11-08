@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .select(`
         id,sku,saree_name,slug,category_id,description,fabric,colour,pattern,occasion,
         saree_length,blouse_length,blouse_included,care_instructions,selling_price,
-        sale_price,stock_quantity,status,featured,bestseller,created_at,updated_at,
+        sale_price,stock_quantity,status,featured,bestseller,instagram_url,created_at,updated_at,
         categories(name),
         product_images(id,path,sort_order,public_url)
       `)
@@ -128,6 +128,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     NL.path(
       'assets/logo/noolthari-logo.webp'
     );
+
+  // Only show external links that resolve to Instagram over HTTPS.
+  let instagramUrl = null;
+  try {
+    const candidate = new URL(String(product.instagram_url || ''));
+    if (candidate.protocol === 'https:' && ['instagram.com', 'www.instagram.com', 'm.instagram.com'].includes(candidate.hostname.toLowerCase()) && candidate.pathname.length > 1) {
+      instagramUrl = candidate.href;
+    }
+  } catch {
+    instagramUrl = null;
+  }
 
   const absoluteProductImage = new URL(mainImage, location.href).href;
   setMeta('meta[property="og:image"]', 'content', absoluteProductImage, 'meta', { property: 'og:image' });
@@ -248,38 +259,32 @@ document.addEventListener('DOMContentLoaded', async () => {
           images.length > 1
             ? `
               <div class="thumbs">
-
                 ${images
                   .map(
                     (image, index) => `
                       <button
                         class="thumb"
                         type="button"
-                        data-src="${NL.esc(
-                          image.public_url
-                        )}"
-                        aria-label="View image ${
-                          index + 1
-                        }"
+                        data-src="${NL.esc(image.public_url)}"
+                        aria-label="View image ${index + 1}"
                       >
-
-                        <img
-                          src="${NL.esc(
-                            image.public_url
-                          )}"
-                          alt=""
-                          loading="lazy"
-                        >
-
+                        <img src="${NL.esc(image.public_url)}" alt="" loading="lazy">
                       </button>
                     `
                   )
                   .join('')}
-
               </div>
             `
             : ''
         }
+
+        ${instagramUrl ? `
+          <a class="product-instagram-link" href="${NL.esc(instagramUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Watch ${NL.esc(product.saree_name || 'this saree')} on Instagram">
+            <span class="instagram-link-mark" aria-hidden="true">◎</span>
+            <span><strong>Watch on Instagram</strong><small>See this saree in motion</small></span>
+            <span class="instagram-link-arrow" aria-hidden="true">↗</span>
+          </a>
+        ` : ''}
 
       </div>
 
@@ -398,6 +403,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             )}
           </dd>
 
+          ${product.saree_length ? `
+            <dt>Saree length</dt>
+            <dd>${NL.esc(product.saree_length)}</dd>
+          ` : ''}
+
+          ${product.blouse_length ? `
+            <dt>Blouse piece length</dt>
+            <dd>${NL.esc(product.blouse_length)}</dd>
+          ` : ''}
 
           <dt>
             Blouse
@@ -414,6 +428,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         </dl>
 
+        ${product.care_instructions ? `
+          <div class="product-care-note"><strong>Care instructions</strong><p>${NL.esc(product.care_instructions)}</p></div>
+        ` : ''}
 
         <!-- STOCK -->
 

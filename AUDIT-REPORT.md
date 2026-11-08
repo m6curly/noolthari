@@ -5,6 +5,11 @@
 ## What changed in this package
 
 ### Storefront and usability
+- November 8 admin/product update: simpler product editor, optional Instagram Reel/video URL, care-instruction editing, SKU auto-generation, live price-margin feedback, photo preview and improved order overview.
+- Product image watermark now uses one small low-opacity NOOLTHARI™ mark, adapts light/dark text contrast, corrects EXIF orientation where supported, limits output dimensions and reports/retries failed uploads rather than silently treating them as complete.
+- Customer product pages show the safe Instagram link and care notes only when supplied.
+- The admin dashboard adds recent orders and quick actions; it explicitly distinguishes paid order value from actual bank/Razorpay payout.
+- Admin order status changes are limited to forward fulfilment states after payment. Payment capture and refunds remain gateway-controlled.
 - Replaced the previous mixed visual treatment with a shared ivory / peacock-teal / antique-gold design system, consistent typography, responsive controls, clearer focus states and reduced-motion support.
 - Removed the awkward injected left-side Back control. Contextual navigation such as “Back to orders” and “Back to sign in” remains where it is useful.
 - Added live catalogue filters for category, fabric, colour, occasion, price range and stock availability, plus sorting.
@@ -34,19 +39,20 @@
 1. Back up the Supabase project and preserve the current GitHub/Vercel deployment.
 2. Confirm whether `20261031_security_integrity_and_contact.sql` has already been applied. If not, apply it first.
 3. Apply `20261101_v2_wishlist_admin_audit.sql` once.
-4. Deploy all five Edge Functions, including `send-order-notifications`, and set the server-only secrets documented in `SETUP.md`.
-5. Test sign-in, guest-bag merge, checkout, Razorpay in Test Mode, webhooks, reservation expiry, admin product editing, returns, tracking and notification emails before switching to live payments.
-6. Deploy the static files to the existing Vercel project only after reviewing the Git diff and confirming the production branch.
+4. Apply `20261108_product_instagram_and_fulfilment.sql` after the October and V2 migrations; do not run `master.sql` on an existing store.
+5. Keep the existing five Edge Functions and server-only secrets. Their source and payment configuration are not changed by this frontend update.
+6. Test sign-in, guest-bag merge, product edit/photo upload, the Instagram link, checkout, Razorpay in Test Mode, webhooks, reservation expiry, order fulfilment, returns and tracking before switching any payment configuration.
+7. Deploy the static files to the existing Vercel project only after reviewing the Git diff and confirming the production branch.
 
 For a brand-new empty Supabase project, run `supabase/master.sql` once. **Never run the full master schema against a live project with existing orders/customers.**
 
 ## Verification performed in this build environment
 
-- JavaScript parse checks and HTML local-reference checks are run by `npm run check`.
-- The HTML and JavaScript files were locally syntax-checked during the build process.
-- A local HTTP preview was started and a page request returned HTTP 200.
-- Edge Function TypeScript source was checked for syntax during development.
-- The `.env.local` token file was removed from the project package.
+- `npm run check` passed after this update: 32 HTML pages, 32 JavaScript files, local references, page titles, viewport tags, duplicate IDs, JSON config and secret-pattern checks.
+- The changed JavaScript files were also run through Node.js syntax checks.
+- The SQL migration and baseline schema were reviewed against the supplied schema source. They were not executed against the owner's Supabase database in this environment.
+- Browser-render/mobile layout automation was attempted, but Chromium was blocked by the build environment's administrator policy; physical Android/iOS/tablet browser testing remains to be done by the owner.
+- The deployable output excludes `.git`, local `.env` files and any service-role/Razorpay secret file; `.env.example` is retained.
 
 These checks do **not** prove live Supabase RLS behaviour, payment capture/refund, webhook delivery, SMTP/provider delivery, Vercel production deployment, real customer flows or compatibility on every physical browser/device. Supabase CLI/psql, production credentials, Razorpay test credentials and owner access were not available in this build environment. The browser-render screenshot check also could not be completed here.
 
@@ -63,7 +69,7 @@ The following require owner decisions, provider configuration or additional prod
 
 ## Immediate credential action
 
-The ZIP originally uploaded to this conversation contained `.env.local` with a Vercel OIDC token. Revoke/invalidate that token in the Vercel account immediately. Do not place Vercel tokens, Supabase service-role/secret keys, Razorpay Key Secrets, Resend API keys or cron secrets in HTML, browser JavaScript, GitHub or the downloadable ZIP.
+A previous revision reviewed in the earlier audit contained `.env.local` with a Vercel OIDC token; the current uploaded revision and this output package do not contain `.env.local`. Check the Vercel account and revoke that old token if it is still active. Never place Vercel tokens, Supabase service-role/secret keys, Razorpay Key Secrets, Resend API keys or cron secrets in HTML, browser JavaScript, GitHub or the downloadable ZIP.
 
 ## Static preflight command
 

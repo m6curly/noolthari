@@ -142,6 +142,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const deliveredDone =
       order.status === 'delivered';
 
+    // Payment, cancellation and return/refund states are never changed
+    // manually from the fulfilment screen. Only verified paid orders move
+    // forward through the delivery stages.
+    const fulfilmentStages = [
+      ['paid', 'Paid'],
+      ['confirmed', 'Confirmed'],
+      ['processing', 'Processing'],
+      ['shipped', 'Shipped'],
+      ['out_for_delivery', 'Out for delivery'],
+      ['delivered', 'Delivered']
+    ];
+    const currentStageIndex = fulfilmentStages.findIndex(([value]) => value === order.status);
+    const statusEditorMarkup = currentStageIndex >= 0 && currentStageIndex < fulfilmentStages.length - 1
+      ? `
+        <form id="status-form">
+          <div class="field">
+            <label for="order-fulfilment-status">Fulfilment status</label>
+            <select id="order-fulfilment-status" name="status">
+              ${fulfilmentStages.slice(currentStageIndex).map(([value, label]) => `<option value="${value}" ${value === order.status ? 'selected' : ''}>${label}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-gold" type="submit">Save fulfilment status</button>
+        </form>
+      `
+      : `<p class="order-status-explainer">${order.status === 'payment_pending'
+          ? 'Waiting for Razorpay to verify payment. Do not dispatch this order until payment is confirmed.'
+          : ['return_requested', 'returned', 'refund_processing', 'refunded'].includes(order.status)
+            ? 'This order is being handled through the Returns workflow. Refund status must match the actual Razorpay transaction.'
+            : order.status === 'cancelled'
+              ? 'This order is cancelled and cannot be reopened from the fulfilment screen.'
+              : 'This order has been delivered. Any post-delivery request must be handled in Returns.'}</p>`;
+
 
     /* =====================================================
        RENDER ORDER
@@ -435,69 +467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </h2>
 
 
-            <form
-              id="status-form"
-            >
-
-              <div class="field">
-
-                <label>
-                  Order status
-                </label>
-
-
-                <select
-                  name="status"
-                >
-
-                  ${
-                    [
-                      'paid',
-                      'confirmed',
-                      'processing',
-                      'shipped',
-                      'out_for_delivery',
-                      'delivered',
-                      'cancelled',
-                      'return_requested',
-                      'returned',
-                      'refund_processing',
-                      'refunded'
-                    ]
-                      .map(
-                        status => `
-                          <option
-                            value="${status}"
-                            ${
-                              status ===
-                              order.status
-                                ? 'selected'
-                                : ''
-                            }
-                          >
-                            ${status.replaceAll(
-                              '_',
-                              ' '
-                            )}
-                          </option>
-                        `
-                      )
-                      .join('')
-                  }
-
-                </select>
-
-              </div>
-
-
-              <button
-                class="btn btn-gold"
-                type="submit"
-              >
-                Save status
-              </button>
-
-            </form>
+            ${statusEditorMarkup}
 
           </section>
 
@@ -686,20 +656,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               );
 
 
-            const result =
-              await sb
-                .from('orders')
-                .update({
-                  status,
+            if (!status) {
+              throw new Error('Choose a fulfilment status.');
+            }
 
-                  updated_at:
-                    new Date()
-                      .toISOString()
-                })
-                .eq(
-                  'id',
-                  id
-                );
+            const result =
+              await sb.rpc('admin_set_order_status', {
+                p_order_id: id,
+                p_status: status
+              });
 
 
             if (result.error) {

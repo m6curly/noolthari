@@ -1,31 +1,39 @@
 # NOOLTHARI™ — 8 November 2026 update notes
 
-## Product admin
-- Reorganised the product add/edit screen into photos, product information, pricing/stock and store settings.
-- Added an optional Instagram Reel/video URL with HTTPS/host validation.
-- Added care instructions, automatic SKU generation when blank and a live estimated gross-margin preview.
-- Kept purchase price and reserved stock behind the protected admin product view; the customer product query does not request purchase price.
-- Product page shows the Instagram link only when supplied and includes care instructions only when supplied.
+## Admin structure and consistent design
+- Unified typography, responsive spacing, forms, buttons and larger base text across all 30 HTML pages. Uses Poppins for body text and Cormorant Garamond for headings.
+- Dashboard focuses on products, orders, customers and returns, recent orders and the editable home banner.
+- Removed Activity and its front-end logic/database audit feature. Removed the separate Categories admin page; categories are created inside the Product form.
+- Removed duplicate Add product/Add saree entry points. Products has one add button and a shared add/edit form.
+- Finance is one page only; the former duplicate account/transaction and legacy P&L functions are dropped by the new migration.
 
-## Product photos
-- Correctly decodes image orientation where supported before drawing the watermark.
-- Adds one restrained `NOOLTHARI™` watermark at 22% opacity, using light/dark contrast based on the image area.
-- Shows a watermarked preview, caps each photo at 15 MB and each product at eight photos, and reports upload failures so the admin can retry.
-- Existing image records are not removed by this update.
+## Product and images
+- Product editor removes Saree length, Blouse piece length, Care instructions and Offer price.
+- Added optional vendor selection and inline Add vendor, plus inline Add category.
+- Opening stock is recorded as a supplier purchase with quantity, unit cost, amount paid now, payment account and vendor due.
+- Purchase price and reserved quantity remain protected from customer queries.
+- Product photos are orientation-corrected where supported and watermarked once with a subtle NOOLTHARI™ mark (22% opacity). Preview, file size and maximum-photo checks remain.
 
-## Dashboard and order safety
-- Dashboard includes quick links and recent orders, plus clear notes for finance figures.
-- Paid order value is explicitly not represented as bank balance or Razorpay settlement.
-- Admin fulfilment status moves forward only for verified paid orders. Payment capture remains with the existing Razorpay verify/webhook functions; the fulfilment screen cannot set `paid`, `cancelled` or `refunded`.
+## Orders, customers and storefront
+- One order record supports online, offline, Instagram, WhatsApp, gifts and collaborations.
+- Manual sale records buyer details even when the buyer has no NOOLTHARI login; optional account linking remains available.
+- Stock is deducted for each manual sale/gift/collaboration. Free gifts have zero revenue but their cost remains in COGS.
+- Manual unpaid sales remain receivables until the admin records money actually received.
+- Customers/admin can remove only cancelled failed orders without captured/authorised payment. Payment records with captured/authorised state are protected.
+- Wishlist table/RLS is included in the new migration.
+- Admin can replace the home banner from Dashboard without editing source files.
 
-## Required Supabase migration
-Before deploying this frontend, apply `supabase/migrations/20261108_product_instagram_and_fulfilment.sql` once in the current Supabase project after backup and after the earlier migrations have been applied. The migration adds one nullable column, adds a narrow public read grant, refreshes the protected `admin_products` view and tightens the fulfilment RPC. It does not drop/reset users, products, carts, orders, payments, stock or financial records.
+## Finance and accounting logic
+- Single ledger for owner capital, paid stock purchases, vendor payments, expenses, sale receipts, refunds, Razorpay settlement transfers and gateway fees.
+- Displays period P&L estimate and lifetime cash/bank/UPI/other balances, Razorpay unsettled funds, inventory value, vendor due and customer due.
+- Uses weighted-average inventory cost. Stock purchase is inventory, not immediate loss; COGS is counted as units are sold or gifted.
+- Razorpay settlement must balance as bank credit + fee = gross and cannot exceed recorded unsettled balance.
 
-Never run `supabase/master.sql` against the existing live database. It is for a brand-new empty project only.
-
-## Unchanged integrations
-- `js/config.js`, Supabase project URL/publishable key, Razorpay Key ID, Razorpay payment Edge Function sources, Supabase project reference and Vercel project metadata remain unchanged.
-- No Razorpay payment/refund function is newly deployed or modified by this update.
+## Required database work
+- Existing project: apply any missing prior migrations, then `supabase/migrations/20261108_business_workflow_reset.sql` once after backup.
+- Only when ready to clear business records: run `supabase/reset_business_data.sql` separately. It preserves Auth users and all profile/customer accounts, but clears products/sales/expenses/inventory etc.
+- Never run `supabase/master.sql` on the existing live project.
+- After upgrade, deploy the changed `razorpay-webhook` Edge Function. Keep existing Razorpay key IDs/secrets and webhook URL/events.
 
 ## Verification boundary
-`npm run check` passed after the changes. It checks static project structure, local references, JavaScript syntax, JSON configuration and secret patterns. The new SQL was reviewed but not executed on the owner's database. Live Supabase RLS, Razorpay transactions/webhooks, production Vercel deployment, and physical PC/Android/iPhone/tablet tests require owner credentials and devices and are not claimed as completed.
+`npm run check` passes: 30 HTML pages and 31 JavaScript files checked for syntax, local references, titles, viewport tags, duplicate IDs, JSON config and secret-pattern issues. This is a static preflight only. The SQL was reviewed but not executed in the owner's Supabase project; no live Razorpay transaction/webhook, production Vercel deployment or physical PC/tablet/iPhone/Android device test is claimed.

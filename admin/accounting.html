@@ -1,564 +1,152 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
-
-  <meta
-    name="theme-color"
-    content="#0B3D45"
-  >
-
-  <title>
-    Profit &amp; Loss | NOOLTHARI™
-  </title>
-
-
-  <!-- Fonts -->
-<!-- Styles -->
-
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#123e42">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Finance | NOOLTHARI™</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link
-    rel="stylesheet"
-    href="../css/main.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="../css/admin.css"
-
-  >
-
-  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
+  <link rel="stylesheet" href="../css/unified.css">
 </head>
-
-
 <body data-root="../">
-
-
-  <!-- =====================================================
-       ADMIN LAYOUT
-  ====================================================== -->
-
   <div class="admin-shell">
-
-
-    <!-- ===================================================
-         SIDEBAR
-    ==================================================== -->
-
     <aside class="admin-side">
-
       <div class="admin-top">
-
-
-        <a
-          class="admin-logo"
-          href="index.html"
-          aria-label="NOOLTHARI Admin Dashboard"
-        >
-
-          <img
-            src="../assets/logo/noolthari-logo.webp"
-            alt="NOOLTHARI™"
-            loading="eager"
-          >
-
-          <span>
-            NOOLTHARI™
-          </span>
-
-        </a>
-
-
-        <button
-          class="admin-mobile-toggle"
-          data-admin-menu
-          type="button"
-          aria-label="Open admin menu"
-          aria-expanded="false"
-        >
-          Menu
-        </button>
-
+        <a class="admin-logo" href="index.html" aria-label="NOOLTHARI Admin Dashboard"><img src="../assets/logo/noolthari-logo.webp" alt="NOOLTHARI™"><span>NOOLTHARI™</span></a>
+        <button class="admin-mobile-toggle" data-admin-menu type="button" aria-label="Open admin menu" aria-expanded="false">Menu</button>
       </div>
-
-
-      <nav
-        class="admin-nav"
-        aria-label="Admin navigation"
-      >
-
-        <a href="index.html">
-          Dashboard
-        </a>
-
-        <a href="activity.html">Activity</a>
-
-        <a href="products.html">
-          Products
-        </a>
-
-        <a href="categories.html">
-          Categories
-        </a>
-
-        <a href="orders.html">
-          Orders
-        </a>
-
-        <a href="customers.html">
-          Customers
-        </a>
-
-        <a href="returns.html">
-          Returns
-        </a>
-
-        <a href="messages.html">
-          Messages
-        </a>
-
-        <a
-          href="accounting.html"
-          class="active"
-          aria-current="page"
-        >
-          Finance
-        </a>
-
-
-        <a href="../index.html">
-          View store
-        </a>
-
-        <a href="../account.html">
-          Account
-        </a>
-
-        <a
-          href="#"
-          data-logout
-        >
-          Sign out
-        </a>
-
+      <nav class="admin-nav" aria-label="Admin navigation">
+        <a href="index.html">Dashboard</a><a href="products.html">Products</a><a href="orders.html">Orders</a>
+        <a href="customers.html">Customers</a><a href="returns.html">Returns</a><a href="messages.html">Messages</a>
+        <a href="accounting.html" class="active" aria-current="page">Finance</a>
+        <a href="../index.html">View store</a><a href="../account.html">Account</a><a href="#" data-logout>Sign out</a>
       </nav>
-
     </aside>
-
-
-    <!-- ===================================================
-         MAIN CONTENT
-    ==================================================== -->
-
     <main class="admin-main">
-
-
-      <!-- PAGE HEADER -->
-
       <header class="admin-page-header">
-
-        <div>
-
-          <div class="eyebrow">
-            Business finance
-          </div>
-
-          <h1 class="page-title">
-            Profit &amp; Loss
-          </h1>
-
-          <p class="finance-note">
-            A management estimate from verified paid orders, saved product costs and expenses you record here.
-          </p>
-
-        </div>
-
+        <div><div class="eyebrow">Business accounts</div><h1 class="page-title">Finance</h1>
+          <p class="finance-note">One place for investments, saree purchases, sales, business expenses, Razorpay settlements and available funds.</p></div>
       </header>
 
-
-      <!-- =================================================
-           PROFIT & LOSS
-      ================================================== -->
-
-      <section
-        aria-label="Profit and loss summary"
-      >
-
-        <div class="stat-grid">
-
-
-          <div class="stat">
-
-            <div class="eyebrow">
-              Paid-order revenue
-            </div>
-
-            <strong id="revenue">
-              —
-            </strong>
-
-          </div>
-
-
-          <div class="stat">
-
-            <div class="eyebrow">
-              COGS
-            </div>
-
-            <strong id="cogs">
-              —
-            </strong>
-
-          </div>
-
-
-          <div class="stat">
-
-            <div class="eyebrow">
-              Expenses
-            </div>
-
-            <strong id="expenses">
-              —
-            </strong>
-
-          </div>
-
-
-          <div class="stat">
-
-            <div class="eyebrow">
-              Net profit
-            </div>
-
-            <strong id="profit">
-              —
-            </strong>
-
-          </div>
-
-
+      <section class="admin-card finance-filter-card" aria-label="Finance date filter">
+        <div class="finance-filter-row">
+          <div class="field"><label for="finance-from">From</label><input id="finance-from" type="date"></div>
+          <div class="field"><label for="finance-to">To</label><input id="finance-to" type="date"></div>
+          <button class="btn btn-gold" id="finance-refresh" type="button">Update report</button>
         </div>
-
+        <p id="finance-status" class="editor-status" role="status" aria-live="polite"></p>
       </section>
 
-
-      <!-- =================================================
-           BALANCE SNAPSHOT
-      ================================================== -->
-
-      <section
-        class="finance-section"
-        aria-label="Balance snapshot"
-      >
-
-        <div class="admin-card">
-
-
-          <div class="eyebrow">
-            Management balance snapshot
-          </div>
-
-
-          <h2>
-            Business position estimate
-          </h2>
-
-
-          <div class="finance-grid">
-
-
-            <div>
-
-              <span>
-                Paid order total (not bank cash)
-              </span>
-
-              <strong id="bs-cash">
-                —
-              </strong>
-
-            </div>
-
-
-            <div>
-
-              <span>
-                Inventory at recorded cost
-              </span>
-
-              <strong id="bs-inventory">
-                —
-              </strong>
-
-            </div>
-
-
-            <div>
-
-              <span>
-                Receivables
-              </span>
-
-              <strong id="bs-receivables">
-                —
-              </strong>
-
-            </div>
-
-
-            <div>
-
-              <span>
-                Pending refund liabilities
-              </span>
-
-              <strong id="bs-liabilities">
-                —
-              </strong>
-
-            </div>
-
-
-            <div>
-
-              <span>
-                Estimated net position
-              </span>
-
-              <strong id="bs-equity">
-                —
-              </strong>
-
-            </div>
-
-
-          </div>
-
-
-          <p class="finance-note">
-            This is not a bank balance or Razorpay settlement statement. It excludes gateway fees, tax adjustments and any costs not entered in Expenses. Reconcile actual payouts/refunds with Razorpay and your bank statement; record business expenses here for a more useful estimate.
-          </p>
-
-
+      <section aria-label="Profit and loss summary" class="finance-block">
+        <div class="finance-block-heading"><div><div class="eyebrow">Profit &amp; loss</div><h2>Business performance</h2></div><span class="finance-period" id="finance-period-label"></span></div>
+        <div class="stat-grid finance-summary-grid">
+          <div class="stat"><div class="eyebrow">Paid sales</div><strong id="f-revenue">—</strong></div>
+          <div class="stat"><div class="eyebrow">Cost of sarees sold</div><strong id="f-cogs">—</strong></div>
+          <div class="stat"><div class="eyebrow">Gross profit</div><strong id="f-gross">—</strong></div>
+          <div class="stat"><div class="eyebrow">Business expenses</div><strong id="f-expenses">—</strong></div>
+          <div class="stat"><div class="eyebrow">Refunds + gateway fees</div><strong id="f-adjustments">—</strong></div>
+          <div class="stat finance-profit-stat"><div class="eyebrow">Estimated net profit</div><strong id="f-net">—</strong></div>
         </div>
-
+        <p class="finance-note">Stock purchases are recorded as inventory, not immediately treated as a loss. The purchase cost is counted as COGS when a saree is sold or gifted. This estimate uses the current weighted-average product cost and the dates recorded in each transaction.</p>
       </section>
 
-
-      <!-- =================================================
-           EXPENSE MANAGEMENT
-      ================================================== -->
-
-      <section
-        class="admin-card"
-        style="margin-top:22px"
-        aria-label="Expense management"
-      >
-
-
-        <div class="section-heading">
-
-          <div class="eyebrow">
-            Business spending
-          </div>
-
-          <h2>
-            Add expense
-          </h2>
-
-          <p class="finance-note">
-            Record operating expenses so your net profit stays accurate.
-          </p>
-
+      <section class="finance-block" aria-label="Business balances">
+        <div class="finance-block-heading"><div><div class="eyebrow">Cash and assets</div><h2>Where the business money is</h2></div></div>
+        <div class="finance-balance-grid">
+          <div class="admin-card"><span>Cash in hand</span><strong id="f-cash">—</strong></div>
+          <div class="admin-card"><span>Bank balance recorded</span><strong id="f-bank">—</strong></div>
+          <div class="admin-card"><span>UPI balance recorded</span><strong id="f-upi">—</strong></div>
+          <div class="admin-card"><span>Other funds</span><strong id="f-other">—</strong></div>
+          <div class="admin-card"><span>Razorpay unsettled</span><strong id="f-razorpay">—</strong></div>
+          <div class="admin-card"><span>Total money on hand + Razorpay</span><strong id="f-funds">—</strong></div>
+          <div class="admin-card"><span>Unpaid customer balances</span><strong id="f-customer-due">—</strong></div>
+          <div class="admin-card"><span>Inventory at cost</span><strong id="f-inventory">—</strong></div>
+          <div class="admin-card"><span>Pending vendor payments</span><strong id="f-vendor-due">—</strong></div>
+          <div class="admin-card"><span>Owner capital entered</span><strong id="f-capital">—</strong></div>
         </div>
-
-
-        <!-- Expense form -->
-
-        <form
-          id="expense-form"
-          class="admin-form"
-        >
-
-
-          <div class="field">
-
-            <label for="expense-title">
-              Title
-            </label>
-
-            <input
-              id="expense-title"
-              name="title"
-              type="text"
-              autocomplete="off"
-              required
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="expense-category">
-              Category
-            </label>
-
-            <input
-              id="expense-category"
-              name="category"
-              type="text"
-              autocomplete="off"
-              required
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="expense-amount">
-              Amount
-            </label>
-
-            <input
-              id="expense-amount"
-              name="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              inputmode="decimal"
-              required
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label for="expense-date">
-              Date
-            </label>
-
-            <input
-              id="expense-date"
-              name="expense_date"
-              type="date"
-              required
-            >
-
-          </div>
-
-
-          <button
-            class="btn btn-gold"
-            type="submit"
-          >
-            Save expense
-          </button>
-
-
-        </form>
-
-
-        <!-- =================================================
-             RECORDED EXPENSES
-        ================================================== -->
-
-        <div
-          class="section-heading"
-          style="margin-top:32px"
-        >
-
-          <div class="eyebrow">
-            Recorded spending
-          </div>
-
-          <h2>
-            Expenses
-          </h2>
-
-        </div>
-
-
-        <div class="table-wrap">
-
-          <table>
-
-            <thead>
-
-              <tr>
-
-                <th scope="col">
-                  Date
-                </th>
-
-                <th scope="col">
-                  Title
-                </th>
-
-                <th scope="col">
-                  Amount
-                </th>
-
-                <th scope="col">
-                  Category
-                </th>
-
-              </tr>
-
-            </thead>
-
-
-            <!-- Hook used by accounting.js -->
-
-            <tbody id="expense-table"></tbody>
-
-          </table>
-
-        </div>
-
-
+        <p class="finance-note">These are calculated from entries you record here, not a live bank connection. Unpaid customer balances are shown separately and are not counted as cash received. Enter your opening investment and opening balances first. Razorpay captured payments remain “unsettled” until you record the actual payout credited to your bank.</p>
       </section>
 
+      <section class="finance-block finance-forms-grid" aria-label="Record business transactions">
+        <article class="admin-card">
+          <div class="eyebrow">Owner funding</div><h2>Add investment / capital</h2>
+          <p class="finance-note">Record money you put into NOOLTHARI™. Capital increases funds, but is not sales revenue or profit.</p>
+          <form id="capital-form" class="admin-form">
+            <div class="field"><label for="capital-amount">Amount (₹) *</label><input id="capital-amount" name="amount" type="number" min="0.01" step="0.01" required></div>
+            <div class="field"><label for="capital-account">Received in *</label><select id="capital-account" name="account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option></select></div>
+            <div class="field"><label for="capital-date">Date *</label><input id="capital-date" name="transaction_date" type="date" required></div>
+            <div class="field"><label for="capital-note">What was this for?</label><input id="capital-note" name="description" maxlength="500" placeholder="Initial investment / additional funds"></div>
+            <button class="btn btn-gold" type="submit">Save investment</button>
+          </form>
+        </article>
+        <article class="admin-card">
+          <div class="eyebrow">Business spending</div><h2>Record an expense</h2>
+          <p class="finance-note">For trademark, registration, domain, packing, courier / Speed Post, advertising and other costs.</p>
+          <form id="expense-form" class="admin-form">
+            <div class="field"><label for="expense-title">Expense description *</label><input id="expense-title" name="title" maxlength="180" required placeholder="e.g. Domain renewal"></div>
+            <div class="field"><label for="expense-category">Category *</label><select id="expense-category" name="category"><option>Trademark</option><option>Business registration</option><option>Domain and website</option><option>Packaging material</option><option>Shipping and courier</option><option>Marketing and collaboration</option><option>Blouse stitching</option><option>Software and services</option><option>Other</option></select></div>
+            <div class="field"><label for="expense-amount">Amount (₹) *</label><input id="expense-amount" name="amount" type="number" min="0.01" step="0.01" required></div>
+            <div class="field"><label for="expense-date">Date *</label><input id="expense-date" name="expense_date" type="date" required></div>
+            <div class="field"><label for="expense-paid-from">Paid from *</label><select id="expense-paid-from" name="paid_from"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="razorpay">Razorpay balance</option><option value="other">Other</option></select></div>
+            <div class="field"><label for="expense-notes">Notes / reference</label><input id="expense-notes" name="notes" maxlength="500"></div>
+            <button class="btn btn-gold" type="submit">Save expense</button>
+          </form>
+        </article>
+        <article class="admin-card">
+          <div class="eyebrow">Inventory</div><h2>Receive saree stock</h2>
+          <p class="finance-note">Use this when you buy more pieces of an existing product. It records vendor, quantities, cost, paid amount and stock together.</p>
+          <form id="stock-form" class="admin-form">
+            <div class="field"><label for="stock-product">Product *</label><select id="stock-product" name="product_id" required><option value="">Loading products…</option></select></div>
+            <div class="field"><label for="stock-vendor">Vendor</label><select id="stock-vendor" name="vendor_id"><option value="">No vendor selected</option></select></div>
+            <div class="field"><label for="stock-quantity">Quantity received *</label><input id="stock-quantity" name="quantity" type="number" min="1" step="1" required></div>
+            <div class="field"><label for="stock-unit-cost">Purchase cost per saree (₹) *</label><input id="stock-unit-cost" name="unit_cost" type="number" min="0" step="0.01" required></div>
+            <div class="field"><label for="stock-paid-amount">Amount paid now (₹)</label><input id="stock-paid-amount" name="paid_amount" type="number" min="0" step="0.01" placeholder="Defaults to full amount"></div>
+            <div class="field"><label for="stock-paid-from">Paid from *</label><select id="stock-paid-from" name="payment_account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option><option value="razorpay">Razorpay balance</option></select></div>
+            <div class="field"><label for="stock-purchase-date">Purchase date *</label><input id="stock-purchase-date" name="purchase_date" type="date" required></div>
+            <div class="field"><label for="stock-notes">Invoice / notes</label><input id="stock-notes" name="notes" maxlength="500"></div>
+            <button class="btn btn-gold" type="submit">Save purchase and stock</button>
+          </form>
+        </article>
+        <article class="admin-card">
+          <div class="eyebrow">Vendor account</div><h2>Pay pending vendor amount</h2>
+          <p class="finance-note">For a saree purchase paid in parts, record each later payment here.</p>
+          <form id="vendor-payment-form" class="admin-form">
+            <div class="field"><label for="vendor-purchase">Purchase with due balance *</label><select id="vendor-purchase" name="purchase_id" required><option value="">Loading vendor dues…</option></select></div>
+            <div class="field"><label for="vendor-payment-amount">Payment amount (₹) *</label><input id="vendor-payment-amount" name="amount" type="number" min="0.01" step="0.01" required></div>
+            <div class="field"><label for="vendor-payment-account">Paid from *</label><select id="vendor-payment-account" name="payment_account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option><option value="razorpay">Razorpay balance</option></select></div>
+            <div class="field"><label for="vendor-payment-date">Date *</label><input id="vendor-payment-date" name="transaction_date" type="date" required></div>
+            <div class="field"><label for="vendor-payment-reference">Reference / note</label><input id="vendor-payment-reference" name="reference" maxlength="200"></div>
+            <button class="btn btn-gold" type="submit">Record vendor payment</button>
+          </form>
+        </article>
+        <article class="admin-card">
+          <div class="eyebrow">Payment reconciliation</div><h2>Record Razorpay payout</h2>
+          <p class="finance-note">Enter the settlement gross, the exact amount credited to bank and the gateway fee. The three figures must balance.</p>
+          <form id="settlement-form" class="admin-form">
+            <div class="field"><label for="settlement-gross">Gross settled amount (₹) *</label><input id="settlement-gross" name="gross_amount" type="number" min="0.01" step="0.01" required></div>
+            <div class="field"><label for="settlement-bank">Bank credit (₹) *</label><input id="settlement-bank" name="bank_credit" type="number" min="0" step="0.01" required></div>
+            <div class="field"><label for="settlement-fee">Razorpay fee + tax (₹) *</label><input id="settlement-fee" name="fee" type="number" min="0" step="0.01" required></div>
+            <div class="field"><label for="settlement-date">Settlement date *</label><input id="settlement-date" name="settlement_date" type="date" required></div>
+            <div class="field"><label for="settlement-reference">Settlement ID / reference *</label><input id="settlement-reference" name="reference" maxlength="160" required></div>
+            <button class="btn btn-gold" type="submit">Save Razorpay settlement</button>
+          </form>
+        </article>
+      </section>
 
+      <section class="admin-card finance-ledger-card" aria-label="Recent business transactions">
+        <div class="finance-block-heading"><div><div class="eyebrow">Single transaction register</div><h2>Recent business entries</h2></div><span class="finance-note">Newest 60 records</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Details</th><th>Account</th><th>Money in / out</th></tr></thead><tbody id="finance-ledger"><tr><td colspan="5">Loading transactions…</td></tr></tbody></table></div>
+      </section>
     </main>
-
   </div>
-
-
-  <!-- =====================================================
-       JAVASCRIPT
-  ====================================================== -->
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"
-  ></script>
-
-  <script src="../js/config.js"></script>
-
-  <script src="../js/supabase.js"></script>
-
-  <script src="../js/utils.js"></script>
-
-  <script src="../js/app.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+  <script src="../js/config.js"></script><script src="../js/supabase.js"></script><script src="../js/utils.js"></script><script src="../js/app.js"></script>
   <script src="../admin/js/accounting.js"></script>
-
-
 </body>
-
 </html>

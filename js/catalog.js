@@ -632,7 +632,7 @@ function card(
     Math.max(
       0,
       Number(
-        product?.sale_price || 0
+        0
       )
     );
 
@@ -1467,8 +1467,8 @@ async function renderProducts(element, options = {}) {
     // purchase cost and reserved inventory are intentionally never fetched.
     let query = sb.from('products').select(`
       id,sku,saree_name,slug,category_id,description,fabric,colour,pattern,occasion,
-      saree_length,blouse_length,blouse_included,care_instructions,selling_price,
-      sale_price,stock_quantity,status,featured,bestseller,created_at,updated_at,
+      blouse_included,selling_price,
+      stock_quantity,status,featured,bestseller,created_at,updated_at,
       categories(name),product_images(id,path,sort_order,public_url)
     `).eq('status', 'active');
 
@@ -1506,7 +1506,7 @@ async function renderProducts(element, options = {}) {
     const maxPrice = options.maxPrice === '' || options.maxPrice == null ? null : Number(options.maxPrice);
     const effectivePrice = product => {
       const regular = Math.max(0, Number(product.selling_price || 0));
-      const sale = Math.max(0, Number(product.sale_price || 0));
+      const sale = Math.max(0, Number(0));
       return sale > 0 && sale < regular ? sale : regular;
     };
     if (Number.isFinite(minPrice)) products = products.filter(product => effectivePrice(product) >= minPrice);

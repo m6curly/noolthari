@@ -102,6 +102,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const payment =
       order.payments?.[0] || null;
+    const customerName = order.customer_name || order.profiles?.name || order.shipping_full_name || 'Customer';
+    const customerEmail = order.customer_email || order.profiles?.email || '';
+    const customerPhone = order.customer_phone || order.profiles?.phone || order.shipping_phone || '';
+    const saleChannel = String(order.sales_channel || 'online').replaceAll('_', ' ');
 
 
     /* =====================================================
@@ -167,7 +171,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         </form>
       `
       : `<p class="order-status-explainer">${order.status === 'payment_pending'
-          ? 'Waiting for Razorpay to verify payment. Do not dispatch this order until payment is confirmed.'
+          ? (order.payment_provider === 'manual'
+              ? 'This manual sale has an outstanding customer balance. Do not mark it paid until the money is actually received; use Orders → Mark paid to record collection.'
+              : 'Waiting for Razorpay to verify payment. Do not dispatch this order until payment is confirmed.')
           : ['return_requested', 'returned', 'refund_processing', 'refunded'].includes(order.status)
             ? 'This order is being handled through the Returns workflow. Refund status must match the actual Razorpay transaction.'
             : order.status === 'cancelled'
@@ -233,26 +239,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div>
 
               <h2>
-                ${NL.esc(
-                  order.profiles?.name ||
-                  'Customer'
-                )}
+                ${NL.esc(customerName)}
               </h2>
 
 
               <p>
 
-                ${NL.esc(
-                  order.profiles?.email ||
-                  ''
-                )}
-
-                ·
-
-                ${NL.esc(
-                  order.profiles?.phone ||
-                  ''
-                )}
+                ${NL.esc(customerEmail)}
+                ${customerEmail && customerPhone ? ' · ' : ''}
+                ${NL.esc(customerPhone)}
+                <br><span class="order-channel">${NL.esc(saleChannel)}</span>
 
               </p>
 
@@ -443,6 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ''
               )}
             </p>
+            ${order.internal_note ? `<p><strong>Admin note:</strong> ${NL.esc(order.internal_note)}</p>` : ''}
 
           </div>
 
@@ -573,10 +570,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p>
               Status:
               <strong>
-                ${NL.esc(
-                  payment?.status ||
-                  '—'
-                )}
+                ${NL.esc(payment?.status || (Number(order.total || 0) === 0 ? 'Not applicable — gift / collaboration' : 'No payment record'))}
               </strong>
             </p>
 
@@ -590,12 +584,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             </p>
 
 
+            <p>Method: ${NL.esc(order.payment_mode || payment?.payment_method || '—')}</p>
             <p>
               Payment ID:
-              ${NL.esc(
-                payment?.razorpay_payment_id ||
-                '—'
-              )}
+              ${NL.esc(payment?.razorpay_payment_id || '—')}
             </p>
 
           </section>

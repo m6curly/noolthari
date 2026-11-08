@@ -46,8 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Never request purchase_price or reserved_quantity in the customer app.
       .select(`
         id,sku,saree_name,slug,category_id,description,fabric,colour,pattern,occasion,
-        saree_length,blouse_length,blouse_included,care_instructions,selling_price,
-        sale_price,stock_quantity,status,featured,bestseller,instagram_url,created_at,updated_at,
+        blouse_included,selling_price,
+        stock_quantity,status,featured,bestseller,instagram_url,created_at,updated_at,
         categories(name),
         product_images(id,path,sort_order,public_url)
       `)
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     Math.max(
       0,
       Number(
-        product.sale_price || 0
+        0
       )
     );
 
@@ -402,18 +402,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               '—'
             )}
           </dd>
-
-          ${product.saree_length ? `
-            <dt>Saree length</dt>
-            <dd>${NL.esc(product.saree_length)}</dd>
-          ` : ''}
-
-          ${product.blouse_length ? `
-            <dt>Blouse piece length</dt>
-            <dd>${NL.esc(product.blouse_length)}</dd>
-          ` : ''}
-
-          <dt>
+<dt>
             Blouse
           </dt>
 
@@ -427,12 +416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
         </dl>
-
-        ${product.care_instructions ? `
-          <div class="product-care-note"><strong>Care instructions</strong><p>${NL.esc(product.care_instructions)}</p></div>
-        ` : ''}
-
-        <!-- STOCK -->
+<!-- STOCK -->
 
         <p class="stock">
 

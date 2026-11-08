@@ -1,99 +1,106 @@
-# NOOLTHARI Supabase source and update guide
+# NOOLTHARI — Supabase upgrade and clean-start guide
 
-This project ZIP contains the complete Supabase source under `supabase/`:
+This guide is for the existing live project connected in `js/config.js`. It is deliberately split into an **upgrade** and a separate optional **business-data reset**. Do not combine them into one step.
 
-- `supabase/master.sql` — original first-time database setup script.
-- `supabase/migrations/20261031_security_integrity_and_contact.sql` — security/contact/return/payment-reservation migration already present in the original upload.
-- `supabase/migrations/20261101_v2_wishlist_admin_audit.sql` — additive V2 migration for wishlist, admin activity logging, contact rate limiting, notification queue, guest-cart import and protected product reads.
-- `supabase/migrations/20261108_product_instagram_and_fulfilment.sql` — additive product Instagram-link column and protected admin fulfilment update function.
-- `supabase/functions/` — the existing Razorpay/payment functions plus `send-order-notifications/index.ts`.
-- `supabase/config.toml` — keeps the existing Supabase project reference and function settings; V2 adds the notification function configuration.
+## 1. Back up first
 
-## Important: the latest V2.1 visual update needs no database migration
+In Supabase Dashboard, open the existing NOOLTHARI project and take a database backup. Keep a copy of the current website folder and current ZIP as well. Do not change the project URL, anon/publishable key, service keys or Vercel domain.
 
-The V2.1 changes to the storefront header, footer, navigation icons, responsive layouts and Collection filters do not change database tables or RPCs. Colour and Occasion were removed only as visible filter controls; their product data columns are preserved.
+The existing project reference in the supplied config is `moptzrldmubkfteemyql`. Confirm that the Supabase Dashboard you open is the same project before running SQL.
 
-## Before applying any database SQL
+## 2. Upgrade the existing database
 
-1. Make a Supabase database backup.
-2. Open the Supabase Dashboard and check whether each migration has already been applied.
-3. Apply only missing migrations, in chronological order. Do not run a migration a second time just because it is present in the ZIP.
-4. Do not run `supabase/master.sql` against an existing live store. It is the baseline setup script for a new database, not an update script.
-5. Test on a staging project before applying changes to production.
+Open **Supabase → SQL Editor**. Apply only migrations that are missing from your existing project, in this order:
 
-### Migration order
+1. `supabase/migrations/20261031_security_integrity_and_contact.sql`
+2. `supabase/migrations/20261101_v2_wishlist_admin_audit.sql`
+3. `supabase/migrations/20261108_product_instagram_and_fulfilment.sql`
+4. `supabase/migrations/20261108_business_workflow_reset.sql` **(new migration for this package)**
 
-1. `20261031_security_integrity_and_contact.sql` — also supplied in the original ZIP; only apply if it has not already been installed.
-2. `20261101_v2_wishlist_admin_audit.sql` — introduced with V2; apply once if the wishlist/admin audit/notification features are to be enabled and this migration is not already installed.
-3. `20261108_product_instagram_and_fulfilment.sql` — adds the optional product Instagram URL, public-safe column grant and one-way admin fulfilment status RPC. Apply to the current live project before deploying the new frontend.
+The first three are already part of the earlier project setup. Check your existing database before running them; never re-run a migration that has already been applied merely because its file is present. The newest business-workflow migration should be run once after the earlier schema is present. It creates/updates wishlist, vendor/product linkage, a combined customer directory (registered accounts plus offline/Instagram buyers), the single business ledger, banner settings, manual-sale functions, failed-order cleanup protections and the new finance summary. It drops the unused Activity log machinery and obsolete finance tables/functions. It removes the unused product fields `saree_length`, `blouse_length`, `care_instructions` and `sale_price`.
 
-These are database changes, not automatic file-copy operations. Uploading the ZIP to Vercel does not run SQL migrations.
+**Do not run `supabase/master.sql` on this live database.** The master file is an all-in-one baseline for a completely new Supabase project. It is not a production upgrade script.
 
-## Notification email function (optional)
+After the SQL completes, check that these objects exist:
 
-`send-order-notifications` is additional source. It needs a verified sender in Resend and server-side Supabase Function secrets. The function reads:
+- `public.wishlist_items`
+- `public.business_ledger_entries`
+- `public.vendor_purchase_payments`
+- `public.store_settings`
+- `public.admin_products` and `public.admin_customer_directory` admin-only views
+- RPCs `admin_receive_stock`, `admin_record_manual_sale`, `admin_business_summary`, `delete_own_failed_order`, `admin_delete_failed_order`
 
-- `RESEND_API_KEY`
-- `NOTIFICATION_FROM_EMAIL`
-- `NOTIFICATION_CRON_SECRET`
-- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (provided by the Supabase Functions environment; never put the service key in browser JavaScript)
+Check that your owner account is still an admin (read-only verification):
 
-Example for the three Resend/cron secrets, using your own values in a secure terminal:
-
-```bash
-supabase secrets set RESEND_API_KEY=YOUR_RESEND_API_KEY NOTIFICATION_FROM_EMAIL=YOUR_VERIFIED_SENDER NOTIFICATION_CRON_SECRET=YOUR_LONG_RANDOM_SECRET
+```sql
+select email, role
+from public.profiles
+where lower(email) = lower('noolthari6@gmail.com');
 ```
 
-Deploy the function only after the secrets are configured and the notification migration exists:
+The expected role is `admin`. The migration does not change or delete Auth users or profile roles.
+
+## 3. Optional: start the business records from zero
+
+Only do this after step 2, after you have a backup, and when you are ready to remove existing business/catalogue records. Open `supabase/reset_business_data.sql` in SQL Editor and run it once.
+
+It clears products, product-image metadata, categories, vendors, stock movements, purchase records, orders, order items, payment/shipments, returns/refunds, wishlist entries, cart line items, notifications, guest-cart import history, expenses, financial ledger and contact enquiries.
+
+It deliberately **preserves**:
+
+- Supabase Auth accounts in `auth.users`.
+- `public.profiles`, including `noolthari6@gmail.com` and every customer profile.
+- Saved customer addresses and cart containers (their cart contents are cleared).
+- `store_settings`, so the current home-page banner setting is retained.
+
+### Remove old product image files too
+
+The reset SQL deletes product/return image database rows, but Storage files should be removed through the Storage service rather than deleting `storage.objects` rows directly. After the reset, open **Supabase → Storage** and delete the contents of `product-images` and, if you want all old return photos gone, `return-evidence`. Keep `store-assets` so the banner is retained. Do not delete the buckets themselves.
+
+## 4. Storage and browser configuration
+
+The migration creates or updates the public `store-assets` bucket for the admin-managed banner. Existing buckets used by the store are `product-images` (public product photos) and `return-evidence` (private return evidence).
+
+Keep `js/config.js` unchanged for the existing Supabase URL, public publishable/anon key and Razorpay Key ID. The browser must never contain `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, or a Supabase service/secret key.
+
+## 5. Edge Function update for Razorpay
+
+The payment creation and signature-verification functions are retained. This package changes only the webhook's failure-state guard, so deploy the updated `razorpay-webhook` function to the same Supabase project. With Supabase CLI already available and linked, run:
 
 ```bash
-supabase functions deploy send-order-notifications
+supabase functions deploy razorpay-webhook --project-ref moptzrldmubkfteemyql
 ```
 
-A trusted scheduled caller must invoke the function using the configured cron secret and valid Supabase function authorization. Scheduling is not created by this website ZIP. Until a scheduler and sender are configured, queued emails will not be delivered; the storefront and payment functions do not depend on those emails being sent.
+Do not rotate or replace your live Razorpay keys for this website update. Keep the existing Supabase Function secrets and confirm they are present:
 
-## Existing project connection
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `RAZORPAY_WEBHOOK_SECRET`
+- `ALLOWED_ORIGINS` — comma-separated exact HTTPS origins for the live site and any required preview site
+- Supabase server secret (`SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY`)
+- `CRON_SECRET` for the existing reservation-expiry function
 
-- `js/config.js` is unchanged from the uploaded project.
-- `js/supabase.js` is unchanged.
-- `.vercel/project.json` is unchanged.
-- Existing HTML page names, asset paths and current Supabase function paths are retained.
-- The V2.1 UI refinement itself adds no database requirement.
+In the Razorpay Dashboard, retain the current webhook URL:
 
-Never copy a Supabase service-role/secret key into `js/config.js`, HTML, CSS or any public file. The browser may use only the project's public anon/publishable key.
+`https://moptzrldmubkfteemyql.supabase.co/functions/v1/razorpay-webhook`
 
-## 2026-11-08 product Instagram link and fulfilment safety update
+Keep the existing webhook secret and subscribed events `payment.captured`, `payment.failed` and `order.paid`. Do not create a second webhook or change the website's live Key ID. Test the payment flow in a controlled Test Mode/staging setup before accepting live orders; do not use a real order merely as a test.
 
-The latest admin/store refinement adds one optional `products.instagram_url` field. The product editor stores a direct HTTPS Instagram Reel/video link; the customer product page displays a small “Watch on Instagram” link only when that field is present. The field is included in the public product-column allow-list, while `purchase_price` and `reserved_quantity` remain restricted to the protected `admin_products` view.
+## 6. What happens to Vercel and GitHub?
 
-The update also tightens `admin_set_order_status`: the admin can move an already-paid order forward through `confirmed`, `processing`, `shipped`, `out_for_delivery`, and `delivered`. The browser cannot use this workflow to manually set an order to `paid`, `refunded`, `cancelled`, or move a fulfilment stage backwards. Razorpay's verified payment functions continue to control payment capture and paid-order stock deduction.
+No database SQL is executed by Vercel. Apply the Supabase migration separately first. The website source keeps the current Vercel project link and domain configuration. Push the repaired files to the same GitHub repository/production branch; Vercel should deploy automatically if that repository is linked to the existing `noolthari` Vercel project. Alternatively run `npm run deploy` from this project folder after confirming Vercel CLI is logged in and the existing project link is selected.
 
-### Apply on the existing live Supabase project
+Do not change DNS, custom domain settings, Vercel project name or the Supabase URL for this update.
 
-1. Take a fresh Supabase backup first.
-2. Open **Supabase Dashboard → SQL Editor** for the same project currently connected to the website.
-3. Open `supabase/migrations/20261108_product_instagram_and_fulfilment.sql` from this ZIP, copy the complete SQL and run it once.
-4. Confirm the query completes successfully. In Table Editor, check that `products.instagram_url` exists. In SQL Editor you can also check:
+## 7. Final checks after migration and deployment
 
-   ```sql
-   select column_name
-   from information_schema.columns
-   where table_schema = 'public'
-     and table_name = 'products'
-     and column_name = 'instagram_url';
-   ```
+1. Sign in with `noolthari6@gmail.com`; verify Admin access.
+2. Sign in with an existing customer account; verify the account still exists.
+3. Add a category and vendor inside Product → Add product.
+4. Add a test saree and a watermarked product photo; check the public product page and wishlist.
+5. Record a small manual sale in an offline/test workflow; check that the order appears in Admin Orders and stock reduces exactly once.
+6. Record capital, a sample expense and an additional stock purchase; verify Finance balances and vendor due.
+7. Use Razorpay Test Mode for a successful capture and a failed attempt; confirm captured payment cannot be deleted and a failed/cancelled order can be removed.
+8. Change the banner from Dashboard and confirm the home page updates.
 
-5. Do **not** run `supabase/master.sql` on the live store. Do not drop/recreate tables, reset the project, or delete existing products/users. The new migration is additive and preserves existing records.
-6. Keep the existing Supabase URL and public browser key in `js/config.js`. This update does not require changing the Supabase project URL or rotating keys.
-
-The migration updates the `admin_products` view and the safe public column grants. Without it, the updated product editor/customer product page will receive a missing-column or permission error for `instagram_url`.
-
-### Payment and finance behaviour
-
-No Razorpay payment Edge Function was replaced by this UI update. The existing order-creation, signature-verification/webhook and paid-order finalisation functions remain the authoritative payment path. A verified payment finalises the order and decrements stock through the existing database function; the admin then advances delivery status in the Orders screen.
-
-The Dashboard labels the paid-order total as **Paid order value**, not bank cash. Razorpay settlements/payouts, fees, refunds and bank credits must be reconciled with the Razorpay dashboard and bank statement; this site cannot force a Razorpay payout to the bank merely by updating a database number. Refund state must reflect the actual refund in Razorpay; do not manually mark an order refunded in the fulfilment dropdown.
-
-### First-time database only
-
-For a genuinely new, empty Supabase project, use the baseline setup and all required migrations in chronological order. The `master.sql` baseline has also been updated with the Instagram column, public read grant and restricted fulfilment RPC. Never use the baseline as a production update script for an existing store.
+The ZIP passes static code checks, but the real Supabase SQL, Row Level Security, live Razorpay capture/webhook, Vercel production deployment and physical device testing still need to be completed against your own project.

@@ -1,80 +1,76 @@
-# NOOLTHARI™ V2 — Code audit and rollout report
+# NOOLTHARI™ — source audit and verification report
 
-**Package:** NOOLTHARI V2 (static HTML/CSS/JavaScript + Supabase + Razorpay)
+**Scope:** the supplied website ZIP, including storefront pages, admin pages, JavaScript, CSS, Supabase SQL/migrations, Storage policies and Razorpay Edge Function source. The working copy retains the existing Supabase and Vercel project configuration. No production deployment or live database modification was performed during this edit.
 
-## What changed in this package
+## Changes made
 
-### Storefront and usability
-- November 8 admin/product update: simpler product editor, optional Instagram Reel/video URL, care-instruction editing, SKU auto-generation, live price-margin feedback, photo preview and improved order overview.
-- Product image watermark now uses one small low-opacity NOOLTHARI™ mark, adapts light/dark text contrast, corrects EXIF orientation where supported, limits output dimensions and reports/retries failed uploads rather than silently treating them as complete.
-- Customer product pages show the safe Instagram link and care notes only when supplied.
-- The admin dashboard adds recent orders and quick actions; it explicitly distinguishes paid order value from actual bank/Razorpay payout.
-- Admin order status changes are limited to forward fulfilment states after payment. Payment capture and refunds remain gateway-controlled.
-- Replaced the previous mixed visual treatment with a shared ivory / peacock-teal / antique-gold design system, consistent typography, responsive controls, clearer focus states and reduced-motion support.
-- Removed the awkward injected left-side Back control. Contextual navigation such as “Back to orders” and “Back to sign in” remains where it is useful.
-- Added live catalogue filters for category, fabric, colour, occasion, price range and stock availability, plus sorting.
-- Added customer wishlist UI backed by an owner-only Supabase table, related-saree suggestions and a guest bag that survives sign-in.
-- Product detail pages now update SEO/social metadata and emit basic Product structured data using the actual product details.
-- Added canonical and social metadata for public pages, no-index metadata for private/admin pages, `robots.txt` and a sitemap.
-- Added product image WebP display copies while retaining source assets.
+### Storefront and responsive design
+- Added `css/unified.css` to all 30 HTML pages to standardise typography, line-height, field sizing, button sizes, administrative spacing and mobile layouts.
+- Poppins is used for body/interface text and Cormorant Garamond for headings. Base text and interactive controls were increased for readability.
+- Kept the existing visual identity, page routes, storefront structure and local assets.
 
-### Security and data integrity
-- Removed the supplied `.env.local` from the deployable project. The supplied archive contained a Vercel OIDC token; revoke that token in Vercel and do not reuse it. `.env.local` and other `.env.*` files are excluded from the package; `.env.example` contains placeholders only.
-- Customer product queries now request an explicit public-safe column list rather than `select('*')`.
-- The V2 SQL migration revokes broad browser `SELECT` on `products`, grants only storefront-safe columns, and exposes full product reads through an `admin_products` view filtered by `is_admin()`.
-- The V2 migration adds RLS-protected customer wishlists, an admin activity log that deliberately excludes customer PII/payment secrets, per-email contact-form rate limiting, a retryable notification outbox and an idempotent, stock-rechecking guest-cart import RPC.
-- Existing October security/integrity migration remains part of the required upgrade path. It is not replaced by this package.
-- Contact form adds a honeypot; deployment CSP and browser security headers are configured in `vercel.json`.
-- Admin exports neutralize spreadsheet formula injection in CSV values.
-- Admin returns UI no longer lets an operator mark a return as `refunded` from a dropdown. The real refund must be processed and verified at Razorpay; this package does not yet provide a refund-initiation endpoint or a button to mark a return as refunded.
+### Admin
+- Removed the standalone Activity and Categories pages and the corresponding browser scripts.
+- The migration drops the old admin activity log table and trigger function/feature.
+- Categories are still stored as catalogue data, but new categories are created inside the product form. The category selector remains required.
+- Kept one Products page/add button and one shared add/edit form.
+- Kept Orders, Customers, Returns, Messages, Finance, dashboard/store view, account and sign out.
+- Dashboard has a single current banner editor backed by `store_settings` and the `store-assets` bucket.
 
-### Operations and deployment
-- Added Admin → Activity and CSV export for the currently displayed admin table.
-- Added a Supabase Edge Function that sends queued order/shipment/return/refund status emails through Resend using server-side secrets and a cron secret.
-- Added VS Code terminal helper scripts for local preview, static preflight, GitHub update and Vercel deployment.
-- Added setup instructions for safe migration order, deployment secrets, email scheduling and owner-supplied business settings.
+### Product management
+- Removed `saree_length`, `blouse_length`, `care_instructions` and `sale_price` from the active product editor and the latest database schema.
+- Added vendor selection and inline vendor creation. Product purchase cost remains private.
+- Opening stock creates a purchase, purchase item, vendor payment if paid, stock movement and ledger outflow. Partial payment leaves an explicit vendor due.
+- Replenishment is recorded from Finance rather than overwriting product stock in the editor.
+- Preserved watermark processing: EXIF-aware orientation where supported, one subtle watermark at 22% opacity, preview, file validation, image limits and upload error handling.
 
-## Required upgrade order for an existing/live store
+### Orders and payment safety
+- Online and manually recorded sales share `orders` and `order_items` with a unique order number and linked shipment.
+- Manual orders store customer name/phone/email snapshots; linking a registered customer account is optional.
+- Customers now combines registered profiles and no-login manual buyers in one admin directory, with order count, paid order value and last activity.
+- Manual channels include offline, Instagram, WhatsApp, gift and collaboration. Gifts/collabs can be recorded at ₹0 while stock and cost are accounted for.
+- Manual unpaid sales are receivables until the admin records actual payment.
+- Customer/admin deletion RPCs are restricted to cancelled orders with no authorised/captured payment and no refund record.
+- Failed/unpaid reservation expiry excludes authorised/captured payments. Checkout failure does not clear the customer's cart.
+- Razorpay payment creation and verification source remains in place. The webhook failure handler is guarded from downgrading authorised/captured payments.
 
-1. Back up the Supabase project and preserve the current GitHub/Vercel deployment.
-2. Confirm whether `20261031_security_integrity_and_contact.sql` has already been applied. If not, apply it first.
-3. Apply `20261101_v2_wishlist_admin_audit.sql` once.
-4. Apply `20261108_product_instagram_and_fulfilment.sql` after the October and V2 migrations; do not run `master.sql` on an existing store.
-5. Keep the existing five Edge Functions and server-only secrets. Their source and payment configuration are not changed by this frontend update.
-6. Test sign-in, guest-bag merge, product edit/photo upload, the Instagram link, checkout, Razorpay in Test Mode, webhooks, reservation expiry, order fulfilment, returns and tracking before switching any payment configuration.
-7. Deploy the static files to the existing Vercel project only after reviewing the Git diff and confirming the production branch.
+### Finance
+- Added the single `business_ledger_entries` register and `vendor_purchase_payments` table.
+- Capital, purchase payments, expenses, paid order receipts, refunds, gateway fees and Razorpay settlement transfers have ledger entries.
+- Finance shows selected-period P&L estimate and lifetime account balances, unsettled Razorpay funds, stock inventory value, vendor dues and customer receivables.
+- Inventory cost uses a weighted-average purchase cost and becomes COGS when a saree is sold or gifted. Capital is not revenue. Stock purchase is not an immediate expense.
+- Settlement entry requires gross = actual bank credit + fee and checks the available unsettled Razorpay balance.
 
-For a brand-new empty Supabase project, run `supabase/master.sql` once. **Never run the full master schema against a live project with existing orders/customers.**
+## Static verification performed
 
-## Verification performed in this build environment
-
-- `npm run check` passed after this update: 32 HTML pages, 32 JavaScript files, local references, page titles, viewport tags, duplicate IDs, JSON config and secret-pattern checks.
-- The changed JavaScript files were also run through Node.js syntax checks.
-- The SQL migration and baseline schema were reviewed against the supplied schema source. They were not executed against the owner's Supabase database in this environment.
-- Browser-render/mobile layout automation was attempted, but Chromium was blocked by the build environment's administrator policy; physical Android/iOS/tablet browser testing remains to be done by the owner.
-- The deployable output excludes `.git`, local `.env` files and any service-role/Razorpay secret file; `.env.example` is retained.
-
-These checks do **not** prove live Supabase RLS behaviour, payment capture/refund, webhook delivery, SMTP/provider delivery, Vercel production deployment, real customer flows or compatibility on every physical browser/device. Supabase CLI/psql, production credentials, Razorpay test credentials and owner access were not available in this build environment. The browser-render screenshot check also could not be completed here.
-
-## Not safe to invent or claim as completed
-
-The following require owner decisions, provider configuration or additional production implementation before they can be represented as live features:
-
-- **Actual commercial/legal details:** legal seller name, address, GST/tax registration details where applicable, support/grievance contacts and final legal text.
-- **Shipping policy:** the existing checkout's shipping amount is currently ₹0. Actual shipping prices, zones, free-shipping threshold and delivery promises must be supplied and wired to the server-side checkout calculation before launch.
-- **Coupons/discounts:** no client-only discount has been added. A secure server-side coupon schema, validation, usage limits and Razorpay amount calculation must be designed before coupon campaigns are enabled.
-- **Actual Razorpay refund initiation:** the current admin status selector intentionally does not claim to process money. A server-side refund endpoint, idempotency, signature/permission checks and confirmation/reconciliation workflow must be built and configured with the owner's Razorpay account before enabling automated refunds.
-- **Monitoring and delivery:** production error monitoring DSN, Resend verified sender/domain and trusted scheduler must be configured by the owner.
-- **Legal compliance:** the policy pages are templates and require real business terms and qualified India-specific legal/compliance review.
-
-## Immediate credential action
-
-A previous revision reviewed in the earlier audit contained `.env.local` with a Vercel OIDC token; the current uploaded revision and this output package do not contain `.env.local`. Check the Vercel account and revoke that old token if it is still active. Never place Vercel tokens, Supabase service-role/secret keys, Razorpay Key Secrets, Resend API keys or cron secrets in HTML, browser JavaScript, GitHub or the downloadable ZIP.
-
-## Static preflight command
+Command:
 
 ```bash
 npm run check
 ```
 
-A pass means only that the included static checks passed; it is not a security certification or a live-production test.
+Result: **PASSED**
+
+- 30 HTML pages scanned.
+- 31 JavaScript files passed Node syntax checks.
+- Local HTML links/assets checked.
+- Page titles and viewport meta tags checked.
+- Duplicate HTML IDs checked.
+- JSON configuration parsed.
+- Secret-pattern scan passed.
+
+## Not verified in this environment
+
+- SQL migration execution against the owner's actual Supabase database, existing table variants, constraints and RLS policies.
+- Live Supabase Auth/admin permissions and real customer wishlist/session flows.
+- Real Razorpay Test/Live payment capture, retry, webhook delivery, settlement/refund or bank payout.
+- Actual Vercel production deployment, custom-domain DNS/HTTPS and live caching.
+- Physical browser tests on the owner's PC, iPhone/iPad, Android phone/tablet. Chromium headless could not be launched reliably in the available execution environment, so no visual screenshot/device test is claimed.
+
+## Important operational caveats
+
+- Back up Supabase before applying the new migration or optional clean-start SQL.
+- Never run `supabase/master.sql` on the existing live project. Use it only for a brand-new project.
+- `supabase/reset_business_data.sql` is destructive to business/catalogue data but preserves `auth.users` and `public.profiles`; run only after upgrade and backup.
+- Storage files are deleted through Supabase Storage UI/API, not by deleting `storage.objects` rows in SQL. Keep the `store-assets` bucket to preserve the banner.
+- Finance is a manually maintained management ledger, not a bank connector, accounting audit, GST return or tax filing. Record all off-platform sales, cash movements, expenses and settlements accurately and consult an accountant for tax treatment.

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
+  <link rel="stylesheet" href="../css/unified.css">
 </head>
 <body data-root="../">
   <div class="admin-shell">
@@ -25,10 +26,8 @@
       </div>
       <nav class="admin-nav" aria-label="Admin navigation">
         <a href="index.html" class="active" aria-current="page">Dashboard</a>
-        <a href="activity.html">Activity</a>
-        <a href="products.html">Products</a>
-        <a href="categories.html">Categories</a>
-        <a href="orders.html">Orders</a>
+                <a href="products.html">Products</a>
+                <a href="orders.html">Orders</a>
         <a href="customers.html">Customers</a>
         <a href="returns.html">Returns</a>
         <a href="messages.html">Messages</a>
@@ -44,16 +43,14 @@
         <div>
           <div class="eyebrow">NOOLTHARI™ · STORE MANAGEMENT</div>
           <h1 class="page-title">Business dashboard</h1>
-          <p class="finance-note">Your products, orders, customers and business figures in one place.</p>
+          <p class="finance-note">Manage your catalogue, customer orders and store settings from one place.</p>
         </div>
-        <a class="btn btn-gold dashboard-primary-action" href="product-add.html">＋ Add new product</a>
       </header>
 
       <section class="admin-quick-actions" aria-label="Quick actions">
         <a href="products.html"><span class="quick-action-icon" aria-hidden="true">▧</span><span><strong>Products</strong><small>Manage your catalogue</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
         <a href="orders.html"><span class="quick-action-icon" aria-hidden="true">▤</span><span><strong>Orders</strong><small>Payments and delivery</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
         <a href="customers.html"><span class="quick-action-icon" aria-hidden="true">♙</span><span><strong>Customers</strong><small>Customer information</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
-        <a href="accounting.html"><span class="quick-action-icon" aria-hidden="true">₹</span><span><strong>Finance</strong><small>Sales, costs and expenses</small></span><span class="quick-action-arrow" aria-hidden="true">→</span></a>
       </section>
 
       <section class="dashboard-section" aria-labelledby="overview-heading">
@@ -66,19 +63,14 @@
           <div class="stat"><div class="eyebrow">Total orders</div><strong id="s-orders">—</strong><small>Including pending orders</small></div>
           <div class="stat"><div class="eyebrow">Customers</div><strong id="s-customers">—</strong><small>Registered customer accounts</small></div>
           <div class="stat"><div class="eyebrow">Open returns</div><strong id="s-returns">—</strong><small>Needs your attention</small></div>
-          <div class="stat stat-finance"><div class="eyebrow">Paid sales · YTD</div><strong id="s-sales">—</strong><small>Verified paid orders</small></div>
-          <div class="stat stat-finance"><div class="eyebrow">Estimated profit · YTD</div><strong id="s-profit">—</strong><small>Sales less saved product costs and expenses</small></div>
-          <div class="stat"><div class="eyebrow">Paid order value</div><strong id="cash-balance">—</strong><small>Not a bank / Razorpay settlement balance</small></div>
-          <div class="stat"><div class="eyebrow">Inventory cost value</div><strong id="inventory-value">—</strong><small>Active stock at saved cost price</small></div>
           <div class="stat"><div class="eyebrow">Low stock</div><strong id="low-stock">—</strong><small>Active products with 3 or fewer units</small></div>
-          <div class="stat"><div class="eyebrow">Estimated net position</div><strong id="equity-value">—</strong><small>Management estimate</small></div>
         </div>
       </section>
 
       <section class="dashboard-bottom-grid">
         <div class="admin-card recent-orders-card">
           <div class="dashboard-section-heading">
-            <div><div class="eyebrow">LATEST ACTIVITY</div><h2>Recent orders</h2></div>
+            <div><div class="eyebrow">LATEST UPDATES</div><h2>Recent orders</h2></div>
             <a class="text-link" href="orders.html">View all orders →</a>
           </div>
           <div id="recent-orders-list" class="recent-orders-list" aria-live="polite">
@@ -93,13 +85,26 @@
             <li><span>1</span><div><strong>Add your sarees</strong><small>Upload photos, product details, price and stock.</small></div></li>
             <li><span>2</span><div><strong>Review new orders</strong><small>Payment verification and stock updates are handled by the payment flow.</small></div></li>
             <li><span>3</span><div><strong>Pack and dispatch</strong><small>Update delivery progress from the Orders section.</small></div></li>
-            <li><span>4</span><div><strong>Check business figures</strong><small>Review recorded sales, cost price and expenses in Finance.</small></div></li>
           </ol>
-          <a class="btn btn-outline" href="accounting.html">Open finance summary</a>
         </aside>
       </section>
 
-      <p class="dashboard-footnote">Finance figures are calculated from the orders, product costs and expenses recorded in this store. Razorpay payouts and bank deposits must still be reconciled against your Razorpay and bank statements.</p>
+      <section class="admin-card dashboard-banner-card" aria-labelledby="banner-heading">
+        <div class="dashboard-section-heading">
+          <div><div class="eyebrow">STOREFRONT APPEARANCE</div><h2 id="banner-heading">Home page banner</h2></div>
+        </div>
+        <p class="finance-note">Change the main home page photograph whenever you need. The current image remains live until the new image is uploaded successfully.</p>
+        <div class="banner-editor-grid">
+          <div class="banner-preview-wrap"><img id="hero-banner-preview" src="../assets/hero/noolthari-hero.webp" alt="Current home page banner preview"></div>
+          <form id="hero-banner-form" class="admin-form banner-form">
+            <div class="field"><label for="hero-banner-image">Choose a new banner photo</label><input id="hero-banner-image" type="file" accept="image/jpeg,image/png,image/webp" required><small>JPG, PNG or WebP. Use a wide, high-quality photograph for the best result on phones and larger screens.</small></div>
+            <div class="field"><label for="hero-banner-position">Photo position</label><select id="hero-banner-position"><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></div>
+            <p id="hero-banner-status" class="editor-status" role="status" aria-live="polite"></p>
+            <button class="btn btn-gold" type="submit" id="save-hero-banner">Update home banner</button>
+          </form>
+        </div>
+      </section>
+
       <p id="dashboard-status" class="editor-status" role="status" aria-live="polite"></p>
     </main>
   </div>

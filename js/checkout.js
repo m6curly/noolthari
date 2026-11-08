@@ -228,8 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             quantity,
             products(
               selling_price,
-              sale_price
-            )
+                          )
           `)
           .eq(
             'cart_id',
@@ -284,7 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const salePrice =
             Number(
-              product.sale_price || 0
+              0
             );
 
 
@@ -576,12 +575,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    razorpay.on('payment.failed', event => {
-      // The gateway modal can offer another attempt against the same order.
+    razorpay.on('payment.failed', async event => {
+      const failedOrderId = activePaymentData?.order_id;
       NL.toast(
-        event.error?.description || 'Payment attempt failed. You can retry in the secure payment window.',
+        event.error?.description || 'Payment attempt failed. We are closing this unpaid order so it does not remain stuck.',
         'error'
       );
+      if (!failedOrderId) return;
+      try {
+        const cancelled = await sb.rpc('cancel_own_pending_order', { p_order_id: failedOrderId });
+        if (cancelled.error) throw cancelled.error;
+        if (!cancelled.data?.cancelled) throw new Error('The order is no longer safely cancellable. Please refresh My Orders and check payment status before retrying.');
+        activePaymentData = null;
+        pendingPaymentResponse = null;
+        resetPaymentButton('Try payment again');
+        NL.toast('The failed order was cancelled and its reserved stock was released. You can place a fresh order from your cart.', 'success');
+      } catch (error) {
+        console.error('Failed payment order cancellation requires review:', error);
+        resetPaymentButton('Check payment status');
+        NL.toast('Payment failed, but the order could not be closed automatically. Please check My Orders before trying again.', 'warning');
+      }
     });
 
     razorpay.open();

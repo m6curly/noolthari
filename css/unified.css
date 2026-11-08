@@ -1,0 +1,70 @@
+/* NOOLTHARI™ unified typography and accessible cross-page spacing */
+:root {
+  --nt-teal: #124D56;
+  --nt-deep: #0B3D45;
+  --nt-ivory: #FCFAF7;
+  --nt-paper: #F8F3EC;
+  --nt-gold: #C89433;
+  --nt-ink: #263238;
+  --nt-muted: #626a6b;
+  --nt-border: rgba(18,77,86,.14);
+}
+html { font-size: 16px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body, button, input, select, textarea { font-family: 'Poppins', Arial, sans-serif; }
+body { color: var(--nt-ink); font-size: 17px; line-height: 1.7; }
+h1, h2, h3, h4, .page-title, .section-title, .hero-title { font-family: 'Cormorant Garamond', Georgia, serif; letter-spacing: .01em; line-height: 1.12; }
+h1, .page-title { font-size: clamp(2rem, 4vw, 2.8rem); }
+h2 { font-size: clamp(1.55rem, 3vw, 2rem); }
+h3 { font-size: 1.35rem; }
+p, li { line-height: 1.7; }
+small, .small, .eyebrow, .finance-note, .editor-help, .field small { font-size: .9rem; line-height: 1.6; }
+label { font-size: .96rem; font-weight: 500; }
+input, select, textarea { min-height: 46px; font-size: 1rem; }
+textarea { min-height: 100px; }
+button, .btn { font-size: .95rem; line-height: 1.4; }
+.admin-main { min-width: 0; }
+.admin-card { border-color: var(--nt-border); }
+.admin-nav a { font-size: .94rem; line-height: 1.45; }
+.admin-table td, .table-wrap td { font-size: .94rem; }
+.admin-table th, .table-wrap th { font-size: .88rem; }
+.editor-field small, .editor-help, .editor-status { font-size: .88rem; }
+.order-row-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.order-channel { display:block; margin-top:3px; color:var(--nt-muted); font-size:.76rem; text-transform:capitalize; }
+.manual-sale-card { margin-bottom:24px; }
+.manual-sale-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.manual-sale-grid .field { min-width:0; }
+.manual-sale-grid input, .manual-sale-grid select, .manual-sale-grid textarea { width:100%; }
+.manual-sale-span { grid-column:1/-1; }
+@media (min-width: 1200px) { .manual-sale-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (max-width: 700px) {
+  body { font-size: 16.5px; }
+  .manual-sale-grid { grid-template-columns:1fr; }
+  .manual-sale-span { grid-column:auto; }
+  .admin-main { padding:18px 14px 32px; }
+  .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .table-wrap table { min-width:680px; }
+  .btn { min-height:42px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+
+.manual-payment-action { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.manual-payment-action select { min-width:90px; min-height:38px; font-size:.8rem; padding:5px; }
+.ledger-in { color:#176b46; font-weight:600; white-space:nowrap; }
+.ledger-out { color:#99503d; font-weight:600; white-space:nowrap; }
+.finance-block { margin-top:28px; }
+.finance-block-heading { display:flex; align-items:end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+.finance-block-heading h2 { margin:4px 0 0; }
+.finance-filter-row { display:flex; align-items:end; flex-wrap:wrap; gap:14px; }
+.finance-filter-row .field { min-width:190px; }
+.finance-balance-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.finance-balance-grid .admin-card { display:flex; flex-direction:column; gap:7px; }
+.finance-balance-grid strong { font-size:1.35rem; color:var(--nt-teal); }
+.finance-forms-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.finance-forms-grid .admin-card { min-width:0; }
+.finance-forms-grid .admin-form { display:grid; gap:12px; }
+.finance-profit-stat { border:1px solid rgba(200,148,51,.45); }
+.finance-profit-stat strong { color:var(--nt-teal); }
+@media(max-width:850px){.finance-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.finance-forms-grid{grid-template-columns:1fr;}}
+@media(max-width:520px){.finance-balance-grid{grid-template-columns:1fr;}.finance-filter-row{align-items:stretch;flex-direction:column;}.finance-filter-row .field{width:100%;}.finance-block-heading{align-items:start;flex-direction:column;}}

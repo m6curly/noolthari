@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (wishlistGrid) {
     try {
       const result = await sb.from('wishlist_items')
-        .select(`product_id,products(id,saree_name,sku,selling_price,sale_price,stock_quantity,status,categories(name),product_images(id,path,sort_order,public_url))`)
+        .select(`product_id,products(id,saree_name,sku,selling_price,stock_quantity,status,categories(name),product_images(id,path,sort_order,public_url))`)
         .eq('customer_id', profile.id)
         .order('created_at', { ascending: false });
       if (result.error) throw result.error;

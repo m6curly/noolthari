@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const result = await sb.from('products')
-      .select('id,saree_name,selling_price,sale_price,stock_quantity,status,product_images(public_url,sort_order)')
+      .select('id,saree_name,selling_price,stock_quantity,status,product_images(public_url,sort_order)')
       .in('id', ids)
       .eq('status', 'active');
     if (result.error) throw result.error;
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (quantity !== requestedQty) guestItems[productId] = quantity;
       const selling = Math.max(0, Number(product.selling_price || 0));
-      const sale = Math.max(0, Number(product.sale_price || 0));
+      const sale = Math.max(0, Number(0));
       const price = sale > 0 && sale < selling ? sale : selling;
       total += price * quantity;
       const image = typeof imgFor === 'function' ? imgFor(product) : NL.path('assets/logo/noolthari-logo.webp');
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             id,
             saree_name,
             selling_price,
-            sale_price,
+
             stock_quantity,
             product_images(
               public_url,
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const salePrice =
             Number(
-              product.sale_price || 0
+              0
             );
 
 

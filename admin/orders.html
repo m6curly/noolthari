@@ -48,6 +48,7 @@
 
   <meta name="robots" content="noindex,nofollow,noarchive">
   <link rel="stylesheet" href="../css/v2.css">
+  <link rel="stylesheet" href="../css/unified.css">
 </head>
 
 
@@ -115,14 +116,9 @@
           Dashboard
         </a>
 
-        <a href="activity.html">Activity</a>
 
         <a href="products.html">
           Products
-        </a>
-
-        <a href="categories.html">
-          Categories
         </a>
 
         <a
@@ -201,6 +197,28 @@
       <!-- ===================================================
            ORDERS TABLE
       ==================================================== -->
+
+      <section class="admin-card manual-sale-card" aria-labelledby="manual-sale-title">
+        <div class="section-heading">
+          <div><div class="eyebrow">Store, Instagram, WhatsApp or offline</div><h2 id="manual-sale-title">Record a manual sale</h2></div>
+          <p class="finance-note">Create the same order record for a buyer who does not have a website account. Stock, customer details and finance update together.</p>
+        </div>
+        <form id="manual-sale-form" class="admin-form manual-sale-grid">
+          <div class="field"><label for="manual-customer-name">Customer name *</label><input id="manual-customer-name" name="customer_name" maxlength="160" required placeholder="Buyer name"></div>
+          <div class="field"><label for="manual-customer-phone">Phone</label><input id="manual-customer-phone" name="customer_phone" type="tel" maxlength="30" placeholder="Phone number"></div>
+          <div class="field"><label for="manual-customer-email">Email</label><input id="manual-customer-email" name="customer_email" type="email" maxlength="254" placeholder="Email (optional)"></div>
+          <div class="field"><label for="manual-customer-account">Link existing customer account</label><select id="manual-customer-account" name="customer_id"><option value="">No website account / walk-in</option></select></div>
+          <div class="field"><label for="manual-product">Saree *</label><select id="manual-product" name="product_id" required><option value="">Loading products…</option></select></div>
+          <div class="field"><label for="manual-quantity">Quantity *</label><input id="manual-quantity" name="quantity" type="number" min="1" max="1000" step="1" value="1" required></div>
+          <div class="field"><label for="manual-unit-price">Selling price per saree (₹) *</label><input id="manual-unit-price" name="unit_price" type="number" min="0" max="9999999999.99" step="0.01" required></div>
+          <div class="field"><label for="manual-sale-date">Sale date *</label><input id="manual-sale-date" name="sale_date" type="date" required></div>
+          <div class="field"><label for="manual-channel">Sale channel *</label><select id="manual-channel" name="sales_channel"><option value="offline">Offline / direct</option><option value="instagram">Instagram</option><option value="whatsapp">WhatsApp</option><option value="gift">Gift</option><option value="collaboration">Instagram collaboration</option></select></div>
+          <div class="field"><label for="manual-payment-mode">Payment received through</label><select id="manual-payment-mode" name="payment_mode"><option value="cash">Cash</option><option value="upi">UPI</option><option value="bank">Bank transfer</option><option value="other">Other</option><option value="credit">Not received yet (credit)</option><option value="none">No payment / gift</option></select></div>
+          <div class="field manual-sale-span"><label for="manual-internal-note">Notes</label><textarea id="manual-internal-note" name="internal_note" rows="2" maxlength="1000" placeholder="Shipping, discount reason, collaboration details, etc."></textarea></div>
+          <label class="editor-toggle manual-sale-span"><input id="manual-is-paid" name="is_paid" type="checkbox" checked><span><strong>Payment received</strong><small>Untick for an unpaid customer balance. For gifts/collaborations, choose the matching channel and ₹0 price.</small></span></label>
+          <div class="manual-sale-span"><button class="btn btn-gold" id="manual-sale-submit" type="submit">Save sale and update stock</button><p id="manual-sale-status" class="editor-status" role="status" aria-live="polite"></p></div>
+        </form>
+      </section>
 
       <section
         class="admin-card"
@@ -281,6 +299,7 @@
   <script src="../js/app.js"></script>
 
   <script src="../admin/js/orders.js"></script>
+  <script src="../admin/js/manual-sales.js"></script>
 
 
 </body>

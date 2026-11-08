@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
+  <link rel="stylesheet" href="../css/unified.css">
 </head>
 <body data-root="../">
   <div class="admin-shell">
@@ -25,10 +26,8 @@
       </div>
       <nav class="admin-nav" aria-label="Admin navigation">
         <a href="index.html">Dashboard</a>
-        <a href="activity.html">Activity</a>
-        <a href="products.html" class="active" aria-current="page">Products</a>
-        <a href="categories.html">Categories</a>
-        <a href="orders.html">Orders</a>
+                <a href="products.html" class="active" aria-current="page">Products</a>
+                <a href="orders.html">Orders</a>
         <a href="customers.html">Customers</a>
         <a href="returns.html">Returns</a>
         <a href="messages.html">Messages</a>
@@ -79,15 +78,32 @@
                   <label for="saree-name">Product title <span class="required-mark">*</span></label>
                   <input id="saree-name" name="saree_name" type="text" maxlength="160" placeholder="e.g. Peacock Blue Semi Silk Kanchipuram Saree" autocomplete="off" required>
                 </div>
-                <div class="editor-field">
+                <div class="editor-field editor-span-2">
                   <label for="category">Category <span class="required-mark">*</span></label>
-                  <select id="category" name="category_id" required>
-                    <option value="">Loading categories…</option>
-                  </select>
+                  <div class="inline-picker-row">
+                    <select id="category" name="category_id" required><option value="">Loading categories…</option></select>
+                    <button class="btn btn-outline btn-small" id="add-category-toggle" type="button">＋ New category</button>
+                  </div>
+                  <div class="inline-create-panel" id="new-category-panel" hidden>
+                    <input id="new-category-name" type="text" maxlength="100" placeholder="Enter category name">
+                    <button class="btn btn-gold btn-small" id="save-new-category" type="button">Save category</button>
+                  </div>
                 </div>
                 <div class="editor-field">
                   <label for="sku">SKU <span class="optional-mark">Auto-generated when blank</span></label>
                   <input id="sku" name="sku" type="text" maxlength="60" placeholder="Leave blank to generate automatically" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="editor-field editor-span-2 vendor-picker-field">
+                  <label for="vendor">Purchased from (vendor)</label>
+                  <div class="inline-picker-row">
+                    <select id="vendor" name="vendor_id"><option value="">Select vendor (optional)</option></select>
+                    <button class="btn btn-outline btn-small" id="add-vendor-toggle" type="button">＋ Add vendor</button>
+                  </div>
+                  <div class="inline-create-panel" id="new-vendor-panel" hidden>
+                    <input id="new-vendor-name" type="text" maxlength="160" placeholder="Vendor / shop name" autocomplete="organization">
+                    <input id="new-vendor-phone" type="tel" maxlength="30" placeholder="Phone (optional)" autocomplete="tel">
+                    <button class="btn btn-gold btn-small" id="save-new-vendor" type="button">Save vendor</button>
+                  </div>
                 </div>
                 <div class="editor-field editor-span-2">
                   <label for="instagram-url">Instagram video / Reel link <span class="optional-mark">Optional</span></label>
@@ -114,18 +130,6 @@
                   <label for="occasion">Occasion</label>
                   <input id="occasion" name="occasion" type="text" maxlength="120" placeholder="e.g. Festive, wedding">
                 </div>
-                <div class="editor-field">
-                  <label for="saree-length">Saree length</label>
-                  <input id="saree-length" name="saree_length" type="text" maxlength="60" placeholder="e.g. 6.3 metres">
-                </div>
-                <div class="editor-field">
-                  <label for="blouse-length">Blouse piece length</label>
-                  <input id="blouse-length" name="blouse_length" type="text" maxlength="60" placeholder="e.g. 0.8 metres">
-                </div>
-                <div class="editor-field editor-span-2">
-                  <label for="care-instructions">Care instructions</label>
-                  <textarea id="care-instructions" name="care_instructions" rows="3" maxlength="1000" placeholder="e.g. Dry clean recommended. Store in a cotton bag."></textarea>
-                </div>
               </div>
             </section>
 
@@ -136,20 +140,27 @@
               </div>
               <div class="editor-grid editor-pricing-grid">
                 <div class="editor-field">
-                  <label for="purchase-price">Your cost price (₹) <span class="required-mark">*</span></label>
-                  <input id="purchase-price" name="purchase_price" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="What you paid" required>
+                  <label for="purchase-price">Unit purchase cost (₹) <span class="required-mark">*</span></label>
+                  <input id="purchase-price" name="purchase_price" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Amount paid per saree" required>
+                  <small>Used for inventory valuation and profit calculation; never shown to customers.</small>
                 </div>
                 <div class="editor-field">
                   <label for="selling-price">Regular price (₹) <span class="required-mark">*</span></label>
                   <input id="selling-price" name="selling_price" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Displayed price" required>
                 </div>
                 <div class="editor-field">
-                  <label for="sale-price">Offer price (₹) <span class="optional-mark">Optional</span></label>
-                  <input id="sale-price" name="sale_price" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Leave blank for no offer">
+                  <label for="stock-quantity">Initial stock quantity <span class="required-mark">*</span></label>
+                  <input id="stock-quantity" name="stock_quantity" type="number" min="0" max="1000000" step="1" inputmode="numeric" placeholder="How many sarees received" required>
+                  <small id="stock-field-help">On edit, use Finance → Receive stock to record every new purchase.</small>
                 </div>
-                <div class="editor-field">
-                  <label for="stock-quantity">Available stock <span class="required-mark">*</span></label>
-                  <input id="stock-quantity" name="stock_quantity" type="number" min="0" max="1000000" step="1" inputmode="numeric" placeholder="Quantity available" required>
+                <div class="editor-field" id="initial-stock-payment-field">
+                  <label for="initial-stock-paid">Amount paid to vendor now (₹)</label>
+                  <input id="initial-stock-paid" name="initial_stock_paid" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="Defaults to full purchase cost">
+                  <small>Enter 0 or a part-payment when some vendor balance is still due.</small>
+                </div>
+                <div class="editor-field" id="initial-stock-account-field">
+                  <label for="purchase-account">Paid from</label>
+                  <select id="purchase-account" name="purchase_account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option></select>
                 </div>
               </div>
               <div id="price-insight" class="price-insight" aria-live="polite">Enter your cost price and selling price to see the estimated margin.</div>
@@ -172,7 +183,7 @@
               <h3>What happens after saving?</h3>
               <ol>
                 <li>The product appears in your online catalogue.</li>
-                <li>Customers see the selling / offer price, not your cost price.</li>
+                <li>Customers see the selling price, not your cost price.</li>
                 <li>Verified Razorpay payments update the order and stock automatically.</li>
                 <li>Sales and product costs feed into the finance summary.</li>
               </ol>

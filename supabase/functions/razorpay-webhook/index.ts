@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
           razorpay_payment_id: gatewayPayment?.id || null,
           payment_method: gatewayPayment?.method || null,
           updated_at: new Date().toISOString(),
-        }).eq('id', paymentResult.data.id).neq('status', 'captured');
+        }).eq('id', paymentResult.data.id).not('status', 'in', '(captured,authorized)');
         if (failed.error) throw failed.error;
       }
       // Do not release the reservation here: Razorpay can report a failed

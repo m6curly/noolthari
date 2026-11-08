@@ -18,6 +18,7 @@ let activeProductId = null;
 let loadedProduct = null;
 let existingProductImageCount = 0;
 let holdUntilUploadComplete = false;
+let productWasCreatedInThisSession = false;
 const watermarkedImageCache = new Map();
 const uploadedImageKeys = new Set();
 const previewObjectUrls = [];
@@ -40,6 +41,10 @@ function setImageStatus(message, kind = '') {
     status.textContent = message || '';
     status.className = `editor-status${kind ? ` is-${kind}` : ''}`;
   }
+}
+
+function localDateString(date = new Date()) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
 function formatRupees(value) {
@@ -91,8 +96,7 @@ function normalizeInstagramUrl(value) {
 function updatePriceInsight() {
   const cost = Number(NL.qs('[name="purchase_price"]')?.value || 0);
   const regular = Number(NL.qs('[name="selling_price"]')?.value || 0);
-  const offerInput = NL.qs('[name="sale_price"]')?.value;
-  const offer = offerInput === '' || offerInput == null ? null : Number(offerInput);
+
   const output = NL.qs('#price-insight');
   if (!output) return;
 
@@ -102,13 +106,10 @@ function updatePriceInsight() {
     return;
   }
 
-  const actualSelling = offer != null && Number.isFinite(offer) && offer > 0 && offer < regular
-    ? offer
-    : regular;
+  const actualSelling = regular;
   const margin = actualSelling - cost;
   const marginPercent = actualSelling > 0 ? (margin / actualSelling) * 100 : 0;
-  const label = offer != null && offer > 0 && offer < regular ? 'Offer price' : 'Selling price';
-  output.textContent = `${label}: ${formatRupees(actualSelling)}  ·  Estimated gross margin: ${formatRupees(margin)} (${marginPercent.toFixed(1)}%) per saree`;
+  output.textContent = `Selling price: ${formatRupees(actualSelling)}  ·  Estimated gross margin before other business costs: ${formatRupees(margin)} (${marginPercent.toFixed(1)}%) per saree`;
   output.classList.toggle('is-positive', margin >= 0);
   output.classList.toggle('is-negative', margin < 0);
 }
@@ -123,8 +124,8 @@ async function adminProductTable() {
   const result = await sb
     .from('products')
     .select(`
-      id, saree_name, sku, selling_price, sale_price,
-      stock_quantity, status, categories(name),
+      id, saree_name, sku, selling_price,
+      stock_quantity, status, categories(name), vendors(name),
       product_images(public_url, sort_order)
     `)
     .order('created_at', { ascending: false });
@@ -132,13 +133,13 @@ async function adminProductTable() {
   if (result.error) {
     console.error('Product table error:', result.error);
     NL.toast(result.error.message || 'Unable to load products.', 'error');
-    table.innerHTML = '<tr><td colspan="6">Products could not be loaded. Please refresh.</td></tr>';
+    table.innerHTML = '<tr><td colspan="7">Products could not be loaded. Please refresh.</td></tr>';
     return;
   }
 
   const products = result.data || [];
   if (!products.length) {
-    table.innerHTML = '<tr><td colspan="6">No products yet. Add your first saree to start the catalogue.</td></tr>';
+    table.innerHTML = '<tr><td colspan="7">No products yet. Add your first saree to start the catalogue.</td></tr>';
     return;
   }
 
@@ -147,9 +148,7 @@ async function adminProductTable() {
     const image = (product.product_images || [])
       .slice()
       .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))[0]?.public_url;
-    const actualPrice = Number(product.sale_price) > 0 && Number(product.sale_price) < Number(product.selling_price)
-      ? Number(product.sale_price)
-      : Number(product.selling_price || 0);
+    const actualPrice = Number(product.selling_price || 0);
 
     return `
       <tr>
@@ -161,11 +160,13 @@ async function adminProductTable() {
         </td>
         <td>${NL.esc(product.sku || '—')}</td>
         <td>${NL.money(actualPrice)}</td>
+        <td>${NL.esc(product.vendors?.name || '—')}</td>
         <td>${Number(product.stock_quantity || 0)}</td>
         <td><span class="product-status ${inactive ? 'is-inactive' : 'is-active'}">${inactive ? 'Inactive' : 'Active'}</span></td>
         <td>
           <div class="product-row-actions">
             <a class="btn btn-outline" href="${NL.path(`admin/product-edit.html?id=${encodeURIComponent(product.id)}`)}">Edit</a>
+            <a class="btn btn-outline" href="${NL.path(`admin/orders.html?product_id=${encodeURIComponent(product.id)}`)}">Record sale</a>
             <button class="btn product-remove-btn" type="button"
               data-remove-product="${NL.esc(product.id)}"
               data-product-name="${NL.esc(product.saree_name || '')}"
@@ -474,17 +475,82 @@ async function uploadProductImages(productId, input) {
 /* ---------------------------------------------------------
    Categories and product edit loading
 --------------------------------------------------------- */
-async function loadProductCategories() {
+async function loadProductCategories(selectedId = '') {
   const select = NL.qs('#category');
   if (!select) return;
-
-  const result = await sb.from('categories').select('id,name').order('name');
+  const result = await sb.from('categories').select('id,name').eq('active', true).order('name');
   if (result.error) throw result.error;
-
   const categories = result.data || [];
   select.innerHTML = '<option value="">Choose a category</option>' + categories.map(category => `
     <option value="${NL.esc(category.id)}">${NL.esc(category.name)}</option>
   `).join('');
+  if (selectedId) select.value = selectedId;
+}
+
+async function loadProductVendors(selectedId = '') {
+  const select = NL.qs('#vendor');
+  if (!select) return;
+  const result = await sb.from('vendors').select('id,name').order('name');
+  if (result.error) throw result.error;
+  const vendors = result.data || [];
+  select.innerHTML = '<option value="">Select vendor (optional)</option>' + vendors.map(vendor => `
+    <option value="${NL.esc(vendor.id)}">${NL.esc(vendor.name)}</option>
+  `).join('');
+  if (selectedId) select.value = selectedId;
+}
+
+function bindInlineCreateForms() {
+  const bindToggle = (buttonId, panelId, inputId) => {
+    const button = NL.qs(`#${buttonId}`);
+    const panel = NL.qs(`#${panelId}`);
+    const input = NL.qs(`#${inputId}`);
+    button?.addEventListener('click', () => {
+      if (!panel) return;
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) input?.focus();
+    });
+  };
+  bindToggle('add-category-toggle', 'new-category-panel', 'new-category-name');
+  bindToggle('add-vendor-toggle', 'new-vendor-panel', 'new-vendor-name');
+
+  NL.qs('#save-new-category')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    const input = NL.qs('#new-category-name');
+    const name = String(input?.value || '').trim();
+    if (!name) return NL.toast('Enter a category name.', 'warning');
+    button.disabled = true;
+    try {
+      const slug = slugify(name);
+      const result = await sb.from('categories').insert({ name, slug, active: true }).select('id').single();
+      if (result.error) throw result.error;
+      await loadProductCategories(result.data.id);
+      if (input) input.value = '';
+      NL.qs('#new-category-panel').hidden = true;
+      NL.toast('Category added and selected.', 'success');
+    } catch (error) {
+      NL.toast(error.message || 'Unable to add this category.', 'error');
+    } finally { button.disabled = false; }
+  });
+
+  NL.qs('#save-new-vendor')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    const nameInput = NL.qs('#new-vendor-name');
+    const phoneInput = NL.qs('#new-vendor-phone');
+    const name = String(nameInput?.value || '').trim();
+    if (!name) return NL.toast('Enter a vendor name.', 'warning');
+    button.disabled = true;
+    try {
+      const result = await sb.from('vendors').insert({ name, phone: String(phoneInput?.value || '').trim() || null }).select('id').single();
+      if (result.error) throw result.error;
+      await loadProductVendors(result.data.id);
+      if (nameInput) nameInput.value = '';
+      if (phoneInput) phoneInput.value = '';
+      NL.qs('#new-vendor-panel').hidden = true;
+      NL.toast('Vendor added and selected.', 'success');
+    } catch (error) {
+      NL.toast(error.message || 'Unable to add this vendor.', 'error');
+    } finally { button.disabled = false; }
+  });
 }
 
 function setField(name, value) {
@@ -539,13 +605,23 @@ async function loadEditProduct() {
   setField('colour', product.colour);
   setField('pattern', product.pattern);
   setField('occasion', product.occasion);
-  setField('saree_length', product.saree_length);
-  setField('blouse_length', product.blouse_length);
-  setField('care_instructions', product.care_instructions);
+  await loadProductVendors(product.vendor_id);
   setField('purchase_price', product.purchase_price);
   setField('selling_price', product.selling_price);
-  setField('sale_price', product.sale_price);
   setField('stock_quantity', product.stock_quantity);
+  setField('purchase_account', 'bank');
+  const initialPaymentField = NL.qs('#initial-stock-payment-field');
+  const initialAccountField = NL.qs('#initial-stock-account-field');
+  if (initialPaymentField) initialPaymentField.hidden = true;
+  if (initialAccountField) initialAccountField.hidden = true;
+  const stockInput = NL.qs('#stock-quantity');
+  const costInput = NL.qs('#purchase-price');
+  const vendorInput = NL.qs('#vendor');
+  if (stockInput) stockInput.readOnly = true;
+  if (costInput) costInput.readOnly = true;
+  if (vendorInput) vendorInput.disabled = true;
+  const stockHelp = NL.qs('#stock-field-help');
+  if (stockHelp) stockHelp.textContent = 'Current stock: use Finance → Receive stock for every new purchase. Stock is not overwritten when editing product details.';
   setCheckbox('blouse_included', product.blouse_included);
   setCheckbox('featured', product.featured);
   setCheckbox('bestseller', product.bestseller);
@@ -569,52 +645,30 @@ async function saveProduct(formElement) {
   const name = String(form.get('saree_name') || '').trim();
   const categoryId = String(form.get('category_id') || '').trim();
   const sku = String(form.get('sku') || '').trim().toUpperCase() || makeSku();
-  const rawPurchasePrice = form.get('purchase_price');
-  const rawSellingPrice = form.get('selling_price');
-  const rawSalePrice = form.get('sale_price');
-  const rawStockQuantity = form.get('stock_quantity');
-  const purchasePrice = Number(rawPurchasePrice);
-  const sellingPrice = Number(rawSellingPrice);
-  const salePrice = rawSalePrice === '' || rawSalePrice == null ? null : Number(rawSalePrice);
-  const stockQuantity = Number(rawStockQuantity);
-  const imageInput = NL.qs('[name="images"]');
-  const selectedFiles = Array.from(imageInput?.files || []);
+  const purchasePrice = Number(form.get('purchase_price'));
+  const sellingPrice = Number(form.get('selling_price'));
+  const stockQuantity = Number(form.get('stock_quantity'));
+  const vendorId = String(form.get('vendor_id') || '').trim() || null;
+  const purchaseAccount = String(form.get('purchase_account') || 'bank');
+  const initialPaidRaw = String(form.get('initial_stock_paid') || '').trim();
+  const initialStockPaid = initialPaidRaw === '' ? stockQuantity * purchasePrice : Number(initialPaidRaw);
+  const selectedFiles = Array.from(NL.qs('[name="images"]')?.files || []);
 
   if (!name) throw new Error('Enter a product title.');
-  if (!categoryId) throw new Error('Choose a product category.');
-  if (rawPurchasePrice == null || String(rawPurchasePrice).trim() === '' || !Number.isFinite(purchasePrice) || purchasePrice < 0 || purchasePrice > 9999999999.99) {
-    throw new Error('Enter the actual cost price you paid. It must be zero or more.');
-  }
-  if (rawSellingPrice == null || String(rawSellingPrice).trim() === '' || !Number.isFinite(sellingPrice) || sellingPrice <= 0 || sellingPrice > 9999999999.99) {
-    throw new Error('Enter a regular selling price greater than zero.');
-  }
-  if (salePrice !== null && (!Number.isFinite(salePrice) || salePrice <= 0 || salePrice >= sellingPrice || salePrice > 9999999999.99)) {
-    throw new Error('Offer price must be greater than zero and lower than the regular price.');
-  }
-  if (rawStockQuantity == null || String(rawStockQuantity).trim() === '' || !Number.isInteger(stockQuantity) || stockQuantity < 0 || stockQuantity > 1000000) {
-    throw new Error('Enter the available stock as a whole number (zero or more).');
-  }
-  if (selectedFiles.length + existingProductImageCount > NOOLTHARI_WATERMARK.maxFiles) {
-    throw new Error(`A product can have up to ${NOOLTHARI_WATERMARK.maxFiles} photos in total.`);
-  }
+  if (!categoryId) throw new Error('Choose a category.');
+  if (!activeProductId && (!Number.isFinite(purchasePrice) || purchasePrice < 0)) throw new Error('Enter the unit purchase cost.');
+  if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) throw new Error('Enter a selling price greater than zero.');
+  if (!activeProductId && (!Number.isInteger(stockQuantity) || stockQuantity < 0 || stockQuantity > 1000000)) throw new Error('Enter the initial stock quantity.');
+  if (!activeProductId && (!Number.isFinite(initialStockPaid) || initialStockPaid < 0 || initialStockPaid > stockQuantity * purchasePrice)) throw new Error('Enter a valid amount paid to the vendor (it cannot exceed the total stock cost).');
+  if (selectedFiles.length + existingProductImageCount > NOOLTHARI_WATERMARK.maxFiles) throw new Error(`A product can have up to ${NOOLTHARI_WATERMARK.maxFiles} photos in total.`);
   if (!activeProductId && selectedFiles.length === 0) throw new Error('Please add at least one product photo before publishing.');
   const requestedStatus = form.get('active_toggle') === 'on' ? 'active' : 'inactive';
-  if (requestedStatus === 'active' && existingProductImageCount + selectedFiles.length === 0) {
-    throw new Error('Add at least one product photo before showing this saree in the store.');
-  }
-
-  const reservedQuantity = Number(loadedProduct?.reserved_quantity || 0);
-  if (activeProductId && stockQuantity < reservedQuantity) {
-    throw new Error(`There are ${reservedQuantity} units reserved in pending orders. Available stock cannot be set below ${reservedQuantity}.`);
-  }
+  if (requestedStatus === 'active' && existingProductImageCount + selectedFiles.length === 0) throw new Error('Add at least one product photo before showing this saree in the store.');
 
   const instagramUrl = normalizeInstagramUrl(form.get('instagram_url'));
   if ((!activeProductId || existingProductImageCount === 0) && selectedFiles.length > 0) holdUntilUploadComplete = true;
-  const existingSlug = String(loadedProduct?.slug || '').trim();
   const baseSlug = slugify(name) || `saree-${Date.now()}`;
-  const slug = activeProductId && existingSlug
-    ? existingSlug
-    : `${baseSlug}-${slugify(sku).toLowerCase()}`;
+  const slug = activeProductId && loadedProduct?.slug ? loadedProduct.slug : `${baseSlug}-${slugify(sku).toLowerCase()}`;
 
   const payload = {
     saree_name: name,
@@ -622,18 +676,12 @@ async function saveProduct(formElement) {
     slug,
     category_id: categoryId,
     instagram_url: instagramUrl,
+    vendor_id: activeProductId ? (loadedProduct?.vendor_id || null) : vendorId,
     description: String(form.get('description') || '').trim() || null,
     fabric: String(form.get('fabric') || '').trim() || null,
     colour: String(form.get('colour') || '').trim() || null,
     pattern: String(form.get('pattern') || '').trim() || null,
     occasion: String(form.get('occasion') || '').trim() || null,
-    saree_length: String(form.get('saree_length') || '').trim() || null,
-    blouse_length: String(form.get('blouse_length') || '').trim() || null,
-    care_instructions: String(form.get('care_instructions') || '').trim() || null,
-    purchase_price: purchasePrice,
-    selling_price: sellingPrice,
-    sale_price: salePrice,
-    stock_quantity: stockQuantity,
     blouse_included: form.get('blouse_included') === 'on',
     featured: form.get('featured') === 'on',
     bestseller: form.get('bestseller') === 'on',
@@ -642,14 +690,21 @@ async function saveProduct(formElement) {
   };
 
   let result;
+  const wasNew = !activeProductId;
   if (activeProductId) {
     result = await sb.from('products').update(payload).eq('id', activeProductId).select('id').single();
   } else {
-    result = await sb.from('products').insert(payload).select('id').single();
+    result = await sb.from('products').insert({
+      ...payload,
+      purchase_price: purchasePrice,
+      selling_price: sellingPrice,
+      stock_quantity: 0
+    }).select('id').single();
   }
   if (result.error) throw result.error;
 
   activeProductId = result.data.id;
+  if (wasNew) productWasCreatedInThisSession = true;
   loadedProduct = { ...(loadedProduct || {}), ...payload, id: activeProductId };
   if (!NL.query.get('id')) {
     const editUrl = new URL(location.href);
@@ -658,7 +713,7 @@ async function saveProduct(formElement) {
   }
   const skuField = NL.qs('[name="sku"]');
   if (skuField) skuField.value = sku;
-  return activeProductId;
+  return { productId: activeProductId, sareeName: name, initialStock: productWasCreatedInThisSession && !formElement.dataset.initialStockDone ? stockQuantity : 0, purchasePrice, initialStockPaid, vendorId, purchaseAccount, isNew: productWasCreatedInThisSession };
 }
 
 async function initializeProductForm() {
@@ -667,7 +722,8 @@ async function initializeProductForm() {
 
   activeProductId = NL.query.get('id');
   try {
-    await loadProductCategories();
+    await Promise.all([loadProductCategories(), loadProductVendors()]);
+    bindInlineCreateForms();
     if (activeProductId) await loadEditProduct();
   } catch (error) {
     console.error('Product editor initialization failed:', error);
@@ -681,7 +737,22 @@ async function initializeProductForm() {
   const imageInput = NL.qs('[name="images"]');
   imageInput?.addEventListener('change', () => prepareProductImagePreviews(imageInput));
 
-  ['purchase_price', 'selling_price', 'sale_price'].forEach(name => {
+  const initialPaidInput = NL.qs('#initial-stock-paid');
+  const initialQtyInput = NL.qs('#stock-quantity');
+  const initialCostInput = NL.qs('#purchase-price');
+  if (initialPaidInput) {
+    const updateInitialPaid = () => {
+      if (initialPaidInput.dataset.userEdited === 'true') return;
+      const total = Number(initialQtyInput?.value || 0) * Number(initialCostInput?.value || 0);
+      initialPaidInput.value = total > 0 ? total.toFixed(2) : '';
+    };
+    initialQtyInput?.addEventListener('input', updateInitialPaid);
+    initialCostInput?.addEventListener('input', updateInitialPaid);
+    initialPaidInput.addEventListener('input', () => { initialPaidInput.dataset.userEdited = 'true'; });
+    updateInitialPaid();
+  }
+
+  ['purchase_price', 'selling_price'].forEach(name => {
     NL.qs(`[name="${name}"]`)?.addEventListener('input', updatePriceInsight);
   });
   updatePriceInsight();
@@ -698,10 +769,34 @@ async function initializeProductForm() {
 
     let productSaved = false;
     try {
-      const productId = await saveProduct(form);
+      const saved = await saveProduct(form);
+      const productId = saved.productId;
       productSaved = true;
       setEditorStatus('Product details saved. Uploading photos…', '');
       await uploadProductImages(productId, imageInput);
+      if (saved.initialStock > 0 && saved.isNew) {
+        setEditorStatus('Recording the vendor purchase and stock…', '');
+        const stockResult = await sb.rpc('admin_receive_stock', {
+          p_product_id: productId,
+          p_quantity: saved.initialStock,
+          p_unit_cost: saved.purchasePrice,
+          p_vendor_id: saved.vendorId,
+          p_paid_amount: saved.initialStockPaid,
+          p_payment_account: saved.purchaseAccount,
+          p_notes: `Initial stock for ${saved.sareeName || 'new product'} (recorded while adding product).`,
+          p_client_reference: productId,
+          p_purchase_date: localDateString()
+        });
+        if (stockResult.error) throw new Error(`Product and photos are saved, but initial stock/purchase could not be recorded: ${stockResult.error.message}`);
+        form.dataset.savedProduct = 'true';
+        form.dataset.initialStockDone = 'true';
+        const stockInput = NL.qs('#stock-quantity');
+        if (stockInput) { stockInput.value = String(saved.initialStock); stockInput.readOnly = true; }
+        const costInput = NL.qs('#purchase-price');
+        if (costInput) costInput.readOnly = true;
+        const vendorInput = NL.qs('#vendor');
+        if (vendorInput) vendorInput.disabled = true;
+      }
 
       const requestedStatus = form.querySelector('[name="active_toggle"]')?.checked ? 'active' : 'inactive';
       if (requestedStatus === 'active' && existingProductImageCount === 0) {

@@ -8,6 +8,15 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SKIP_COPY = new Set(['.git', '.vercel', 'node_modules']);
+// These pages/scripts were deliberately removed from the admin product.
+// Remove them from the remote staging clone too; generic overlay copying is
+// otherwise additive and intentionally preserves unrelated remote-only files.
+const REMOVED_FROM_PROJECT = [
+  'admin/activity.html',
+  'admin/categories.html',
+  'admin/js/activity.js',
+  'admin/js/categories.js',
+];
 
 function git(args, cwd = ROOT, options = {}) {
   const result = spawnSync('git', args, {
@@ -96,6 +105,9 @@ async function bootstrapFromZip(repositoryUrl) {
     console.log('Copying the repaired NOOLTHARI project over the matching website files.');
     console.log('Files that exist only in GitHub are preserved; no remote files are mass-deleted.');
     overlayProject(ROOT, cloneDir);
+    for (const relativePath of REMOVED_FROM_PROJECT) {
+      fs.rmSync(path.join(cloneDir, relativePath), { force: true });
+    }
     runPreflight(cloneDir);
     commitAndPush(cloneDir);
 

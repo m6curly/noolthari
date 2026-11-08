@@ -1466,16 +1466,14 @@ async function renderProducts(element, options = {}) {
     // Only storefront-safe columns are readable by customers. Internal
     // purchase cost and reserved inventory are intentionally never fetched.
     let query = sb.from('products').select(`
-      id,sku,saree_name,slug,category_id,description,fabric,colour,pattern,occasion,
+      id,sku,saree_name,slug,category_id,description,colour,
       blouse_included,selling_price,
       stock_quantity,status,featured,bestseller,created_at,updated_at,
       categories(name),product_images(id,path,sort_order,public_url)
     `).eq('status', 'active');
 
     if (options.category) query = query.eq('category_id', options.category);
-    if (options.fabric) query = query.eq('fabric', options.fabric);
     if (options.colour) query = query.eq('colour', options.colour);
-    if (options.occasion) query = query.eq('occasion', options.occasion);
     if (options.excludeId) query = query.neq('id', options.excludeId);
     if (options.availability === 'in-stock') query = query.gt('stock_quantity', 0);
     if (options.availability === 'out-of-stock') query = query.lte('stock_quantity', 0);
@@ -1488,10 +1486,7 @@ async function renderProducts(element, options = {}) {
         query = query.or([
           `saree_name.ilike.%${term}%`,
           `sku.ilike.%${term}%`,
-          `fabric.ilike.%${term}%`,
           `colour.ilike.%${term}%`,
-          `pattern.ilike.%${term}%`,
-          `occasion.ilike.%${term}%`,
           `description.ilike.%${term}%`
         ].join(','));
       }

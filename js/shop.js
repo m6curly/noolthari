@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const controls = {
     search: NL.qs('#search'),
     category: NL.qs('#category'),
-    fabric: NL.qs('#fabric'),
     minPrice: NL.qs('#min-price'),
     maxPrice: NL.qs('#max-price'),
     availability: NL.qs('#availability'),
@@ -29,18 +28,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   try {
-    const [categoriesResult, facetsResult] = await Promise.all([
-      sb.from('categories').select('id,name').eq('active', true).order('name'),
-      sb.from('products').select('fabric').eq('status', 'active')
-    ]);
+    const categoriesResult = await sb.from('categories').select('id,name').eq('active', true).order('name');
     if (categoriesResult.error) throw categoriesResult.error;
-    if (facetsResult.error) throw facetsResult.error;
-
     (categoriesResult.data || []).forEach(category => {
       controls.category?.add(new Option(category.name || '', category.id));
     });
-    const facets = facetsResult.data || [];
-    fillOptions(controls.fabric, facets.map(item => item.fabric), 'All fabrics');
   } catch (error) {
     console.error('Shop filter options failed:', error);
     NL.toast('Some filters could not be loaded. You can still browse the collection.', 'warning');
@@ -66,7 +58,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderProducts(grid, {
       search: controls.search?.value || '',
       category: controls.category?.value || '',
-      fabric: controls.fabric?.value || '',
       minPrice: min,
       maxPrice: max,
       availability: controls.availability?.value || '',

@@ -108,6 +108,53 @@ function checkProjectConfig() {
   if (!gitignore.includes('.env')) problems.push('.gitignore must exclude local .env files before deployment.');
 }
 
+
+function checkNoothariFeatureContracts(files) {
+  const htmlFiles = files.filter((file) => file.endsWith('.html'));
+  for (const file of htmlFiles) {
+    const html = fs.readFileSync(file, 'utf8');
+    if (!html.includes('site-consistency.css')) {
+      problems.push(`Missing uniform responsive stylesheet: ${relative(file)}`);
+    }
+  }
+
+  const productJs = fs.readFileSync(path.join(ROOT, 'admin/js/products.js'), 'utf8');
+  if (!productJs.includes(".from('admin_products')")) {
+    problems.push('Admin product listing/editor must read protected product details from public.admin_products.');
+  }
+  if (/\.from\(['"]products['"]\)\s*\.select\(/.test(productJs)) {
+    problems.push('Admin product JS must not directly SELECT protected columns from public.products.');
+  }
+
+  const productFiles = [
+    'admin/product-add.html', 'admin/product-edit.html', 'admin/js/products.js',
+    'js/catalog.js', 'js/product.js', 'js/shop.js', 'shop.html', 'product.html'
+  ];
+  for (const name of productFiles) {
+    const file = path.join(ROOT, name);
+    if (!fs.existsSync(file)) continue;
+    const source = fs.readFileSync(file, 'utf8');
+    if (/\b(?:fabric|pattern|occasion)\b/i.test(source)) {
+      problems.push(`Removed product field still referenced in ${name}.`);
+    }
+  }
+
+  const financeHtml = fs.readFileSync(path.join(ROOT, 'admin/accounting.html'), 'utf8');
+  const financeJs = fs.readFileSync(path.join(ROOT, 'admin/js/accounting.js'), 'utf8');
+  for (const label of ['Receive saree stock', 'Pay pending vendor amount', 'Record Razorpay payout']) {
+    if (financeHtml.toLowerCase().includes(label.toLowerCase())) {
+      problems.push(`Removed Finance section is still present: ${label}.`);
+    }
+  }
+  if (/admin_pay_vendor_balance|admin_record_razorpay_settlement|receive-stock-form|vendor-payment-form|razorpay-settlement-form/i.test(financeJs)) {
+    problems.push('Removed Finance form logic is still present in admin/js/accounting.js.');
+  }
+
+  if (!productJs.includes("text: 'NOOLTHARI™'")) {
+    problems.push('NOOLTHARI image watermark is missing from the product uploader.');
+  }
+}
+
 function main() {
   process.chdir(ROOT);
   const files = walk(ROOT);
@@ -118,6 +165,7 @@ function main() {
   for (const file of htmlFiles) checkHtml(file);
   for (const file of jsFiles) runNodeCheck(file);
   checkSecretSafety(files);
+  checkNoothariFeatureContracts(files);
 
   if (problems.length) {
     console.error(`\nNOOLTHARI pre-deploy check FAILED (${problems.length} issue(s))\n`);
@@ -129,7 +177,7 @@ function main() {
   console.log('NOOLTHARI pre-deploy check PASSED');
   console.log(`HTML pages checked: ${htmlFiles.length}`);
   console.log(`JavaScript files syntax-checked: ${jsFiles.length}`);
-  console.log('Local HTML references, page titles, viewport tags, duplicate IDs, JSON config and secret patterns: passed');
+  console.log('Local references, uniform CSS, product permission path, removed fields, Finance cleanup, page titles, viewport tags, duplicate IDs, config and secret checks: passed');
   console.log('Note: this is a static preflight, not a live Supabase/Razorpay transaction or physical-device browser test.');
 }
 

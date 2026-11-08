@@ -8,11 +8,12 @@
   <title>Finance | NOOLTHARI™</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
   <link rel="stylesheet" href="../css/unified.css">
+  <link rel="stylesheet" href="../css/site-consistency.css">
 </head>
 <body data-root="../">
   <div class="admin-shell">
@@ -31,7 +32,7 @@
     <main class="admin-main">
       <header class="admin-page-header">
         <div><div class="eyebrow">Business accounts</div><h1 class="page-title">Finance</h1>
-          <p class="finance-note">One place for investments, saree purchases, sales, business expenses, Razorpay settlements and available funds.</p></div>
+          <p class="finance-note">One place for business investments, sales, expenses, inventory value and available funds.</p></div>
       </header>
 
       <section class="admin-card finance-filter-card" aria-label="Finance date filter">
@@ -70,7 +71,7 @@
           <div class="admin-card"><span>Pending vendor payments</span><strong id="f-vendor-due">—</strong></div>
           <div class="admin-card"><span>Owner capital entered</span><strong id="f-capital">—</strong></div>
         </div>
-        <p class="finance-note">These are calculated from entries you record here, not a live bank connection. Unpaid customer balances are shown separately and are not counted as cash received. Enter your opening investment and opening balances first. Razorpay captured payments remain “unsettled” until you record the actual payout credited to your bank.</p>
+        <p class="finance-note">These are calculated from entries you record here, not a live bank connection. Unpaid customer balances are shown separately and are not counted as cash received. Enter your opening investment and opening balances first. Razorpay captured payments are tracked separately from the bank balance; this page does not claim a live bank connection.</p>
       </section>
 
       <section class="finance-block finance-forms-grid" aria-label="Record business transactions">
@@ -96,45 +97,6 @@
             <div class="field"><label for="expense-paid-from">Paid from *</label><select id="expense-paid-from" name="paid_from"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="razorpay">Razorpay balance</option><option value="other">Other</option></select></div>
             <div class="field"><label for="expense-notes">Notes / reference</label><input id="expense-notes" name="notes" maxlength="500"></div>
             <button class="btn btn-gold" type="submit">Save expense</button>
-          </form>
-        </article>
-        <article class="admin-card">
-          <div class="eyebrow">Inventory</div><h2>Receive saree stock</h2>
-          <p class="finance-note">Use this when you buy more pieces of an existing product. It records vendor, quantities, cost, paid amount and stock together.</p>
-          <form id="stock-form" class="admin-form">
-            <div class="field"><label for="stock-product">Product *</label><select id="stock-product" name="product_id" required><option value="">Loading products…</option></select></div>
-            <div class="field"><label for="stock-vendor">Vendor</label><select id="stock-vendor" name="vendor_id"><option value="">No vendor selected</option></select></div>
-            <div class="field"><label for="stock-quantity">Quantity received *</label><input id="stock-quantity" name="quantity" type="number" min="1" step="1" required></div>
-            <div class="field"><label for="stock-unit-cost">Purchase cost per saree (₹) *</label><input id="stock-unit-cost" name="unit_cost" type="number" min="0" step="0.01" required></div>
-            <div class="field"><label for="stock-paid-amount">Amount paid now (₹)</label><input id="stock-paid-amount" name="paid_amount" type="number" min="0" step="0.01" placeholder="Defaults to full amount"></div>
-            <div class="field"><label for="stock-paid-from">Paid from *</label><select id="stock-paid-from" name="payment_account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option><option value="razorpay">Razorpay balance</option></select></div>
-            <div class="field"><label for="stock-purchase-date">Purchase date *</label><input id="stock-purchase-date" name="purchase_date" type="date" required></div>
-            <div class="field"><label for="stock-notes">Invoice / notes</label><input id="stock-notes" name="notes" maxlength="500"></div>
-            <button class="btn btn-gold" type="submit">Save purchase and stock</button>
-          </form>
-        </article>
-        <article class="admin-card">
-          <div class="eyebrow">Vendor account</div><h2>Pay pending vendor amount</h2>
-          <p class="finance-note">For a saree purchase paid in parts, record each later payment here.</p>
-          <form id="vendor-payment-form" class="admin-form">
-            <div class="field"><label for="vendor-purchase">Purchase with due balance *</label><select id="vendor-purchase" name="purchase_id" required><option value="">Loading vendor dues…</option></select></div>
-            <div class="field"><label for="vendor-payment-amount">Payment amount (₹) *</label><input id="vendor-payment-amount" name="amount" type="number" min="0.01" step="0.01" required></div>
-            <div class="field"><label for="vendor-payment-account">Paid from *</label><select id="vendor-payment-account" name="payment_account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option><option value="razorpay">Razorpay balance</option></select></div>
-            <div class="field"><label for="vendor-payment-date">Date *</label><input id="vendor-payment-date" name="transaction_date" type="date" required></div>
-            <div class="field"><label for="vendor-payment-reference">Reference / note</label><input id="vendor-payment-reference" name="reference" maxlength="200"></div>
-            <button class="btn btn-gold" type="submit">Record vendor payment</button>
-          </form>
-        </article>
-        <article class="admin-card">
-          <div class="eyebrow">Payment reconciliation</div><h2>Record Razorpay payout</h2>
-          <p class="finance-note">Enter the settlement gross, the exact amount credited to bank and the gateway fee. The three figures must balance.</p>
-          <form id="settlement-form" class="admin-form">
-            <div class="field"><label for="settlement-gross">Gross settled amount (₹) *</label><input id="settlement-gross" name="gross_amount" type="number" min="0.01" step="0.01" required></div>
-            <div class="field"><label for="settlement-bank">Bank credit (₹) *</label><input id="settlement-bank" name="bank_credit" type="number" min="0" step="0.01" required></div>
-            <div class="field"><label for="settlement-fee">Razorpay fee + tax (₹) *</label><input id="settlement-fee" name="fee" type="number" min="0" step="0.01" required></div>
-            <div class="field"><label for="settlement-date">Settlement date *</label><input id="settlement-date" name="settlement_date" type="date" required></div>
-            <div class="field"><label for="settlement-reference">Settlement ID / reference *</label><input id="settlement-reference" name="reference" maxlength="160" required></div>
-            <button class="btn btn-gold" type="submit">Save Razorpay settlement</button>
           </form>
         </article>
       </section>

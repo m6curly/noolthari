@@ -8,7 +8,7 @@ do $$ begin create type public.shipment_status as enum ('not_shipped','shipped',
 
 create table if not exists public.profiles(id uuid primary key references auth.users(id) on delete cascade,name text,email text,phone text,role public.user_role not null default 'customer',created_at timestamptz not null default now(),updated_at timestamptz not null default now());
 create table if not exists public.categories(id uuid primary key default gen_random_uuid(),name text not null unique,slug text not null unique,active boolean not null default true,created_at timestamptz not null default now());
-create table if not exists public.products(id uuid primary key default gen_random_uuid(),sku text not null unique,saree_name text not null,slug text unique,category_id uuid references public.categories(id),description text,fabric text,colour text,pattern text,occasion text,instagram_url text,saree_length text,blouse_length text,blouse_included boolean not null default false,care_instructions text,purchase_price numeric(12,2) not null default 0,selling_price numeric(12,2) not null default 0,sale_price numeric(12,2),stock_quantity integer not null default 0,reserved_quantity integer not null default 0,status text not null default 'active' check(status in ('active','inactive')),featured boolean not null default false,bestseller boolean not null default false,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),check(stock_quantity>=0),check(reserved_quantity>=0),check(selling_price>=0),check(purchase_price>=0),check(instagram_url is null or (length(btrim(instagram_url)) between 1 and 2048 and btrim(instagram_url) ~* '^https://(www\.|m\.)?instagram\.com/[^[:space:]]+$')));
+create table if not exists public.products(id uuid primary key default gen_random_uuid(),sku text not null unique,saree_name text not null,slug text unique,category_id uuid references public.categories(id),description text,colour text,instagram_url text,blouse_included boolean not null default false,purchase_price numeric(12,2) not null default 0,selling_price numeric(12,2) not null default 0,stock_quantity integer not null default 0,reserved_quantity integer not null default 0,status text not null default 'active' check(status in ('active','inactive')),featured boolean not null default false,bestseller boolean not null default false,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),check(stock_quantity>=0),check(reserved_quantity>=0),check(selling_price>=0),check(purchase_price>=0),check(instagram_url is null or (length(btrim(instagram_url)) between 1 and 2048 and btrim(instagram_url) ~* '^https://(www\.|m\.)?instagram\.com/[^[:space:]]+$')));
 create table if not exists public.product_images(id uuid primary key default gen_random_uuid(),product_id uuid not null references public.products(id) on delete cascade,path text not null,public_url text,sort_order integer not null default 0,is_primary boolean not null default false,created_at timestamptz not null default now());
 create table if not exists public.addresses(id uuid primary key default gen_random_uuid(),customer_id uuid not null references public.profiles(id) on delete cascade,full_name text not null,phone text not null,address_line1 text not null,address_line2 text,city text not null,state text not null,postal_code text not null,country text not null default 'India',created_at timestamptz not null default now());
 create table if not exists public.cart(id uuid primary key default gen_random_uuid(),customer_id uuid not null unique references public.profiles(id) on delete cascade,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
@@ -82,7 +82,6 @@ begin
       p.saree_name,
       p.sku,
       p.selling_price,
-      p.sale_price,
       p.purchase_price,
       p.stock_quantity,
       p.reserved_quantity,
@@ -101,7 +100,7 @@ begin
     end if;
 
     v_subtotal := v_subtotal
-      + coalesce(nullif(v_item.sale_price, 0), v_item.selling_price) * v_item.quantity;
+      + v_item.selling_price * v_item.quantity;
   end loop;
 
   v_order_number :=
@@ -151,7 +150,6 @@ begin
       p.saree_name,
       p.sku,
       p.selling_price,
-      p.sale_price,
       p.purchase_price
     from public.cart_items ci
     join public.products p on p.id = ci.product_id
@@ -173,8 +171,8 @@ begin
       v_item.saree_name,
       v_item.sku,
       v_item.quantity,
-      coalesce(nullif(v_item.sale_price, 0), v_item.selling_price),
-      coalesce(nullif(v_item.sale_price, 0), v_item.selling_price) * v_item.quantity,
+      v_item.selling_price,
+      v_item.selling_price * v_item.quantity,
       v_item.purchase_price
     );
 
@@ -789,7 +787,7 @@ begin
 
   for v_item in
     select ci.product_id, ci.quantity, p.saree_name, p.sku,
-           p.selling_price, p.sale_price, p.purchase_price,
+           p.selling_price, p.purchase_price,
            p.stock_quantity, p.reserved_quantity, p.status
     from public.cart_items ci
     join public.products p on p.id = ci.product_id
@@ -812,12 +810,7 @@ begin
       raise exception 'INVALID_PRODUCT_PRICE:%', v_item.saree_name;
     end if;
 
-    v_subtotal := v_subtotal +
-      (case
-        when v_item.sale_price > 0 and v_item.sale_price < v_item.selling_price
-          then v_item.sale_price
-        else v_item.selling_price
-      end) * v_item.quantity;
+    v_subtotal := v_subtotal + v_item.selling_price * v_item.quantity;
   end loop;
 
   if v_item_count = 0 or v_subtotal <= 0 then
@@ -842,7 +835,7 @@ begin
 
   for v_item in
     select ci.product_id, ci.quantity, p.saree_name, p.sku,
-           p.selling_price, p.sale_price, p.purchase_price
+           p.selling_price, p.purchase_price
     from public.cart_items ci
     join public.products p on p.id = ci.product_id
     where ci.cart_id = v_cart_id
@@ -854,10 +847,8 @@ begin
     ) values (
       v_order.id, v_item.product_id, v_item.saree_name, v_item.sku,
       v_item.quantity,
-      case when v_item.sale_price > 0 and v_item.sale_price < v_item.selling_price
-        then v_item.sale_price else v_item.selling_price end,
-      (case when v_item.sale_price > 0 and v_item.sale_price < v_item.selling_price
-        then v_item.sale_price else v_item.selling_price end) * v_item.quantity,
+      v_item.selling_price,
+      v_item.selling_price * v_item.quantity,
       v_item.purchase_price
     );
 
@@ -1093,20 +1084,6 @@ grant execute on function public.admin_profit_loss(timestamptz, timestamptz)
 
 -- Avoid creating a check that could fail because of historical rows. NOT VALID
 -- still enforces the rule for new/updated products until legacy rows are audited.
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'products_sale_price_nonnegative'
-      and conrelid = 'public.products'::regclass
-  ) then
-    alter table public.products
-      add constraint products_sale_price_nonnegative
-      check (sale_price is null or sale_price >= 0) not valid;
-  end if;
-end;
-$$;
-
 commit;
 
 -- NOOLTHARI V2: account wishlist + privacy-conscious admin activity log.
@@ -1187,7 +1164,6 @@ begin
     'stock_quantity', v_row->'stock_quantity',
     'reserved_quantity', v_row->'reserved_quantity',
     'selling_price', v_row->'selling_price',
-    'sale_price', v_row->'sale_price',
     'active', v_row->'active',
     'name', case when TG_TABLE_NAME = 'categories' then v_row->'name' else null end,
     'total', v_row->'total',
@@ -1469,9 +1445,8 @@ grant execute on function public.sync_guest_cart(uuid, jsonb) to authenticated;
 -- read these columns directly through the Supabase REST API.
 revoke select on table public.products from public, anon, authenticated;
 grant select (
-  id, sku, saree_name, slug, category_id, description, fabric, colour, pattern,
-  occasion, instagram_url, saree_length, blouse_length, blouse_included, care_instructions,
-  selling_price, sale_price, stock_quantity, status, featured, bestseller,
+  id, sku, saree_name, slug, category_id, description, colour, instagram_url,
+  blouse_included, selling_price, stock_quantity, status, featured, bestseller,
   created_at, updated_at
 ) on table public.products to anon, authenticated;
 
@@ -1485,6 +1460,7 @@ select p.*
 from public.products p
 where public.is_admin();
 revoke all on public.admin_products from public, anon, authenticated;
+grant insert, update, delete on table public.products to authenticated;
 grant select on public.admin_products to authenticated;
 
 -- Refund status changes are operationally important too; log them without
@@ -1557,14 +1533,17 @@ alter table public.products
   drop column if exists saree_length,
   drop column if exists blouse_length,
   drop column if exists care_instructions,
-  drop column if exists sale_price;
+  drop column if exists sale_price,
+  drop column if exists fabric,
+  drop column if exists pattern,
+  drop column if exists occasion;
 
 -- The customer browser can read only store-safe columns. Purchase price,
 -- vendor and reserved stock remain behind the admin-only view.
 revoke select on table public.products from public, anon, authenticated;
 grant select (
-  id, sku, saree_name, slug, category_id, description, fabric, colour, pattern,
-  occasion, instagram_url, blouse_included, selling_price, stock_quantity,
+  id, sku, saree_name, slug, category_id, description, colour, instagram_url,
+  blouse_included, selling_price, stock_quantity,
   status, featured, bestseller, created_at, updated_at
 ) on table public.products to anon, authenticated;
 

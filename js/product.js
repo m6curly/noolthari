@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .from('products')
       // Never request purchase_price or reserved_quantity in the customer app.
       .select(`
-        id,sku,saree_name,slug,category_id,description,fabric,colour,pattern,occasion,
+        id,sku,saree_name,slug,category_id,description,colour,
         blouse_included,selling_price,
         stock_quantity,status,featured,bestseller,instagram_url,created_at,updated_at,
         categories(name),
@@ -357,48 +357,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
           <dt>
-            Fabric
-          </dt>
-
-          <dd>
-            ${NL.esc(
-              product.fabric ||
-              '—'
-            )}
-          </dd>
-
-
-          <dt>
             Colour
           </dt>
 
           <dd>
             ${NL.esc(
               product.colour ||
-              '—'
-            )}
-          </dd>
-
-
-          <dt>
-            Pattern
-          </dt>
-
-          <dd>
-            ${NL.esc(
-              product.pattern ||
-              '—'
-            )}
-          </dd>
-
-
-          <dt>
-            Occasion
-          </dt>
-
-          <dd>
-            ${NL.esc(
-              product.occasion ||
               '—'
             )}
           </dd>

@@ -9,11 +9,12 @@
   <title>Edit product | NOOLTHARI™</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
   <link rel="stylesheet" href="../css/unified.css">
+  <link rel="stylesheet" href="../css/site-consistency.css">
 </head>
 <body data-root="../">
   <div class="admin-shell">
@@ -60,7 +61,7 @@
             <span>JPG, PNG or WebP · Up to 8 photos · 15 MB each</span>
             <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple>
           </label>
-          <p class="editor-help">A light, single NOOLTHARI™ watermark is added to each photo before it is uploaded. Preview below shows the watermarked version.</p>
+          <p class="editor-help">A subtle NOOLTHARI™ watermark is repeated across the centre of each photo in light grey. The saree remains clear and the original image detail is preserved.</p>
           <div id="product-image-preview" class="image-preview-grid" aria-live="polite"></div>
           <div id="existing-product-images" class="image-preview-grid existing-image-grid" aria-label="Currently saved product photos"></div>
           <p id="image-processing-status" class="editor-status" role="status" aria-live="polite"></p>
@@ -115,20 +116,8 @@
                   <textarea id="description" name="description" rows="5" maxlength="3000" placeholder="Describe the saree, its look, weave, border and what makes it special."></textarea>
                 </div>
                 <div class="editor-field">
-                  <label for="fabric">Fabric</label>
-                  <input id="fabric" name="fabric" type="text" maxlength="100" placeholder="e.g. Semi silk">
-                </div>
-                <div class="editor-field">
                   <label for="colour">Colour</label>
                   <input id="colour" name="colour" type="text" maxlength="100" placeholder="e.g. Peacock blue">
-                </div>
-                <div class="editor-field">
-                  <label for="pattern">Pattern / border</label>
-                  <input id="pattern" name="pattern" type="text" maxlength="160" placeholder="e.g. Traditional zari border">
-                </div>
-                <div class="editor-field">
-                  <label for="occasion">Occasion</label>
-                  <input id="occasion" name="occasion" type="text" maxlength="120" placeholder="e.g. Festive, wedding">
                 </div>
               </div>
             </section>
@@ -151,7 +140,7 @@
                 <div class="editor-field">
                   <label for="stock-quantity">Initial stock quantity <span class="required-mark">*</span></label>
                   <input id="stock-quantity" name="stock_quantity" type="number" min="0" max="1000000" step="1" inputmode="numeric" placeholder="How many sarees received" required>
-                  <small id="stock-field-help">On edit, use Finance → Receive stock to record every new purchase.</small>
+                  <small id="stock-field-help">On edit, use the Receive additional stock panel to record each new vendor purchase.</small>
                 </div>
                 <div class="editor-field" id="initial-stock-payment-field">
                   <label for="initial-stock-paid">Amount paid to vendor now (₹)</label>
@@ -199,6 +188,24 @@
           </div>
         </div>
       </form>
+
+      <section id="additional-stock-panel" class="admin-card additional-stock-panel" hidden aria-labelledby="additional-stock-title">
+        <div class="editor-section-heading">
+          <div><span class="editor-step">05</span><h2 id="additional-stock-title">Receive additional stock</h2></div>
+          <p>Record a new purchase for this saree without opening Finance.</p>
+        </div>
+        <div class="additional-stock-grid">
+          <div class="editor-field"><label for="additional-stock-vendor">Vendor</label><select id="additional-stock-vendor"><option value="">Use current product vendor</option></select></div>
+          <div class="editor-field"><label for="additional-stock-quantity">Quantity received *</label><input id="additional-stock-quantity" type="number" min="1" step="1" inputmode="numeric" required></div>
+          <div class="editor-field"><label for="additional-stock-cost">Purchase cost per saree (₹) *</label><input id="additional-stock-cost" type="number" min="0" step="0.01" inputmode="decimal" required></div>
+          <div class="editor-field"><label for="additional-stock-paid">Amount paid now (₹)</label><input id="additional-stock-paid" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Defaults to full cost"></div>
+          <div class="editor-field"><label for="additional-stock-account">Paid from</label><select id="additional-stock-account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option><option value="razorpay">Razorpay balance</option></select></div>
+          <div class="editor-field"><label for="additional-stock-date">Purchase date *</label><input id="additional-stock-date" type="date" required></div>
+          <div class="editor-field additional-stock-notes"><label for="additional-stock-notes">Invoice / notes</label><input id="additional-stock-notes" type="text" maxlength="500"></div>
+        </div>
+        <p id="additional-stock-status" class="editor-status" role="status" aria-live="polite"></p>
+        <button id="save-additional-stock" class="btn btn-gold" type="button">Save additional stock</button>
+      </section>
     </main>
   </div>
 

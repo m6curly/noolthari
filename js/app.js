@@ -140,9 +140,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   NL.qsa('[data-auth-slot]').forEach(slot => {
 
-    // Mark admin-only header actions so they can remain available on small screens.
-    slot.classList.toggle('auth-slot-admin', profile?.role === 'admin');
-
     /* -----------------------------------------------------
        Guest
     ------------------------------------------------------ */

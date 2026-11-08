@@ -56,16 +56,20 @@ alter table public.products
   drop column if exists saree_length,
   drop column if exists blouse_length,
   drop column if exists care_instructions,
-  drop column if exists sale_price;
+  drop column if exists sale_price,
+  drop column if exists fabric,
+  drop column if exists pattern,
+  drop column if exists occasion;
 
 -- The customer browser can read only store-safe columns. Purchase price,
 -- vendor and reserved stock remain behind the admin-only view.
 revoke select on table public.products from public, anon, authenticated;
 grant select (
-  id, sku, saree_name, slug, category_id, description, fabric, colour, pattern,
-  occasion, instagram_url, blouse_included, selling_price, stock_quantity,
+  id, sku, saree_name, slug, category_id, description, colour, instagram_url,
+  blouse_included, selling_price, stock_quantity,
   status, featured, bestseller, created_at, updated_at
 ) on table public.products to anon, authenticated;
+grant insert, update, delete on table public.products to authenticated;
 
 create or replace view public.admin_products
 with (security_barrier = true, security_invoker = false)

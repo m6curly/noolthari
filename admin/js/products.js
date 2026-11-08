@@ -6,10 +6,10 @@
 
 const NOOLTHARI_WATERMARK = Object.freeze({
   text: 'NOOLTHARI™',
-  maxImageEdge: 2400,
-  opacity: 0.22,
-  fontRatio: 0.028,
-  quality: 0.92,
+  maxImageEdge: 3000,
+  opacity: 0.24,
+  fontRatio: 0.026,
+  quality: 0.95,
   maxFiles: 8,
   maxFileBytes: 15 * 1024 * 1024
 });
@@ -121,47 +121,70 @@ async function adminProductTable() {
   const table = NL.qs('#products-table');
   if (!table) return;
 
-  const result = await sb
-    .from('products')
-    .select(`
-      id, saree_name, sku, selling_price,
-      stock_quantity, status, categories(name), vendors(name),
-      product_images(public_url, sort_order)
-    `)
+  // Purchase cost/vendor/reserved stock are intentionally protected from the
+  // public products table. Admin-only details are read through admin_products.
+  const productsResult = await sb
+    .from('admin_products')
+    .select('id,saree_name,sku,category_id,vendor_id,selling_price,stock_quantity,status,created_at')
     .order('created_at', { ascending: false });
 
-  if (result.error) {
-    console.error('Product table error:', result.error);
-    NL.toast(result.error.message || 'Unable to load products.', 'error');
-    table.innerHTML = '<tr><td colspan="7">Products could not be loaded. Please refresh.</td></tr>';
+  if (productsResult.error) {
+    console.error('Admin product view error:', productsResult.error);
+    NL.toast(productsResult.error.message || 'Unable to load products.', 'error');
+    table.innerHTML = '<tr><td colspan="7">Products could not be loaded. Check the Admin Products permission and refresh.</td></tr>';
     return;
   }
 
-  const products = result.data || [];
+  const products = productsResult.data || [];
   if (!products.length) {
     table.innerHTML = '<tr><td colspan="7">No products yet. Add your first saree to start the catalogue.</td></tr>';
     return;
   }
 
+  const productIds = products.map(product => product.id);
+  const categoryIds = [...new Set(products.map(product => product.category_id).filter(Boolean))];
+  const vendorIds = [...new Set(products.map(product => product.vendor_id).filter(Boolean))];
+  const [categoriesResult, vendorsResult, imagesResult] = await Promise.all([
+    categoryIds.length
+      ? sb.from('categories').select('id,name').in('id', categoryIds)
+      : Promise.resolve({ data: [], error: null }),
+    vendorIds.length
+      ? sb.from('vendors').select('id,name').in('id', vendorIds)
+      : Promise.resolve({ data: [], error: null }),
+    sb.from('product_images').select('product_id,public_url,sort_order').in('product_id', productIds).order('sort_order', { ascending: true })
+  ]);
+
+  const relatedError = categoriesResult.error || vendorsResult.error || imagesResult.error;
+  if (relatedError) {
+    console.error('Product related data error:', relatedError);
+    NL.toast(relatedError.message || 'Product details could not be loaded.', 'error');
+    table.innerHTML = '<tr><td colspan="7">Product category, vendor or photo information could not be loaded.</td></tr>';
+    return;
+  }
+
+  const categoryNames = new Map((categoriesResult.data || []).map(item => [item.id, item.name]));
+  const vendorNames = new Map((vendorsResult.data || []).map(item => [item.id, item.name]));
+  const firstImages = new Map();
+  (imagesResult.data || []).forEach(item => {
+    if (!firstImages.has(item.product_id)) firstImages.set(item.product_id, item.public_url);
+  });
+
   table.innerHTML = products.map(product => {
     const inactive = product.status === 'inactive';
-    const image = (product.product_images || [])
-      .slice()
-      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))[0]?.public_url;
+    const image = firstImages.get(product.id);
     const actualPrice = Number(product.selling_price || 0);
-
     return `
       <tr>
         <td>
           <div class="product-table-name">
             ${image ? `<img src="${NL.esc(image)}" alt="" loading="lazy">` : '<span class="product-table-placeholder" aria-hidden="true">N</span>'}
-            <span><strong>${NL.esc(product.saree_name || 'Untitled product')}</strong><small>${NL.esc(product.categories?.name || 'Uncategorised')}</small></span>
+            <span><strong>${NL.esc(product.saree_name || 'Untitled product')}</strong><small>${NL.esc(categoryNames.get(product.category_id) || 'Uncategorised')}</small></span>
           </div>
         </td>
         <td>${NL.esc(product.sku || '—')}</td>
         <td>${NL.money(actualPrice)}</td>
-        <td>${NL.esc(product.vendors?.name || '—')}</td>
-        <td>${Number(product.stock_quantity || 0)}</td>
+        <td>${NL.esc(vendorNames.get(product.vendor_id) || '—')}</td>
+        <td>${Number(product.stock_quantity || 0).toLocaleString('en-IN')}</td>
         <td><span class="product-status ${inactive ? 'is-inactive' : 'is-active'}">${inactive ? 'Inactive' : 'Active'}</span></td>
         <td>
           <div class="product-row-actions">
@@ -246,25 +269,6 @@ async function decodeImageFile(file) {
   }
 }
 
-function averageLuminance(ctx, width, height, centerX, centerY, sampleWidth, sampleHeight) {
-  const x = Math.max(0, Math.min(width - 1, Math.round(centerX - sampleWidth / 2)));
-  const y = Math.max(0, Math.min(height - 1, Math.round(centerY - sampleHeight / 2)));
-  const w = Math.max(1, Math.min(sampleWidth, width - x));
-  const h = Math.max(1, Math.min(sampleHeight, height - y));
-  try {
-    const pixels = ctx.getImageData(x, y, w, h).data;
-    let total = 0;
-    let count = 0;
-    for (let i = 0; i < pixels.length; i += 4) {
-      total += (0.2126 * pixels[i]) + (0.7152 * pixels[i + 1]) + (0.0722 * pixels[i + 2]);
-      count++;
-    }
-    return count ? total / count : 128;
-  } catch {
-    return 128;
-  }
-}
-
 async function createWatermarkedImage(file) {
   if (!(file instanceof Blob) || !String(file.type || '').startsWith('image/')) {
     throw new Error('Please select a supported image file.');
@@ -293,34 +297,44 @@ async function createWatermarkedImage(file) {
     context.fillRect(0, 0, width, height);
     context.drawImage(decoded.source, 0, 0, width, height);
 
-    // One small, restrained brand mark. Colour automatically contrasts with
-    // the underlying photo so it remains visible without hiding the saree.
+    // Repeated centered watermark tiles make simple cropping less useful while
+    // keeping the saree weave and colours visible. Marks use one soft neutral grey.
     const minDimension = Math.min(width, height);
-    const fontSize = Math.max(12, Math.min(38, Math.round(minDimension * NOOLTHARI_WATERMARK.fontRatio)));
-    const text = NOOLTHARI_WATERMARK.text;
-    context.save();
-    context.font = `500 ${fontSize}px Georgia, 'Times New Roman', serif`;
+    const columns = Math.max(3, Math.min(6, Math.round(2.5 + (width / height))));
+    const rows = Math.max(4, Math.min(7, Math.round(2.5 + (height / width))));
+    let fontSize = Math.max(13, Math.min(34, Math.round(minDimension * NOOLTHARI_WATERMARK.fontRatio)));
+    if (document.fonts?.load) {
+      try { await document.fonts.load(`600 ${fontSize}px Poppins`); } catch { /* fallback below */ }
+    }
+    context.font = `600 ${fontSize}px Poppins, Arial, sans-serif`;
+    const cellWidth = width / columns;
+    const maxWatermarkWidth = cellWidth * 0.78;
+    const measuredWidth = context.measureText(NOOLTHARI_WATERMARK.text).width;
+    if (measuredWidth > maxWatermarkWidth) {
+      fontSize = Math.max(11, Math.floor(fontSize * (maxWatermarkWidth / measuredWidth)));
+      context.font = `600 ${fontSize}px Poppins, Arial, sans-serif`;
+    }
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-
-    const markX = Math.round(width * 0.72);
-    const markY = Math.round(height * 0.91);
-    const textWidth = context.measureText(text).width;
-    const luminance = averageLuminance(
-      context, width, height, markX, markY,
-      Math.max(fontSize * 5, textWidth * 0.8),
-      Math.max(fontSize * 2, 20)
-    );
-    const useLightMark = luminance < 132;
-
+    context.fillStyle = '#778184';
     context.globalAlpha = NOOLTHARI_WATERMARK.opacity;
-    context.fillStyle = useLightMark ? '#ffffff' : '#173f3d';
-    context.shadowColor = useLightMark ? 'rgba(0,0,0,.52)' : 'rgba(255,255,255,.75)';
-    context.shadowBlur = Math.max(1, fontSize * 0.08);
-    context.translate(markX, markY);
-    context.rotate(-4 * Math.PI / 180);
-    context.fillText(text, 0, 0);
-    context.restore();
+    context.shadowColor = 'rgba(35, 46, 49, 0.16)';
+    context.shadowBlur = Math.max(1, fontSize * 0.06);
+    const cellHeight = height / rows;
+    for (let row = 0; row < rows; row++) {
+      for (let column = 0; column < columns; column++) {
+        const stagger = row % 2 ? 0.12 : -0.12;
+        const x = Math.max(0, Math.min(width, (column + 0.5 + stagger) * cellWidth));
+        const y = (row + 0.5) * cellHeight;
+        context.save();
+        context.translate(x, y);
+        context.rotate(-17 * Math.PI / 180);
+        context.fillText(NOOLTHARI_WATERMARK.text, 0, 0, maxWatermarkWidth);
+        context.restore();
+      }
+    }
+    context.globalAlpha = 1;
+    context.shadowBlur = 0;
 
     const blob = await new Promise((resolve, reject) => {
       canvas.toBlob(result => {
@@ -601,10 +615,7 @@ async function loadEditProduct() {
   setField('category_id', product.category_id);
   setField('instagram_url', product.instagram_url);
   setField('description', product.description);
-  setField('fabric', product.fabric);
   setField('colour', product.colour);
-  setField('pattern', product.pattern);
-  setField('occasion', product.occasion);
   await loadProductVendors(product.vendor_id);
   setField('purchase_price', product.purchase_price);
   setField('selling_price', product.selling_price);
@@ -621,7 +632,7 @@ async function loadEditProduct() {
   if (costInput) costInput.readOnly = true;
   if (vendorInput) vendorInput.disabled = true;
   const stockHelp = NL.qs('#stock-field-help');
-  if (stockHelp) stockHelp.textContent = 'Current stock: use Finance → Receive stock for every new purchase. Stock is not overwritten when editing product details.';
+  if (stockHelp) stockHelp.textContent = 'Current stock is protected from accidental edits. Use the Receive additional stock panel below to record a new vendor purchase.';
   setCheckbox('blouse_included', product.blouse_included);
   setCheckbox('featured', product.featured);
   setCheckbox('bestseller', product.bestseller);
@@ -635,6 +646,83 @@ async function loadEditProduct() {
 
   await renderExistingProductImages(activeProductId);
   updatePriceInsight();
+}
+
+
+async function initializeAdditionalStockPanel() {
+  const panel = NL.qs('#additional-stock-panel');
+  if (!panel || !activeProductId) return;
+  panel.hidden = false;
+
+  const vendorSelect = NL.qs('#additional-stock-vendor');
+  const vendorResult = await sb.from('vendors').select('id,name').order('name');
+  if (vendorResult.error) throw vendorResult.error;
+  vendorSelect.innerHTML = '<option value="">Use current product vendor</option>' + (vendorResult.data || []).map(vendor =>
+    `<option value="${NL.esc(vendor.id)}">${NL.esc(vendor.name)}</option>`
+  ).join('');
+  if (loadedProduct?.vendor_id) vendorSelect.value = loadedProduct.vendor_id;
+
+  const dateInput = NL.qs('#additional-stock-date');
+  if (dateInput && !dateInput.value) dateInput.value = localDateString();
+  const qty = NL.qs('#additional-stock-quantity');
+  const cost = NL.qs('#additional-stock-cost');
+  const paid = NL.qs('#additional-stock-paid');
+  const refreshPaid = () => {
+    if (paid?.dataset.userEdited === 'true') return;
+    paid.value = (Number(qty?.value || 0) * Number(cost?.value || 0)).toFixed(2);
+  };
+  qty?.addEventListener('input', refreshPaid);
+  cost?.addEventListener('input', refreshPaid);
+  paid?.addEventListener('input', () => { paid.dataset.userEdited = 'true'; });
+  refreshPaid();
+
+  const button = NL.qs('#save-additional-stock');
+  const status = NL.qs('#additional-stock-status');
+  button?.addEventListener('click', async () => {
+    const quantity = Number(qty?.value);
+    const unitCost = Number(cost?.value);
+    const amountRaw = String(paid?.value ?? '').trim();
+    const paidAmount = amountRaw === '' ? quantity * unitCost : Number(amountRaw);
+    if (!Number.isInteger(quantity) || quantity < 1) return NL.toast('Enter a valid received quantity.', 'warning');
+    if (!Number.isFinite(unitCost) || unitCost < 0) return NL.toast('Enter a valid purchase cost per saree.', 'warning');
+    if (!Number.isFinite(paidAmount) || paidAmount < 0 || paidAmount > quantity * unitCost) return NL.toast('Amount paid cannot be more than the total purchase cost.', 'warning');
+
+    button.disabled = true;
+    const oldLabel = button.textContent;
+    button.textContent = 'Saving stock…';
+    if (status) { status.textContent = 'Recording purchase, vendor and stock movement…'; status.className = 'editor-status'; }
+    try {
+      const response = await sb.rpc('admin_receive_stock', {
+        p_product_id: activeProductId,
+        p_quantity: quantity,
+        p_unit_cost: unitCost,
+        p_vendor_id: String(vendorSelect?.value || loadedProduct?.vendor_id || '').trim() || null,
+        p_paid_amount: paidAmount,
+        p_payment_account: String(NL.qs('#additional-stock-account')?.value || 'bank'),
+        p_notes: String(NL.qs('#additional-stock-notes')?.value || '').trim() || null,
+        p_client_reference: `product-edit:${activeProductId}:${(typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`)}`,
+        p_purchase_date: String(dateInput?.value || localDateString())
+      });
+      if (response.error) throw response.error;
+      const stock = Number(response.data?.stock_quantity);
+      const stockField = NL.qs('#stock-quantity');
+      if (stockField && Number.isFinite(stock)) stockField.value = String(stock);
+      if (status) { status.textContent = 'Stock purchase saved. Inventory, vendor and finance records are updated.'; status.className = 'editor-status is-success'; }
+      NL.toast('Additional stock recorded successfully.', 'success');
+      qty.value = '';
+      cost.value = '';
+      paid.value = '';
+      paid.dataset.userEdited = '';
+      NL.qs('#additional-stock-notes').value = '';
+    } catch (error) {
+      console.error('Additional stock receipt failed:', error);
+      if (status) { status.textContent = error.message || 'Could not record the stock purchase.'; status.className = 'editor-status is-error'; }
+      NL.toast(error.message || 'Could not record the stock purchase.', 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = oldLabel;
+    }
+  });
 }
 
 /* ---------------------------------------------------------
@@ -678,10 +766,8 @@ async function saveProduct(formElement) {
     instagram_url: instagramUrl,
     vendor_id: activeProductId ? (loadedProduct?.vendor_id || null) : vendorId,
     description: String(form.get('description') || '').trim() || null,
-    fabric: String(form.get('fabric') || '').trim() || null,
+    selling_price: sellingPrice,
     colour: String(form.get('colour') || '').trim() || null,
-    pattern: String(form.get('pattern') || '').trim() || null,
-    occasion: String(form.get('occasion') || '').trim() || null,
     blouse_included: form.get('blouse_included') === 'on',
     featured: form.get('featured') === 'on',
     bestseller: form.get('bestseller') === 'on',
@@ -725,6 +811,7 @@ async function initializeProductForm() {
     await Promise.all([loadProductCategories(), loadProductVendors()]);
     bindInlineCreateForms();
     if (activeProductId) await loadEditProduct();
+    if (activeProductId) await initializeAdditionalStockPanel();
   } catch (error) {
     console.error('Product editor initialization failed:', error);
     setEditorStatus(error.message || 'The editor could not load. Please refresh.', 'error');

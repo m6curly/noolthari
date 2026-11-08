@@ -3087,24 +3087,9 @@ h1{
     font-size:11px;
   }
 
+  .header-admin-link,
   .header-logout{
     display:none;
-  }
-
-  /* Keep the admin entry point visible to signed-in admins on phones. */
-  .header-admin-link{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-height:38px;
-    padding:0 9px;
-    border:1px solid var(--line);
-    border-radius:3px;
-    background:var(--white);
-    color:var(--teal);
-    font-size:10px;
-    line-height:1;
-    white-space:nowrap;
   }
 
   .nav.open{

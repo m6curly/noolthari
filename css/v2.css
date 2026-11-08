@@ -356,7 +356,10 @@ input,select,textarea{font-size:16px}
   .menu{width:34px;height:34px;min-width:34px}
   .menu .ui-icon{width:17px;height:17px}
   .auth-slot{display:none!important}
-  .header-auth-link,.header-signup,.header-admin-link,.header-logout{display:none!important}
+  /* Show only the admin action on small screens; keep customer auth actions tucked away. */
+  .auth-slot.auth-slot-admin{display:flex!important;align-items:center;flex:0 0 auto}
+  .auth-slot.auth-slot-admin .header-admin-link{display:inline-flex!important;align-items:center;justify-content:center;min-height:36px;padding:0 8px;border:1px solid var(--ui-border);border-radius:3px;background:#fffdfa;color:var(--ui-ink);font-size:9px;line-height:1;letter-spacing:.04em;white-space:nowrap}
+  .header-auth-link,.header-signup,.header-logout{display:none!important}
   .nav{top:calc(100% + 1px)}
   #filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:13px;margin:18px 0 20px}
   #filters .filter-search{grid-column:1/-1}

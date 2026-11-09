@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/v2.css">
   <link rel="stylesheet" href="../css/unified.css">
-  <link rel="stylesheet" href="../css/site-consistency.css">
+  <link rel="stylesheet" href="../css/site-consistency.css?v=20261110">
 </head>
 <body data-root="../">
   <div class="admin-shell">
@@ -94,11 +94,11 @@
         <div class="dashboard-section-heading">
           <div><div class="eyebrow">STOREFRONT APPEARANCE</div><h2 id="banner-heading">Home page banner</h2></div>
         </div>
-        <p class="finance-note">Select four or more campaign photographs. A balanced editorial collage is created in your browser. Your current banner stays live until the new collage and settings are saved successfully.</p>
+        <p class="finance-note">Choose 1–12 campaign photographs. NOOLTHARI automatically creates a premium, responsive 16:9 banner composition. Your current banner stays live until the new image is saved successfully.</p>
         <div class="banner-editor-grid">
           <div class="banner-preview-wrap"><img id="hero-banner-preview" src="../assets/hero/noolthari-hero.webp" alt="Current home page banner preview"></div>
           <form id="hero-banner-form" class="admin-form banner-form">
-            <div class="field"><label for="hero-banner-image">Choose 4–12 banner photos</label><input id="hero-banner-image" type="file" accept="image/jpeg,image/png,image/webp" multiple required><small>Select at least 4 photos. NOOLTHARI will arrange them into one premium 16:9 collage automatically. JPG, PNG or WebP · Up to 12 MB per photo.</small></div>
+            <div class="field"><label for="hero-banner-image">Choose 1–12 banner photos</label><input id="hero-banner-image" type="file" accept="image/jpeg,image/png,image/webp" multiple required><small>Select 1 photo for a full-bleed banner or 2–12 for an automatic editorial collage. JPG, PNG or WebP · Up to 12 MB per photo.</small></div>
             <div class="field"><label for="hero-banner-position">Photo position</label><select id="hero-banner-position"><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></div>
             <p id="hero-banner-status" class="editor-status" role="status" aria-live="polite"></p>
             <button class="btn btn-gold" type="submit" id="save-hero-banner">Update home banner</button>
@@ -115,6 +115,6 @@
   <script src="../js/supabase.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/app.js"></script>
-  <script src="../admin/js/dashboard.js"></script>
+  <script src="../admin/js/dashboard.js?v=20261110"></script>
 </body>
 </html>

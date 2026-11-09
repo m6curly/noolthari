@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div>
 
 
-        <div class="gallery-main">
+        <div class="gallery-main${outOfStock ? ' is-out-of-stock' : ''}" id="product-gallery">
 
           <img
             id="main-img"
@@ -253,7 +253,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             alt="${NL.esc(
               product.saree_name || ''
             )}"
+            draggable="false"
           >
+
+          ${outOfStock ? '<span class="gallery-stock-label">Out of stock</span>' : ''}
+
+          ${images.length > 1 ? `
+            <button class="gallery-nav gallery-nav-prev" type="button" data-gallery-prev aria-label="Previous product photo">‹</button>
+            <button class="gallery-nav gallery-nav-next" type="button" data-gallery-next aria-label="Next product photo">›</button>
+            <span class="gallery-count" id="gallery-counter" aria-live="polite">1 / ${images.length}</span>
+          ` : ''}
 
         </div>
 
@@ -266,10 +275,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                   .map(
                     (image, index) => `
                       <button
-                        class="thumb"
+                        class="thumb${index === 0 ? ' is-active' : ''}"
                         type="button"
+                        data-index="${index}"
                         data-src="${NL.esc(image.public_url)}"
                         aria-label="View image ${index + 1}"
+                        aria-pressed="${index === 0 ? 'true' : 'false'}"
                       >
                         <img src="${NL.esc(image.public_url)}" alt="" loading="lazy">
                       </button>
@@ -387,7 +398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <div class="product-stock-status ${outOfStock ? 'is-out-of-stock' : 'is-in-stock'}" role="status">
           <span class="product-stock-dot" aria-hidden="true"></span>
-          <span>${outOfStock ? 'Currently unavailable' : `${stock} available`}</span>
+          <span>${outOfStock ? 'Out of stock' : `${stock} available`}</span>
         </div>
 
 
@@ -412,7 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         >
           ${
             outOfStock
-              ? 'Currently unavailable'
+              ? 'Out of stock'
               : 'Buy now'
           }
         </button>
@@ -426,38 +437,67 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   /* =======================================================
-     THUMBNAILS
+     PRODUCT GALLERY — thumbnails, buttons and touch swipe
   ======================================================== */
 
-  const mainImageElement =
-    NL.qs('#main-img');
+  const mainImageElement = NL.qs('#main-img');
+  const gallery = NL.qs('#product-gallery');
+  const galleryCounter = NL.qs('#gallery-counter');
+  const thumbnailButtons = NL.qsa('.thumb', productView);
+  let activeImageIndex = 0;
 
+  function showProductImage(nextIndex) {
+    if (!images.length || !mainImageElement) return;
+    activeImageIndex = (nextIndex + images.length) % images.length;
+    const selectedImage = images[activeImageIndex];
+    mainImageElement.src = selectedImage?.public_url || mainImage;
+    mainImageElement.alt = `${product.saree_name || 'Saree'} — photo ${activeImageIndex + 1}`;
 
-  NL.qsa(
-    '.thumb',
-    productView
-  ).forEach(button => {
+    thumbnailButtons.forEach((button, index) => {
+      const active = index === activeImageIndex;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
 
-    button.onclick =
-      () => {
+    if (galleryCounter) galleryCounter.textContent = `${activeImageIndex + 1} / ${images.length}`;
+  }
 
-        const source =
-          button.dataset.src;
-
-
-        if (
-          mainImageElement &&
-          source
-        ) {
-
-          mainImageElement.src =
-            source;
-
-        }
-
-      };
-
+  thumbnailButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.index);
+      if (Number.isInteger(index)) showProductImage(index);
+    });
   });
+
+  NL.qs('[data-gallery-prev]', productView)?.addEventListener('click', () => {
+    showProductImage(activeImageIndex - 1);
+  });
+  NL.qs('[data-gallery-next]', productView)?.addEventListener('click', () => {
+    showProductImage(activeImageIndex + 1);
+  });
+
+  if (gallery && images.length > 1) {
+    let swipeStart = null;
+
+    gallery.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      swipeStart = { x: event.clientX, y: event.clientY };
+    });
+
+    window.addEventListener('pointerup', event => {
+      if (!swipeStart) return;
+      const deltaX = event.clientX - swipeStart.x;
+      const deltaY = event.clientY - swipeStart.y;
+      swipeStart = null;
+
+      // Horizontal gestures change photos; vertical gestures remain native page scroll.
+      if (Math.abs(deltaX) >= 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+        showProductImage(activeImageIndex + (deltaX < 0 ? 1 : -1));
+      }
+    });
+
+    window.addEventListener('pointercancel', () => { swipeStart = null; });
+  }
 
 
   /* =======================================================

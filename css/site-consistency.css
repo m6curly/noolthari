@@ -406,3 +406,182 @@ body[data-root="./"] .hero-art > .hero-image {
     aspect-ratio: 16 / 9;
   }
 }
+
+/* =========================================================
+   NOOLTHARI product gallery and refined sold-out presentation
+========================================================= */
+.gallery-main {
+  position: relative;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  touch-action: pan-y pinch-zoom;
+  -webkit-user-select: none;
+  user-select: none;
+  background: #f1ece3;
+}
+.gallery-main > img {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 760px;
+  object-fit: contain;
+  object-position: center;
+  -webkit-user-drag: none;
+}
+.gallery-main.is-out-of-stock > img {
+  filter: saturate(.74) brightness(.93);
+  opacity: .84;
+}
+.gallery-main.is-out-of-stock::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(238, 232, 220, .10);
+}
+.gallery-stock-label {
+  position: absolute;
+  z-index: 3;
+  top: 16px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 13px;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 999px;
+  background: rgba(35, 55, 51, .88);
+  color: #fffaf1;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  box-shadow: 0 7px 20px rgba(25, 35, 31, .14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.gallery-nav {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0 0 4px;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 50%;
+  background: rgba(255, 252, 246, .88);
+  color: #183f3d;
+  font: 400 32px/1 Georgia, serif;
+  box-shadow: 0 5px 18px rgba(25, 35, 31, .13);
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+.gallery-nav:hover { background: #fff; transform: translateY(-50%) scale(1.05); }
+.gallery-nav-prev { left: 14px; }
+.gallery-nav-next { right: 14px; }
+.gallery-count {
+  position: absolute;
+  z-index: 4;
+  right: 14px;
+  bottom: 14px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 999px;
+  background: rgba(28, 45, 42, .72);
+  color: #fffaf1;
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .06em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.thumbs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 3px 1px 8px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.thumb {
+  flex: 0 0 76px;
+  scroll-snap-align: start;
+  opacity: .76;
+  transition: opacity .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.thumb.is-active,
+.thumb[aria-pressed="true"] {
+  border-color: #a98750;
+  opacity: 1;
+  box-shadow: 0 0 0 2px rgba(169, 135, 80, .18);
+}
+
+.product-card.is-out-of-stock .product-media {
+  background: #f1ece3;
+}
+.product-card.is-out-of-stock .product-media img {
+  display: block;
+  visibility: visible;
+  filter: saturate(.72) brightness(.93);
+  opacity: .82;
+}
+.product-card.is-out-of-stock .product-media::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(242, 237, 228, .08);
+}
+.product-card.is-out-of-stock .product-stock-label {
+  top: 14px;
+  bottom: auto;
+  left: 14px;
+  padding: 9px 13px;
+  border: 1px solid rgba(255,255,255,.58);
+  border-radius: 999px;
+  background: rgba(35, 55, 51, .90);
+  color: #fffaf1;
+  font-size: .70rem;
+  font-weight: 650;
+  letter-spacing: .09em;
+  box-shadow: 0 7px 20px rgba(25, 35, 31, .13);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.product-card.is-out-of-stock .product-stock-dot {
+  background: #dfbd7e;
+  box-shadow: 0 0 0 3px rgba(223, 189, 126, .18);
+}
+.product-card.is-out-of-stock .product-name { color: #56635d; }
+.product-card.is-out-of-stock .price-row { color: #777b70; }
+.product-card.is-out-of-stock .product-actions .btn:disabled {
+  border-color: #d8d0c1;
+  background: #eee9df;
+  color: #66706a;
+  opacity: 1;
+}
+.product-stock-status.is-out-of-stock {
+  border-color: #e2d8c7;
+  background: #f3eee5;
+  color: #5b625b;
+  letter-spacing: .015em;
+}
+
+@media (max-width: 640px) {
+  .gallery-nav { width: 38px; height: 38px; font-size: 29px; }
+  .gallery-nav-prev { left: 10px; }
+  .gallery-nav-next { right: 10px; }
+  .gallery-stock-label { top: 11px; left: 11px; padding: 8px 11px; font-size: .66rem; }
+  .gallery-count { right: 10px; bottom: 10px; }
+  .thumb { flex-basis: 68px; }
+}

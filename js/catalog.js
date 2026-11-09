@@ -704,7 +704,7 @@ function card(
       >
         ${
           outOfStock
-            ? 'Currently unavailable'
+            ? 'Out of stock'
             : 'Add to bag'
         }
       </button>
@@ -814,7 +814,7 @@ function card(
   if (outOfStock) {
 
     stockText =
-      'Currently unavailable';
+      'Out of stock';
 
   } else if (inBag > 0) {
 
@@ -881,7 +881,7 @@ function card(
             ? `
               <span class="product-stock-label" role="status">
                 <span class="product-stock-dot" aria-hidden="true"></span>
-                Currently unavailable
+                Out of stock
               </span>
             `
             : ''
@@ -1057,7 +1057,7 @@ function updateShopQuantityControl(
       >
         ${
           safeStock <= 0
-            ? 'Currently unavailable'
+            ? 'Out of stock'
             : 'Add to bag'
         }
       </button>
@@ -1069,7 +1069,7 @@ function updateShopQuantityControl(
       stockHint.textContent =
         safeStock > 0
           ? `${safeStock} available`
-          : 'Currently unavailable';
+          : 'Out of stock';
 
     }
 

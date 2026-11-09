@@ -145,11 +145,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function createBannerTileLayout(count, width, height) {
-    const outer = 26;
-    const gap = 16;
+    const outer = count === 1 ? 0 : 26;
+    const gap = count === 1 ? 0 : 16;
     const innerWidth = width - outer * 2;
     const innerHeight = height - outer * 2;
 
+    // A single campaign photo gets a clean, full-bleed treatment.
+    if (count === 1) {
+      return [{ x: 0, y: 0, width, height }];
+    }
+
+    // Larger campaigns use a balanced editorial grid so every selected photo
+    // remains visible without squeezing the subject into tiny strips.
     if (count >= 9) {
       const columns = count === 9 ? 3 : 4;
       const rows = Math.ceil(count / columns);
@@ -170,21 +177,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // One generous hero tile plus a neatly balanced supporting-photo grid.
+    // Two images share the canvas; from three onward the first image is the
+    // hero and the remaining photos form a calm supporting grid.
+    if (count === 2) {
+      const leftWidth = innerWidth * 0.56;
+      return [
+        { x: outer, y: outer, width: leftWidth, height: innerHeight },
+        { x: outer + leftWidth + gap, y: outer, width: innerWidth - leftWidth - gap, height: innerHeight }
+      ];
+    }
+
     const heroWidth = innerWidth * 0.56;
     const supportingX = outer + heroWidth + gap;
     const supportingWidth = innerWidth - heroWidth - gap;
     const remaining = count - 1;
-    const columns = remaining <= 6 ? 2 : 3;
+    const columns = remaining <= 4 ? 2 : 3;
     const rows = Math.ceil(remaining / columns);
     const tileWidth = (supportingWidth - gap * (columns - 1)) / columns;
     const tileHeight = (innerHeight - gap * (rows - 1)) / rows;
-    const tiles = [{
-      x: outer,
-      y: outer,
-      width: heroWidth,
-      height: innerHeight
-    }];
+    const tiles = [{ x: outer, y: outer, width: heroWidth, height: innerHeight }];
 
     for (let index = 0; index < remaining; index++) {
       const row = Math.floor(index / columns);
@@ -192,10 +203,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const rowItems = Math.min(columns, remaining - row * columns);
       const rowWidth = rowItems * tileWidth + Math.max(0, rowItems - 1) * gap;
       const rowStart = supportingX + Math.max(0, (supportingWidth - rowWidth) / 2);
+      const isSingleTileFinalRow = rowItems === 1;
       tiles.push({
-        x: rowStart + column * (tileWidth + gap),
+        x: isSingleTileFinalRow ? supportingX : rowStart + column * (tileWidth + gap),
         y: outer + row * (tileHeight + gap),
-        width: tileWidth,
+        width: isSingleTileFinalRow ? supportingWidth : tileWidth,
         height: tileHeight
       });
     }
@@ -203,8 +215,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function makePremiumBannerCollage(files) {
-    if (files.length < 4) {
-      throw new Error('Please select at least 4 photos for the banner collage.');
+    if (files.length < 1) {
+      throw new Error('Please select at least 1 photo for the banner.');
     }
     if (files.length > 12) {
       throw new Error('You can select up to 12 photos for one banner collage.');
@@ -280,11 +292,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       setBannerStatus('', '');
       return;
     }
-    if (files.length < 4 || files.length > 12) {
+    if (files.length < 1 || files.length > 12) {
       imageInput.value = '';
       restoreCurrentBannerPreview();
-      setBannerStatus('Select between 4 and 12 photos. Your current banner has not changed.', 'error');
-      NL.toast('Choose at least 4 and no more than 12 photos.', 'warning');
+      setBannerStatus('Select between 1 and 12 photos. Your current banner has not changed.', 'error');
+      NL.toast('Choose 1 to 12 photos for your banner.', 'warning');
       return;
     }
 
@@ -296,7 +308,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         preview.src = collagePreviewUrl;
         preview.style.objectPosition = 'center';
       }
-      setBannerStatus(`${files.length} photos arranged into a premium collage. Review the preview, then save.`, 'success');
+      setBannerStatus(files.length === 1
+        ? 'Your single-photo banner is ready. Review the preview, then save.'
+        : `${files.length} photos arranged into a premium 16:9 collage. Review the preview, then save.`, 'success');
     } catch (error) {
       collageFile = null;
       imageInput.value = '';
@@ -311,7 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   form?.addEventListener('submit', async event => {
     event.preventDefault();
     if (!collageFile) {
-      return NL.toast('Select at least 4 photos and wait for the collage preview.', 'warning');
+      return NL.toast('Select 1 to 12 photos and wait for the banner preview.', 'warning');
     }
 
     if (saveButton) { saveButton.disabled = true; saveButton.textContent = 'Uploading collage…'; }

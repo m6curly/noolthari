@@ -608,7 +608,21 @@ async function loadEditProduct() {
     .single();
   if (result.error) throw result.error;
 
-  loadedProduct = result.data;
+  loadedProduct = { ...(result.data || {}) };
+
+  // Read the description explicitly from the public/store-safe base column.
+  // This avoids stale admin_products/PostgREST view metadata making the form
+  // appear blank and then erasing the existing text on an unrelated edit.
+  const descriptionResult = await sb
+    .from('products')
+    .select('description')
+    .eq('id', activeProductId)
+    .single();
+  if (descriptionResult.error) {
+    throw new Error(`The saved product description could not be loaded safely. Refresh the page before editing: ${descriptionResult.error.message}`);
+  }
+  loadedProduct.description = descriptionResult.data?.description ?? null;
+
   const product = loadedProduct;
   setField('saree_name', product.saree_name);
   setField('sku', product.sku);
@@ -617,7 +631,7 @@ async function loadEditProduct() {
   setField('description', product.description);
   const descriptionField = NL.qs('#description');
   if (descriptionField) {
-    descriptionField.dataset.originalValue = String(product.description || '');
+    descriptionField.dataset.originalValue = String(product.description ?? '');
     descriptionField.dataset.descriptionDirty = 'false';
   }
   setField('colour', product.colour);
@@ -764,12 +778,21 @@ async function saveProduct(formElement) {
   const slug = activeProductId && loadedProduct?.slug ? loadedProduct.slug : `${baseSlug}-${slugify(sku).toLowerCase()}`;
 
   const descriptionField = NL.qs('#description');
-  const submittedDescription = String(form.get('description') || '').trim();
+  const submittedDescription = String(form.get('description') ?? '').trim();
   const descriptionWasEdited = descriptionField?.dataset.descriptionDirty === 'true';
-  // If the textarea was not touched, preserve the database value even if a
-  // browser autofill/late render made the visible field appear empty.
+  const originalDescription = descriptionField?.dataset.originalValue;
+  const hasOriginalDescription = typeof originalDescription === 'string'
+    || typeof loadedProduct?.description === 'string'
+    || loadedProduct?.description === null;
+
+  // Never turn an unavailable/late-loaded original value into NULL on an
+  // unrelated edit. The admin explicitly clears a description only when the
+  // textarea has fired an input event and is therefore marked as edited.
+  if (activeProductId && !descriptionWasEdited && !hasOriginalDescription) {
+    throw new Error('The existing product description has not loaded. Refresh this page before saving so it is not accidentally erased.');
+  }
   const savedDescription = activeProductId && !descriptionWasEdited
-    ? String(loadedProduct?.description ?? descriptionField?.dataset.originalValue ?? submittedDescription).trim()
+    ? String(originalDescription ?? loadedProduct?.description ?? '').trim()
     : submittedDescription;
 
   const payload = {
@@ -843,9 +866,11 @@ async function initializeProductForm() {
   imageInput?.addEventListener('change', () => prepareProductImagePreviews(imageInput));
 
   const descriptionField = NL.qs('#description');
-  descriptionField?.addEventListener('input', () => {
-    descriptionField.dataset.descriptionDirty = 'true';
-  });
+  const markDescriptionEdited = () => {
+    if (descriptionField) descriptionField.dataset.descriptionDirty = 'true';
+  };
+  descriptionField?.addEventListener('input', markDescriptionEdited);
+  descriptionField?.addEventListener('change', markDescriptionEdited);
 
   const initialPaidInput = NL.qs('#initial-stock-paid');
   const initialQtyInput = NL.qs('#stock-quantity');

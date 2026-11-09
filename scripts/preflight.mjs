@@ -122,8 +122,13 @@ function checkNoothariFeatureContracts(files) {
   if (!productJs.includes(".from('admin_products')")) {
     problems.push('Admin product listing/editor must read protected product details from public.admin_products.');
   }
-  if (/\.from\(['"]products['"]\)\s*\.select\(/.test(productJs)) {
-    problems.push('Admin product JS must not directly SELECT protected columns from public.products.');
+  const directProductReads = [...productJs.matchAll(/\.from\(['"]products['"]\)\s*\.select\(([^)]*)\)/g)];
+  for (const read of directProductReads) {
+    // Only the explicitly public description column may be fetched directly;
+    // internal purchase cost/vendor/reservation fields stay behind admin_products.
+    if (!/^\s*['"]description['"]\s*$/.test(read[1])) {
+      problems.push('Admin product JS may directly read only the public description field from public.products.');
+    }
   }
 
   const productFiles = [
@@ -159,19 +164,34 @@ function checkNoothariFeatureContracts(files) {
   if (!/id="hero-banner-image"[^>]*multiple/.test(dashboardHtml)) {
     problems.push('Home banner must accept multiple selected photos for a collage.');
   }
-  if (!dashboardJs.includes('makePremiumBannerCollage') || !dashboardJs.includes('at least 4 photos')) {
-    problems.push('Automatic 4+ photo banner collage logic is missing.');
+  if (!dashboardJs.includes('makePremiumBannerCollage') || !dashboardJs.includes('files.length < 1') || !dashboardJs.includes('files.length > 12')) {
+    problems.push('Automatic banner creation must support 1–12 selected photos.');
   }
-  if (!dashboardJs.includes('count === 9 ? 3 : 4') || !dashboardJs.includes('Decode, draw and release one source at a time')) {
-    problems.push('Banner collage must use balanced layouts and bounded image decoding for mobile devices.');
+  if (!dashboardJs.includes('count >= 9') || !dashboardJs.includes('count === 2') || !dashboardJs.includes('Decode, draw and release one source at a time')) {
+    problems.push('Banner collage must use balanced 1–12 photo layouts and bounded image decoding for mobile devices.');
   }
   const consistencyCss = fs.readFileSync(path.join(ROOT, 'css/site-consistency.css'), 'utf8');
   if (!/hero-art[^}]*aspect-ratio:\s*16\s*\/\s*9/s.test(consistencyCss) || !/hero-image[^}]*object-fit:\s*cover/s.test(consistencyCss)) {
     problems.push('Homepage banner must preserve the 16:9 collage ratio on responsive screens.');
   }
 
-  if (!/descriptionDirty/.test(productJs) || !/savedDescription/.test(productJs)) {
-    problems.push('Product edit must preserve an existing description unless the admin edits it.');
+  if (!/descriptionDirty/.test(productJs) || !/savedDescription/.test(productJs)
+      || !/descriptionResult/.test(productJs)
+      || !/existing product description has not loaded/i.test(productJs)) {
+    problems.push('Product edit must reload and protect the original description from accidental blank saves.');
+  }
+
+  const storefrontProductJs = fs.readFileSync(path.join(ROOT, 'js/product.js'), 'utf8');
+  if (!storefrontProductJs.includes('pointerdown') || !storefrontProductJs.includes('pointerup') || !storefrontProductJs.includes('data-gallery-next')) {
+    problems.push('Product gallery must support touch swipe and accessible previous/next controls.');
+  }
+  if (!storefrontProductJs.includes('gallery-stock-label') || !storefrontProductJs.includes("'Out of stock'")) {
+    problems.push('Product detail page must show a clear out-of-stock state without removing the product image.');
+  }
+  if (!consistencyCss.includes('.product-card.is-out-of-stock .product-media img')
+      || !consistencyCss.includes('visibility: visible')
+      || !consistencyCss.includes('.gallery-main.is-out-of-stock > img')) {
+    problems.push('Out-of-stock product photos must remain visible with a subtle dim treatment.');
   }
 
   const financePage = fs.readFileSync(path.join(ROOT, 'admin/accounting.html'), 'utf8');

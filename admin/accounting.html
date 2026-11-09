@@ -32,7 +32,7 @@
     <main class="admin-main">
       <header class="admin-page-header">
         <div><div class="eyebrow">Business accounts</div><h1 class="page-title">Finance</h1>
-          <p class="finance-note">One place for business investments, sales, expenses, inventory value and available funds.</p></div>
+          <p class="finance-note">One place for sales, expenses, inventory value and available business funds.</p></div>
       </header>
 
       <section class="admin-card finance-filter-card" aria-label="Finance date filter">
@@ -69,23 +69,11 @@
           <div class="admin-card"><span>Unpaid customer balances</span><strong id="f-customer-due">—</strong></div>
           <div class="admin-card"><span>Inventory at cost</span><strong id="f-inventory">—</strong></div>
           <div class="admin-card"><span>Pending vendor payments</span><strong id="f-vendor-due">—</strong></div>
-          <div class="admin-card"><span>Owner capital entered</span><strong id="f-capital">—</strong></div>
         </div>
-        <p class="finance-note">These are calculated from entries you record here, not a live bank connection. Unpaid customer balances are shown separately and are not counted as cash received. Enter your opening investment and opening balances first. Razorpay captured payments are tracked separately from the bank balance; this page does not claim a live bank connection.</p>
+        <p class="finance-note">These are calculated from entries you record here, not a live bank connection. Unpaid customer balances are shown separately and are not counted as cash received. Record each business expense and sale as it happens. Razorpay captured payments are tracked separately from the bank balance; this page does not claim a live bank connection.</p>
       </section>
 
       <section class="finance-block finance-forms-grid" aria-label="Record business transactions">
-        <article class="admin-card">
-          <div class="eyebrow">Owner funding</div><h2>Add investment / capital</h2>
-          <p class="finance-note">Record money you put into NOOLTHARI™. Capital increases funds, but is not sales revenue or profit.</p>
-          <form id="capital-form" class="admin-form">
-            <div class="field"><label for="capital-amount">Amount (₹) *</label><input id="capital-amount" name="amount" type="number" min="0.01" step="0.01" required></div>
-            <div class="field"><label for="capital-account">Received in *</label><select id="capital-account" name="account"><option value="bank">Bank</option><option value="upi">UPI</option><option value="cash">Cash</option><option value="other">Other</option></select></div>
-            <div class="field"><label for="capital-date">Date *</label><input id="capital-date" name="transaction_date" type="date" required></div>
-            <div class="field"><label for="capital-note">What was this for?</label><input id="capital-note" name="description" maxlength="500" placeholder="Initial investment / additional funds"></div>
-            <button class="btn btn-gold" type="submit">Save investment</button>
-          </form>
-        </article>
         <article class="admin-card">
           <div class="eyebrow">Business spending</div><h2>Record an expense</h2>
           <p class="finance-note">For trademark, registration, domain, packing, courier / Speed Post, advertising and other costs.</p>

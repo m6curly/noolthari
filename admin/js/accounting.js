@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const status = NL.qs('#finance-status');
   const setText = (selector, value) => { const el = NL.qs(selector); if (el) el.textContent = value; };
   const money = value => NL.money(Number(value || 0));
-  const dateFields = ['capital-date', 'expense-date'];
+  const dateFields = ['expense-date'];
 
   if (fromInput) fromInput.value = firstDay;
   if (toInput) toInput.value = today;
@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     setText('#f-funds', money(d.business_funds));
     setText('#f-inventory', money(d.inventory_value));
     setText('#f-vendor-due', money(d.vendor_payable));
-    setText('#f-capital', money(d.capital_invested));
     setText('#f-customer-due', money(d.customer_due));
 
     const ledger = await sb.from('business_ledger_entries')
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ledgerBody = NL.qs('#finance-ledger');
     if (ledgerBody) {
       if (ledger.error) ledgerBody.innerHTML = `<tr><td colspan="5">${NL.esc(ledger.error.message || 'Ledger unavailable.')}</td></tr>`;
-      else if (!(ledger.data || []).length) ledgerBody.innerHTML = '<tr><td colspan="5">No business transactions recorded yet. Add your opening investment and first business entries above.</td></tr>';
+      else if (!(ledger.data || []).length) ledgerBody.innerHTML = '<tr><td colspan="5">No business transactions recorded yet. Add your first expense or sale to begin the register.</td></tr>';
       else ledgerBody.innerHTML = ledger.data.map(row => {
         const isIn = row.direction === 'in';
         const type = String(row.entry_type || '').replaceAll('_', ' ');
@@ -91,16 +90,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
-
-  await bindForm('capital-form', async data => {
-    const result = await sb.rpc('admin_add_capital', {
-      p_amount: Number(data.get('amount')),
-      p_account: String(data.get('account')),
-      p_transaction_date: String(data.get('transaction_date')),
-      p_description: String(data.get('description') || '').trim() || null
-    });
-    if (result.error) throw result.error;
-  }, 'Investment recorded.');
 
   await bindForm('expense-form', async data => {
     const result = await sb.from('expenses').insert({

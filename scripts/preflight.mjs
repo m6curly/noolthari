@@ -153,6 +153,64 @@ function checkNoothariFeatureContracts(files) {
   if (!productJs.includes("text: 'NOOLTHARI™'")) {
     problems.push('NOOLTHARI image watermark is missing from the product uploader.');
   }
+
+  const dashboardHtml = fs.readFileSync(path.join(ROOT, 'admin/index.html'), 'utf8');
+  const dashboardJs = fs.readFileSync(path.join(ROOT, 'admin/js/dashboard.js'), 'utf8');
+  if (!/id="hero-banner-image"[^>]*multiple/.test(dashboardHtml)) {
+    problems.push('Home banner must accept multiple selected photos for a collage.');
+  }
+  if (!dashboardJs.includes('makePremiumBannerCollage') || !dashboardJs.includes('at least 4 photos')) {
+    problems.push('Automatic 4+ photo banner collage logic is missing.');
+  }
+  if (!dashboardJs.includes('count === 9 ? 3 : 4') || !dashboardJs.includes('Decode, draw and release one source at a time')) {
+    problems.push('Banner collage must use balanced layouts and bounded image decoding for mobile devices.');
+  }
+  const consistencyCss = fs.readFileSync(path.join(ROOT, 'css/site-consistency.css'), 'utf8');
+  if (!/hero-art[^}]*aspect-ratio:\s*16\s*\/\s*9/s.test(consistencyCss) || !/hero-image[^}]*object-fit:\s*cover/s.test(consistencyCss)) {
+    problems.push('Homepage banner must preserve the 16:9 collage ratio on responsive screens.');
+  }
+
+  if (!/descriptionDirty/.test(productJs) || !/savedDescription/.test(productJs)) {
+    problems.push('Product edit must preserve an existing description unless the admin edits it.');
+  }
+
+  const financePage = fs.readFileSync(path.join(ROOT, 'admin/accounting.html'), 'utf8');
+  if (/capital-form|Add investment|Add investment \/ capital|Save investment/i.test(financePage)) {
+    problems.push('The investment form must be removed from Finance while expenses remain.');
+  }
+  if (!financePage.includes('expense-form')) {
+    problems.push('Finance expense entry must remain available.');
+  }
+
+  const homePage = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  if (!homePage.includes('application/ld+json') || !homePage.includes('https://www.instagram.com/noolthari/')) {
+    problems.push('Homepage Organization/WebSite schema must identify the official NOOLTHARI Instagram profile.');
+  }
+
+  const adminEmailSql = path.join(ROOT, 'supabase/NOOLTHARI_LATEST_MASTER_UPDATE.sql');
+  const adminEmailFunction = path.join(ROOT, 'supabase/functions/send-admin-notifications/index.ts');
+  if (!fs.existsSync(adminEmailSql) || !fs.existsSync(adminEmailFunction)) {
+    problems.push('Admin email notification SQL or Edge Function is missing.');
+  }
+  if (fs.existsSync(adminEmailSql)) {
+    const sql = fs.readFileSync(adminEmailSql, 'utf8');
+    for (const required of ['queue_admin_signup_email', 'queue_admin_order_created_email', 'queue_admin_return_created_email', 'queue_admin_shipment_status_email', 'queue_admin_payment_status_email', 'shipment_status', 'payment_status', 'admin_email_notifications']) {
+      if (!sql.includes(required)) problems.push(`Admin email SQL is missing ${required}.`);
+    }
+    for (const required of ['grant insert, update, delete on table public.products to authenticated', 'create policy products_admin', 'grant select on public.admin_products to authenticated']) {
+      if (!sql.toLowerCase().includes(required)) problems.push(`Existing-project SQL is missing the Admin product permission fix: ${required}.`);
+    }
+    const executableSql = sql.replace(/--.*$/gm, '');
+    if (/\b(drop\s+table|truncate\s+(?:table\s+)?|delete\s+from\s+public\.(?:products|orders|profiles|purchases|expenses))\b/i.test(executableSql)) {
+      problems.push('Existing-project SQL must not delete or reset business/customer records.');
+    }
+  }
+  if (fs.existsSync(adminEmailFunction)) {
+    const fn = fs.readFileSync(adminEmailFunction, 'utf8');
+    for (const required of ["item.event_type === 'signup'", "item.event_type === 'order_created'", "item.event_type === 'return_created'", "item.event_type === 'shipment_status'", "item.event_type === 'payment_status'", 'noolthari6@gmail.com']) {
+      if (!fn.includes(required)) problems.push(`Admin email function is missing ${required}.`);
+    }
+  }
 }
 
 function main() {
@@ -177,7 +235,7 @@ function main() {
   console.log('NOOLTHARI pre-deploy check PASSED');
   console.log(`HTML pages checked: ${htmlFiles.length}`);
   console.log(`JavaScript files syntax-checked: ${jsFiles.length}`);
-  console.log('Local references, uniform CSS, product permission path, removed fields, Finance cleanup, page titles, viewport tags, duplicate IDs, config and secret checks: passed');
+  console.log('Local references, uniform CSS, product permission path, banner collage, description persistence, Finance cleanup, SEO schema, admin email notifications, page titles, viewport tags, duplicate IDs, config and secret checks: passed');
   console.log('Note: this is a static preflight, not a live Supabase/Razorpay transaction or physical-device browser test.');
 }
 

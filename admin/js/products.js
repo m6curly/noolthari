@@ -615,6 +615,11 @@ async function loadEditProduct() {
   setField('category_id', product.category_id);
   setField('instagram_url', product.instagram_url);
   setField('description', product.description);
+  const descriptionField = NL.qs('#description');
+  if (descriptionField) {
+    descriptionField.dataset.originalValue = String(product.description || '');
+    descriptionField.dataset.descriptionDirty = 'false';
+  }
   setField('colour', product.colour);
   await loadProductVendors(product.vendor_id);
   setField('purchase_price', product.purchase_price);
@@ -758,6 +763,15 @@ async function saveProduct(formElement) {
   const baseSlug = slugify(name) || `saree-${Date.now()}`;
   const slug = activeProductId && loadedProduct?.slug ? loadedProduct.slug : `${baseSlug}-${slugify(sku).toLowerCase()}`;
 
+  const descriptionField = NL.qs('#description');
+  const submittedDescription = String(form.get('description') || '').trim();
+  const descriptionWasEdited = descriptionField?.dataset.descriptionDirty === 'true';
+  // If the textarea was not touched, preserve the database value even if a
+  // browser autofill/late render made the visible field appear empty.
+  const savedDescription = activeProductId && !descriptionWasEdited
+    ? String(loadedProduct?.description ?? descriptionField?.dataset.originalValue ?? submittedDescription).trim()
+    : submittedDescription;
+
   const payload = {
     saree_name: name,
     sku,
@@ -765,7 +779,7 @@ async function saveProduct(formElement) {
     category_id: categoryId,
     instagram_url: instagramUrl,
     vendor_id: activeProductId ? (loadedProduct?.vendor_id || null) : vendorId,
-    description: String(form.get('description') || '').trim() || null,
+    description: savedDescription || null,
     selling_price: sellingPrice,
     colour: String(form.get('colour') || '').trim() || null,
     blouse_included: form.get('blouse_included') === 'on',
@@ -792,6 +806,10 @@ async function saveProduct(formElement) {
   activeProductId = result.data.id;
   if (wasNew) productWasCreatedInThisSession = true;
   loadedProduct = { ...(loadedProduct || {}), ...payload, id: activeProductId };
+  if (descriptionField) {
+    descriptionField.dataset.originalValue = savedDescription;
+    descriptionField.dataset.descriptionDirty = 'false';
+  }
   if (!NL.query.get('id')) {
     const editUrl = new URL(location.href);
     editUrl.searchParams.set('id', activeProductId);
@@ -823,6 +841,11 @@ async function initializeProductForm() {
 
   const imageInput = NL.qs('[name="images"]');
   imageInput?.addEventListener('change', () => prepareProductImagePreviews(imageInput));
+
+  const descriptionField = NL.qs('#description');
+  descriptionField?.addEventListener('input', () => {
+    descriptionField.dataset.descriptionDirty = 'true';
+  });
 
   const initialPaidInput = NL.qs('#initial-stock-paid');
   const initialQtyInput = NL.qs('#stock-quantity');

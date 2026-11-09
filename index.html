@@ -28,30 +28,22 @@
 
     .hero-art {
       overflow: hidden;
-      min-height: 520px;
+      min-height: 0;
+      aspect-ratio: 16 / 9;
       border-radius: 6px;
       position: relative;
+      isolation: isolate;
     }
 
     .hero-image {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      min-height: 520px;
+      min-height: 0;
       object-fit: cover;
       object-position: center;
       display: block;
-    }
-
-    @media (max-width: 800px) {
-
-      .hero-art {
-        min-height: 420px;
-      }
-
-      .hero-image {
-        min-height: 420px;
-      }
-
     }
 
   </style>
@@ -66,9 +58,44 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="NOOLTHARI™ | Premium Indian Sarees">
   <meta name="twitter:description" content="Discover premium Indian sarees at NOOLTHARI™ — timeless designs, curated collections and elegant styles.">
-  <meta property="og:image" content="https://www.noolthari.com/assets/hero/hero-main.webp">
+  <meta property="og:image" content="https://www.noolthari.com/assets/hero/noolthari-hero.webp">
+  <meta name="twitter:image" content="https://www.noolthari.com/assets/hero/noolthari-hero.webp">
   <link rel="stylesheet" href="css/unified.css">
   <link rel="stylesheet" href="css/site-consistency.css">
+  <script type="application/ld+json" id="noolthari-brand-schema">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "OnlineStore",
+        "@id": "https://www.noolthari.com/#organization",
+        "name": "NOOLTHARI",
+        "alternateName": "NOOLTHARI™",
+        "url": "https://www.noolthari.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.noolthari.com/assets/logo/noolthari-logo.webp"
+        },
+        "image": "https://www.noolthari.com/assets/hero/noolthari-hero.webp",
+        "email": "noolthari6@gmail.com",
+        "sameAs": [
+          "https://www.instagram.com/noolthari/",
+          "https://www.youtube.com/@Noolthari"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.noolthari.com/#website",
+        "url": "https://www.noolthari.com/",
+        "name": "NOOLTHARI",
+        "publisher": {
+          "@id": "https://www.noolthari.com/#organization"
+        },
+        "inLanguage": "en-IN"
+      }
+    ]
+  }
+  </script>
 </head>
 <body data-root="./">
 <!-- =====================================================

@@ -162,7 +162,7 @@ window.NL = {
 
   /* =======================================================
      BUILD SITE PATH
-     
+
      Examples:
        NL.path('index.html')
        NL.path('cart.html')

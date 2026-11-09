@@ -202,9 +202,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     '@type': 'Product',
     name: String(product.saree_name || 'NOOLTHARI Saree'),
     description: seoDescription,
-    image: [absoluteProductImage],
+    image: images.length
+      ? images.map(item => new URL(item.public_url, location.href).href)
+      : [absoluteProductImage],
     sku: product.sku || undefined,
-    brand: { '@type': 'Brand', name: 'NOOLTHARI™' },
+    color: product.colour || undefined,
+    brand: { '@type': 'Brand', name: 'NOOLTHARI', url: 'https://www.noolthari.com/' },
     offers: {
       '@type': 'Offer',
       url: canonicalUrl.href,
@@ -382,15 +385,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         </dl>
 <!-- STOCK -->
 
-        <p class="stock">
-
-          ${
-            outOfStock
-              ? 'Out of stock'
-              : `${stock} available`
-          }
-
-        </p>
+        <div class="product-stock-status ${outOfStock ? 'is-out-of-stock' : 'is-in-stock'}" role="status">
+          <span class="product-stock-dot" aria-hidden="true"></span>
+          <span>${outOfStock ? 'Currently unavailable' : `${stock} available`}</span>
+        </div>
 
 
         <!-- BUY NOW -->
@@ -414,7 +412,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         >
           ${
             outOfStock
-              ? 'Out of stock'
+              ? 'Currently unavailable'
               : 'Buy now'
           }
         </button>

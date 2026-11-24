@@ -876,16 +876,6 @@ function card(
           title="${wishlistIds.has(String(product.id)) ? 'Remove from wishlist' : 'Save to wishlist'}"
         ><svg class="ui-icon ui-icon-heart" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 8.7c0 5.1-8.8 10.1-8.8 10.1S3.2 13.8 3.2 8.7A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.6Z"></path></svg></button>
 
-        ${
-          outOfStock
-            ? `
-              <span class="product-stock-label" role="status">
-                <span class="product-stock-dot" aria-hidden="true"></span>
-                Out of stock
-              </span>
-            `
-            : ''
-        }
 
       </div>
 
